@@ -21,6 +21,15 @@ def assess_security(
     """Interpreta los tests y relaciona cada contraseña con un patrón."""
 
     patterns: list[str] = []
+    angular_pattern = (
+        _angular_pattern(
+            points,
+            image_width,
+            image_height,
+        )
+        if angle_test.reject_null
+        else None
+    )
 
     if perimeter_test.reject_null:
         if _points_are_grouped(
@@ -29,19 +38,14 @@ def assess_security(
             image_height,
         ):
             patterns.append("Patrón agrupado")
-        elif _triangles_are_regular(triangles):
+        elif (
+            angular_pattern not in {"Patrón Line", "Patrón Diag"}
+            and _triangles_are_regular(triangles)
+        ):
             patterns.append("Patrón regular")
-        else:
-            patterns.append("Perímetros atípicos")
 
-    if angle_test.reject_null:
-        patterns.append(
-            _angular_pattern(
-                points,
-                image_width,
-                image_height,
-            )
-        )
+    if angular_pattern is not None:
+        patterns.append(angular_pattern)
 
     if not patterns:
         return SecurityAssessment(
@@ -109,10 +113,14 @@ def _triangles_are_regular(
     if not perimeters or not maximum_angles:
         return False
 
-    perimeter_variation = pstdev(perimeters) / (sum(perimeters) / len(perimeters))
-    angle_variation = pstdev(maximum_angles) / (
-        sum(maximum_angles) / len(maximum_angles)
-    )
+    average_perimeter = sum(perimeters) / len(perimeters)
+    average_angle = sum(maximum_angles) / len(maximum_angles)
+
+    if average_perimeter <= 0 or average_angle <= 0:
+        return False
+
+    perimeter_variation = pstdev(perimeters) / average_perimeter
+    angle_variation = pstdev(maximum_angles) / average_angle
 
     return perimeter_variation <= 0.1 and angle_variation <= 0.1
 
@@ -137,38 +145,66 @@ def _angular_pattern(
     image_width: int,
     image_height: int,
 ) -> str:
-    first, second = max(
-        (
-            (first, second)
-            for index, first in enumerate(points)
-            for second in points[index + 1 :]
-        ),
-        key=lambda pair: math.hypot(
-            pair[0].x - pair[1].x,
-            pair[0].y - pair[1].y,
-        ),
+    center_x = sum(point.x for point in points) / len(points)
+    center_y = sum(point.y for point in points) / len(points)
+    covariance_xx = sum(
+        (point.x - center_x) ** 2
+        for point in points
     )
-    axis_angle = math.degrees(
-        math.atan2(
-            abs(second.y - first.y),
-            abs(second.x - first.x),
+    covariance_yy = sum(
+        (point.y - center_y) ** 2
+        for point in points
+    )
+    covariance_xy = sum(
+        (point.x - center_x) * (point.y - center_y)
+        for point in points
+    )
+    principal_angle = 0.5 * math.atan2(
+        2 * covariance_xy,
+        covariance_xx - covariance_yy,
+    )
+    direction_x = math.cos(principal_angle)
+    direction_y = math.sin(principal_angle)
+    projections = [
+        (point.x - center_x) * direction_x
+        + (point.y - center_y) * direction_y
+        for point in points
+    ]
+    minimum_projection = min(projections)
+    maximum_projection = max(projections)
+    span = maximum_projection - minimum_projection
+
+    if span <= 0:
+        return "Patrón angular"
+
+    perpendicular_rms = math.sqrt(
+        sum(
+            (
+                -(point.x - center_x) * direction_y
+                + (point.y - center_y) * direction_x
+            ) ** 2
+            for point in points
         )
-    )
-    maximum_distance = math.hypot(
-        second.x - first.x,
-        second.y - first.y,
+        / len(points)
     )
     linearity_tolerance = min(image_width, image_height) * 0.1
 
-    if all(
-        abs(
-            (second.x - first.x) * (point.y - first.y)
-            - (second.y - first.y) * (point.x - first.x)
+    if perpendicular_rms <= linearity_tolerance:
+        first = points[projections.index(minimum_projection)]
+        second = points[projections.index(maximum_projection)]
+        axis_angle = math.degrees(
+            math.atan2(
+                abs(second.y - first.y),
+                abs(second.x - first.x),
+            )
         )
-        <= linearity_tolerance * maximum_distance
-        for point in points
-    ):
+        slope_direction = (
+            (second.y - first.y) * (second.x - first.x)
+        )
+
         if axis_angle <= 15 or axis_angle >= 75:
+            return "Patrón Line"
+        if slope_direction > 0:
             return "Patrón Line"
         return "Patrón Diag"
 

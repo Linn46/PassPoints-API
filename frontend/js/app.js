@@ -164,21 +164,16 @@ function explainResult(security, perimeterRejected, angleRejected) {
   icon.textContent = hasPattern ? "!" : "✓";
   explanation.textContent = security.explanation;
   patterns.replaceChildren();
+  patterns.hidden = detectedPatterns.length === 0;
 
-  if (detectedPatterns.length === 0) {
+  detectedPatterns.forEach((pattern) => {
     const item = document.createElement("li");
-    item.textContent = "Sin patrón específico";
+    item.textContent = pattern;
     patterns.appendChild(item);
-  } else {
-    detectedPatterns.forEach((pattern) => {
-      const item = document.createElement("li");
-      item.textContent = pattern;
-      patterns.appendChild(item);
-    });
-  }
+  });
 
   summary.textContent = `${security.explanation} Revisa la triangulación para observar la forma que crean tus puntos.`;
-  detailedExplanation.textContent = `${security.explanation} El test de perímetros ${perimeterRejected ? "ha detectado" : "no ha detectado"} una regularidad en el tamaño de las figuras y el test de ángulos ${angleRejected ? "ha detectado" : "no ha detectado"} una regularidad en sus formas. Para una contraseña más resistente, evita repetir alineaciones, simetrías o agrupaciones parecidas.`;
+  detailedExplanation.textContent = security.explanation;
 }
 
 function setResultValue(elementId, value) {

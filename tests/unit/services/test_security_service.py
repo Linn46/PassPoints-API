@@ -140,3 +140,24 @@ def test_independent_rejections_report_multiple_patterns_and_low_security():
 
     assert result.patterns == ["Patrón regular", "Patrón angular"]
     assert result.level == "Baja"
+
+
+def test_rejected_perimeter_without_geometric_pattern_is_not_weak():
+    irregular_points = [
+        Point(214, 173),
+        Point(843, 921),
+        Point(1472, 284),
+        Point(1165, 735),
+        Point(521, 492),
+    ]
+    result = assess_security(
+        perimeter_test=perimeter_test(True, -2.1),
+        angle_test=angle_test(False),
+        points=irregular_points,
+        triangles=triangles_for(irregular_points),
+        image_width=1920,
+        image_height=1080,
+    )
+
+    assert result.is_weak is False
+    assert result.patterns == []

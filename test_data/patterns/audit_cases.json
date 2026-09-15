@@ -1,0 +1,124 @@
+{
+  "image_width": 1920,
+  "image_height": 1080,
+  "alpha": 0.05,
+  "cases": [
+    {
+      "name": "synthetic_grouped",
+      "description": "Cinco puntos compactos",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón agrupado"],
+      "points": [
+        { "x": 420, "y": 350 },
+        { "x": 470, "y": 390 },
+        { "x": 510, "y": 430 },
+        { "x": 550, "y": 370 },
+        { "x": 500, "y": 480 }
+      ]
+    },
+    {
+      "name": "synthetic_regular",
+      "description": "Estructura regular tipo rejilla",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón regular"],
+      "points": [
+        { "x": 400, "y": 300 },
+        { "x": 700, "y": 300 },
+        { "x": 1000, "y": 300 },
+        { "x": 700, "y": 600 },
+        { "x": 1000, "y": 600 }
+      ]
+    },
+    {
+      "name": "synthetic_horizontal_line",
+      "description": "Puntos aproximadamente horizontales",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón Line"],
+      "points": [
+        { "x": 200, "y": 500 },
+        { "x": 500, "y": 505 },
+        { "x": 800, "y": 495 },
+        { "x": 1100, "y": 502 },
+        { "x": 1400, "y": 498 }
+      ]
+    },
+    {
+      "name": "synthetic_vertical_line",
+      "description": "Puntos aproximadamente verticales",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón Line"],
+      "points": [
+        { "x": 800, "y": 150 },
+        { "x": 805, "y": 350 },
+        { "x": 795, "y": 550 },
+        { "x": 802, "y": 750 },
+        { "x": 798, "y": 950 }
+      ]
+    },
+    {
+      "name": "synthetic_oblique_line",
+      "description": "Puntos aproximadamente alineados con pendiente positiva",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón Line"],
+      "points": [
+        { "x": 250, "y": 220 },
+        { "x": 550, "y": 385 },
+        { "x": 850, "y": 535 },
+        { "x": 1150, "y": 705 },
+        { "x": 1450, "y": 850 }
+      ]
+    },
+    {
+      "name": "synthetic_diagonal",
+      "description": "Puntos aproximadamente alineados con pendiente negativa",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón Diag"],
+      "points": [
+        { "x": 300, "y": 800 },
+        { "x": 600, "y": 600 },
+        { "x": 900, "y": 400 },
+        { "x": 1200, "y": 200 },
+        { "x": 1500, "y": 100 }
+      ]
+    },
+    {
+      "name": "synthetic_angular",
+      "description": "Configuración no lineal con ángulos atípicos",
+      "expected_weak": true,
+      "expected_patterns": ["Patrón angular"],
+      "points": [
+        { "x": 1177, "y": 340 },
+        { "x": 1220, "y": 352 },
+        { "x": 159, "y": 521 },
+        { "x": 1543, "y": 765 },
+        { "x": 729, "y": 156 }
+      ]
+    },
+    {
+      "name": "synthetic_no_pattern",
+      "description": "Distribución sin regularidad evidente",
+      "expected_weak": false,
+      "expected_patterns": [],
+      "points": [
+        { "x": 214, "y": 173 },
+        { "x": 843, "y": 921 },
+        { "x": 1472, "y": 284 },
+        { "x": 1165, "y": 735 },
+        { "x": 521, "y": 492 }
+      ]
+    },
+    {
+      "name": "synthetic_perimeter_anomaly_without_pattern",
+      "description": "Perímetros atípicos sin forma geométrica específica",
+      "expected_weak": false,
+      "expected_patterns": [],
+      "points": [
+        { "x": 1133, "y": 346 },
+        { "x": 1247, "y": 201 },
+        { "x": 1268, "y": 317 },
+        { "x": 270, "y": 316 },
+        { "x": 893, "y": 385 }
+      ]
+    }
+  ]
+}
