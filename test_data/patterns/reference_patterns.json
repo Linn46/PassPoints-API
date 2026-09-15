@@ -1,0 +1,67 @@
+{
+  "image_width": 1920,
+  "image_height": 1080,
+  "alpha": 0.05,
+  "cases": [
+    {
+      "name": "random_1",
+      "description": "Distribución sin patrón geométrico evidente",
+      "expected_weak": false,
+      "points": [
+        { "x": 214, "y": 173 },
+        { "x": 843, "y": 921 },
+        { "x": 1472, "y": 284 },
+        { "x": 1165, "y": 735 },
+        { "x": 521, "y": 492 }
+      ]
+    },
+    {
+      "name": "clustered_1",
+      "description": "Puntos concentrados en una región",
+      "expected_weak": true,
+      "points": [
+        { "x": 420, "y": 350 },
+        { "x": 470, "y": 390 },
+        { "x": 510, "y": 430 },
+        { "x": 550, "y": 370 },
+        { "x": 500, "y": 480 }
+      ]
+    },
+    {
+      "name": "regular_1",
+      "description": "Puntos distribuidos siguiendo una estructura regular",
+      "expected_weak": true,
+      "points": [
+        { "x": 400, "y": 300 },
+        { "x": 700, "y": 300 },
+        { "x": 1000, "y": 300 },
+        { "x": 700, "y": 600 },
+        { "x": 1000, "y": 600 }
+      ]
+    },
+    {
+      "name": "line_1",
+      "description": "Puntos aproximadamente alineados",
+      "expected_weak": true,
+      "points": [
+        { "x": 250, "y": 220 },
+        { "x": 550, "y": 385 },
+        { "x": 850, "y": 535 },
+        { "x": 1150, "y": 705 },
+        { "x": 1450, "y": 850 }
+      ]
+    },
+    {
+      "name": "diagonal_1",
+      "description": "Patrón diagonal",
+      "expected_weak": true,
+      "points": [
+        { "x": 300, "y": 800 },
+        { "x": 600, "y": 600 },
+        { "x": 900, "y": 400 },
+        { "x": 1200, "y": 200 },
+        { "x": 1500, "y": 100 }
+      ]
+    }
+  ]
+}
