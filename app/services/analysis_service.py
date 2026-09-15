@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from app.domain.point import Point
+from app.domain.security_assessment import SecurityAssessment
 from app.domain.triangulation import Triangulation
 from app.geometry.triangle.angles import (
     average_max_delaunay_angle,
@@ -11,6 +12,7 @@ from app.geometry.triangle.perimeter import (
 from app.services.triangulation_service import (
     TriangulationService,
 )
+from app.services.security_service import assess_security
 from app.statistics.angle_test.test import (
     AngleTestResult,
     run_test as run_angle_test,
@@ -32,6 +34,7 @@ class AnalysisResult:
     average_max_angle: float
     perimeter_test: PerimeterTestStatistic
     angle_test: AngleTestResult
+    security: SecurityAssessment
 
 
 class AnalysisService:
@@ -82,10 +85,20 @@ class AnalysisService:
             alpha=alpha,
         )
 
+        security = assess_security(
+            perimeter_test=perimeter_test,
+            angle_test=angle_test,
+            points=points,
+            triangles=triangles,
+            image_width=image_width,
+            image_height=image_height,
+        )
+
         return AnalysisResult(
             triangulation=triangulation,
             average_perimeter=average_perimeter,
             average_max_angle=average_max_angle,
             perimeter_test=perimeter_test,
             angle_test=angle_test,
+            security=security,
         )

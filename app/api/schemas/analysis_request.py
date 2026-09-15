@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class PointRequest(BaseModel):
@@ -7,6 +7,25 @@ class PointRequest(BaseModel):
 
 
 class AnalysisRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "points": [
+                        {"x": 100, "y": 100},
+                        {"x": 500, "y": 100},
+                        {"x": 500, "y": 500},
+                        {"x": 100, "y": 500},
+                        {"x": 300, "y": 300},
+                    ],
+                    "image_width": 1920,
+                    "image_height": 1080,
+                    "alpha": 0.05,
+                }
+            ]
+        }
+    )
+
     points: list[PointRequest] = Field(
         ...,
         min_length=5,
