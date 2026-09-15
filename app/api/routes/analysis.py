@@ -6,6 +6,7 @@ from app.api.schemas.analysis_response import (
     AngleTestResponse,
     PerimeterTestResponse,
     PointResponse,
+    SecurityResponse,
     TriangleResponse,
 )
 from app.domain.point import Point
@@ -75,5 +76,12 @@ def analyze(request: AnalysisRequest) -> AnalysisResponse:
             critical_value=result.angle_test.critical_value,
             alpha=result.angle_test.alpha,
             reject_null=result.angle_test.reject_null,
+        ),
+        security=SecurityResponse(
+            is_weak=result.security.is_weak,
+            level=result.security.level,
+            patterns=result.security.patterns,
+            title=result.security.title,
+            explanation=result.security.explanation,
         ),
     )

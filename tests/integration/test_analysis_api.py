@@ -52,6 +52,16 @@ def test_analysis_endpoint_returns_complete_result():
     assert "critical_value" in data["angle_test"]
     assert "reject_null" in data["angle_test"]
 
+    assert set(data["security"]) == {
+        "is_weak",
+        "level",
+        "patterns",
+        "title",
+        "explanation",
+    }
+    assert isinstance(data["security"]["is_weak"], bool)
+    assert data["security"]["level"] in {"Alta", "Media", "Baja"}
+
 
 def test_analysis_endpoint_rejects_less_than_five_points():
     request = valid_request()

@@ -69,7 +69,7 @@ function displayResults(result) {
   );
 
   renderTriangulation(result);
-  explainResult(perimeterRejected, angleRejected);
+  explainResult(result.security, perimeterRejected, angleRejected);
 }
 
 function renderTriangulation(result) {
@@ -89,6 +89,8 @@ function renderTriangulation(result) {
   image.src = sourceImage.src;
   image.alt = "Imagen con la triangulación de los puntos seleccionados";
   const imageData = getImageData();
+  const analysisWidth = ANALYSIS_IMAGE_SIZE.width;
+  const analysisHeight = ANALYSIS_IMAGE_SIZE.height;
 
   const overlay = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   overlay.setAttribute("viewBox", `0 0 ${imageData.width} ${imageData.height}`);
@@ -105,7 +107,7 @@ function renderTriangulation(result) {
       triangle.vertices
         .map(
           (point) =>
-            `${(point.x * imageData.width) / 1920},${(point.y * imageData.height) / 1080}`,
+            `${(point.x * imageData.width) / analysisWidth},${(point.y * imageData.height) / analysisHeight}`,
         )
         .join(" "),
     );
@@ -117,8 +119,8 @@ function renderTriangulation(result) {
       "http://www.w3.org/2000/svg",
       "circle",
     );
-    marker.setAttribute("cx", (point.x * imageData.width) / 1920);
-    marker.setAttribute("cy", (point.y * imageData.height) / 1080);
+    marker.setAttribute("cx", (point.x * imageData.width) / analysisWidth);
+    marker.setAttribute("cy", (point.y * imageData.height) / analysisHeight);
     marker.setAttribute("r", "18");
     marker.classList.add("result-point");
     overlay.appendChild(marker);
@@ -127,8 +129,8 @@ function renderTriangulation(result) {
       "http://www.w3.org/2000/svg",
       "text",
     );
-    label.setAttribute("x", (point.x * imageData.width) / 1920);
-    label.setAttribute("y", (point.y * imageData.height) / 1080 + 6);
+    label.setAttribute("x", (point.x * imageData.width) / analysisWidth);
+    label.setAttribute("y", (point.y * imageData.height) / analysisHeight + 6);
     label.textContent = `P${index + 1}`;
     label.classList.add("result-point-label");
     overlay.appendChild(label);
@@ -138,39 +140,45 @@ function renderTriangulation(result) {
   container.appendChild(wrapper);
 }
 
-function explainResult(perimeterRejected, angleRejected) {
+function explainResult(security, perimeterRejected, angleRejected) {
   const banner = document.getElementById("result-banner");
   const status = document.getElementById("result-status");
+  const securityLevel = document.getElementById("security-level");
   const explanation = document.getElementById("result-explanation");
+  const patterns = document.getElementById("security-patterns");
   const summary = document.getElementById("result-summary");
   const detailedExplanation = document.getElementById("detailed-explanation");
   const icon = document.getElementById("result-icon");
 
-  const rejectedTests = Number(perimeterRejected) + Number(angleRejected);
-  let title;
-  let text;
-
-  if (rejectedTests === 0) {
-    title = "No se detectan patrones evidentes";
-    text =
-      "La distribución de tus puntos no coincide claramente con los patrones analizados.";
-  } else if (rejectedTests === 2) {
-    title = "Se detectan patrones geométricos";
-    text =
-      "Los dos análisis encontraron una distribución que puede ser predecible.";
-  } else {
-    title = "Se detecta un patrón parcial";
-    text =
-      "Uno de los dos análisis encontró una distribución que merece atención.";
+  if (!security) {
+    return;
   }
 
-  banner.classList.toggle("warning", rejectedTests > 0);
-  banner.classList.toggle("positive", rejectedTests === 0);
-  status.textContent = title;
-  icon.textContent = rejectedTests === 0 ? "✓" : "!";
-  explanation.textContent = text;
-  summary.textContent = `${text} Revisa la triangulación para entender la forma que crean tus puntos.`;
-  detailedExplanation.textContent = `${text} El test de perímetros ${perimeterRejected ? "detectó" : "no detectó"} una regularidad en el tamaño de las figuras y el test de ángulos ${angleRejected ? "detectó" : "no detectó"} una regularidad en sus formas. Para una contraseña más resistente, evita colocar puntos alineados, simétricos o demasiado agrupados.`;
+  const detectedPatterns = security.patterns || [];
+  const hasPattern = security.is_weak;
+
+  banner.classList.toggle("warning", hasPattern);
+  banner.classList.toggle("positive", !hasPattern);
+  status.textContent = security.title;
+  securityLevel.textContent = `Nivel de seguridad: ${security.level ?? "No disponible"}`;
+  icon.textContent = hasPattern ? "!" : "✓";
+  explanation.textContent = security.explanation;
+  patterns.replaceChildren();
+
+  if (detectedPatterns.length === 0) {
+    const item = document.createElement("li");
+    item.textContent = "Sin patrón específico";
+    patterns.appendChild(item);
+  } else {
+    detectedPatterns.forEach((pattern) => {
+      const item = document.createElement("li");
+      item.textContent = pattern;
+      patterns.appendChild(item);
+    });
+  }
+
+  summary.textContent = `${security.explanation} Revisa la triangulación para observar la forma que crean tus puntos.`;
+  detailedExplanation.textContent = `${security.explanation} El test de perímetros ${perimeterRejected ? "ha detectado" : "no ha detectado"} una regularidad en el tamaño de las figuras y el test de ángulos ${angleRejected ? "ha detectado" : "no ha detectado"} una regularidad en sus formas. Para una contraseña más resistente, evita repetir alineaciones, simetrías o agrupaciones parecidas.`;
 }
 
 function setResultValue(elementId, value) {
