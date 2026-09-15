@@ -54,6 +54,8 @@ def test_angle_test_rejects_null():
 
     assert result.statistic > result.critical_value
     assert result.reject_null is True
+    assert result.alpha == pytest.approx(0.05)
+    assert result.critical_value == pytest.approx(1.6448536)
 
 
 def test_angle_test_does_not_reject_null():
@@ -64,3 +66,5 @@ def test_angle_test_does_not_reject_null():
 
     assert result.statistic == pytest.approx(0.0)
     assert result.reject_null is False
+    assert result.alpha == pytest.approx(0.05)
+    assert result.critical_value == pytest.approx(1.6448536)

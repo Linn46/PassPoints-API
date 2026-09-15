@@ -44,3 +44,17 @@ def test_perimeter_test_returns_decision():
     )
 
     assert result.reject_null is True
+    assert result.alpha == pytest.approx(0.01)
+
+
+def test_perimeter_test_does_not_reject_null():
+    result = run_test(
+        average_perimeter=2109.87,
+        image_width=1920,
+        image_height=1080,
+        alpha=0.05,
+    )
+
+    assert abs(result.statistic) < result.critical_value
+    assert result.reject_null is False
+    assert result.alpha == pytest.approx(0.05)

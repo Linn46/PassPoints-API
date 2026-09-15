@@ -7,6 +7,8 @@
       "name": "synthetic_grouped",
       "description": "Cinco puntos compactos",
       "expected_weak": true,
+      "expected_perimeter_reject": true,
+      "expected_angle_reject": false,
       "expected_patterns": ["Patrón agrupado"],
       "points": [
         { "x": 420, "y": 350 },
@@ -20,6 +22,8 @@
       "name": "synthetic_regular",
       "description": "Estructura regular tipo rejilla",
       "expected_weak": true,
+      "expected_perimeter_reject": true,
+      "expected_angle_reject": false,
       "expected_patterns": ["Patrón regular"],
       "points": [
         { "x": 400, "y": 300 },
@@ -33,6 +37,8 @@
       "name": "synthetic_horizontal_line",
       "description": "Puntos aproximadamente horizontales",
       "expected_weak": true,
+      "expected_perimeter_reject": false,
+      "expected_angle_reject": true,
       "expected_patterns": ["Patrón Line"],
       "points": [
         { "x": 200, "y": 500 },
@@ -46,6 +52,8 @@
       "name": "synthetic_vertical_line",
       "description": "Puntos aproximadamente verticales",
       "expected_weak": true,
+      "expected_perimeter_reject": true,
+      "expected_angle_reject": true,
       "expected_patterns": ["Patrón Line"],
       "points": [
         { "x": 800, "y": 150 },
@@ -59,6 +67,8 @@
       "name": "synthetic_oblique_line",
       "description": "Puntos aproximadamente alineados con pendiente positiva",
       "expected_weak": true,
+      "expected_perimeter_reject": false,
+      "expected_angle_reject": true,
       "expected_patterns": ["Patrón Line"],
       "points": [
         { "x": 250, "y": 220 },
@@ -72,6 +82,8 @@
       "name": "synthetic_diagonal",
       "description": "Puntos aproximadamente alineados con pendiente negativa",
       "expected_weak": true,
+      "expected_perimeter_reject": false,
+      "expected_angle_reject": true,
       "expected_patterns": ["Patrón Diag"],
       "points": [
         { "x": 300, "y": 800 },
@@ -85,6 +97,8 @@
       "name": "synthetic_angular",
       "description": "Configuración no lineal con ángulos atípicos",
       "expected_weak": true,
+      "expected_perimeter_reject": false,
+      "expected_angle_reject": true,
       "expected_patterns": ["Patrón angular"],
       "points": [
         { "x": 1177, "y": 340 },
@@ -98,6 +112,8 @@
       "name": "synthetic_no_pattern",
       "description": "Distribución sin regularidad evidente",
       "expected_weak": false,
+      "expected_perimeter_reject": false,
+      "expected_angle_reject": false,
       "expected_patterns": [],
       "points": [
         { "x": 214, "y": 173 },
@@ -111,6 +127,8 @@
       "name": "synthetic_perimeter_anomaly_without_pattern",
       "description": "Perímetros atípicos sin forma geométrica específica",
       "expected_weak": false,
+      "expected_perimeter_reject": true,
+      "expected_angle_reject": false,
       "expected_patterns": [],
       "points": [
         { "x": 1133, "y": 346 },

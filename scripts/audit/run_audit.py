@@ -35,6 +35,22 @@ def expected_patterns(case: dict) -> list[str]:
     }[case["name"]]
 
 
+def expected_rejections(case: dict) -> tuple[bool, bool]:
+    if "expected_perimeter_reject" in case:
+        return (
+            case["expected_perimeter_reject"],
+            case["expected_angle_reject"],
+        )
+
+    return {
+        "clustered_1": (True, False),
+        "regular_1": (True, False),
+        "line_1": (False, True),
+        "diagonal_1": (False, True),
+        "random_1": (False, False),
+    }[case["name"]]
+
+
 def transformed_case(case: dict, name: str, transform) -> dict:
     return {
         **case,
@@ -138,11 +154,16 @@ def audit_case(
 
     expected_weak = case["expected_weak"]
     expected = case["expected_patterns"]
+    expected_perimeter, expected_angle = expected_rejections(case)
     actual = security["patterns"]
+    result = response.json()
 
     passed = (
         security["is_weak"] == expected_weak
         and set(actual) == set(expected)
+        and result["perimeter_test"]["reject_null"]
+        == expected_perimeter
+        and result["angle_test"]["reject_null"] == expected_angle
     )
 
     marker = "OK" if passed else "FAIL"
@@ -150,7 +171,9 @@ def audit_case(
     print(
         f"[{marker}] {case['name']}: "
         f"weak={security['is_weak']} "
-        f"patterns={actual}"
+        f"patterns={actual} "
+        f"perimeter_reject={result['perimeter_test']['reject_null']} "
+        f"angle_reject={result['angle_test']['reject_null']}"
     )
 
     if not passed:
