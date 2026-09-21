@@ -16,7 +16,7 @@ EXPECTED_PATTERNS = {
 }
 
 PATTERNS_FILE = (
-    Path(__file__).resolve().parents[2]
+    Path(__file__).resolve().parents[3]
     / "test_data"
     / "patterns"
     / "reference_patterns.json"

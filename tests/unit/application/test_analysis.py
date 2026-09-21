@@ -1,7 +1,7 @@
 import pytest
 
 from app.domain.point import Point
-from app.services.analysis_service import AnalysisService
+from app.application.analysis.service import AnalysisService
 
 
 def test_analysis_service_executes_complete_analysis():

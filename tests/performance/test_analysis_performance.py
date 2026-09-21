@@ -1,7 +1,7 @@
 from time import perf_counter
 
 from app.domain.point import Point
-from app.services.analysis_service import AnalysisService
+from app.application.analysis.service import AnalysisService
 
 
 def test_repeated_analysis_completes_in_reasonable_time():
