@@ -1,5 +1,5 @@
 from app.domain.analysis_result import AnalysisResult as DomainAnalysisResult
-from app.services.analysis_service import AnalysisResult
+from app.application.analysis.service import AnalysisResult
 
 
 def to_domain_result(result: AnalysisResult) -> DomainAnalysisResult:

@@ -10,7 +10,7 @@ from app.api.schemas.analysis_response import (
     TriangleResponse,
 )
 from app.domain.point import Point
-from app.services.analysis_service import AnalysisService
+from app.application.analysis.service import AnalysisService
 
 
 router = APIRouter(

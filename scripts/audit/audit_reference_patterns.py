@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from app.domain.point import Point
-from app.services.analysis_service import AnalysisService
+from app.application.analysis.service import AnalysisService
 
 PATTERNS_FILE = (
     ROOT

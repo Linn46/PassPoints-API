@@ -9,10 +9,10 @@ from app.geometry.triangle.angles import (
 from app.geometry.triangle.perimeter import (
     average_delaunay_perimeter,
 )
-from app.services.triangulation_service import (
+from app.application.analysis.triangulation import (
     TriangulationService,
 )
-from app.services.security_service import assess_security
+from app.application.analysis.security import assess_security
 from app.statistics.angle_test.test import (
     AngleTestResult,
     run_test as run_angle_test,

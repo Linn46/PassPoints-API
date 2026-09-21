@@ -1,4 +1,4 @@
-from app.services.security_service import assess_security
+from app.application.analysis.security import assess_security
 from app.domain.point import Point
 from app.geometry.delaunay.triangulator import triangulate
 from app.statistics.angle_test.test import AngleTestResult
