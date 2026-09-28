@@ -1,9 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.analysis import router as analysis_router
+from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.core.config.settings import settings
+from app.infrastructure.database.session import dispose_database_engine
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        yield
+    finally:
+        dispose_database_engine()
 
 
 app = FastAPI(
@@ -13,6 +25,7 @@ app = FastAPI(
         "API para el análisis geométrico y estadístico "
         "de contraseñas gráficas Passpoints."
     ),
+    lifespan=lifespan,
 )
 
 
@@ -34,3 +47,4 @@ app.include_router(
 )
 
 app.include_router(health_router)
+app.include_router(auth_router)

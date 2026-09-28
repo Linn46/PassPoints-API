@@ -27,6 +27,8 @@ PyYAML==6.0.3
 scipy==1.18.1
 SQLAlchemy>=2.0,<3.0
 alembic>=1.13,<2.0
+argon2-cffi>=23.1,<26
+PyJWT>=2.10,<3.0
 psycopg[binary]>=3.2,<4.0
 starlette==1.6.0
 typing-inspection==0.4.4

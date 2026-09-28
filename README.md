@@ -20,6 +20,9 @@ uvicorn app.main:app --reload
 
 La documentación interactiva queda disponible en `http://localhost:8000/docs`.
 
+Para habilitar el login, configura `AUTH_TOKEN_SECRET` con al menos 32 bytes
+aleatorios. La API no usa una clave por defecto.
+
 ## Docker
 
 ```powershell
@@ -31,7 +34,16 @@ docker run --rm -p 8000:8000 passpoints-api
 
 - `GET /health`: verifica que la API esté disponible.
 - `POST /api/v1/analysis`: analiza cinco puntos Passpoints.
+- `POST /auth/register`: registra usuario y contraseña gráfica.
+- `POST /auth/login`: verifica ambas credenciales y devuelve un bearer JWT
+  válido durante 30 minutos.
 - `GET /docs`: documentación OpenAPI interactiva.
+
+Registro y login reciben `username`, `password`, `image_id`, dimensiones de la
+imagen y cinco puntos en coordenadas de píxeles. El registro rechaza patrones
+clasificados como débiles. Passpoints normaliza las coordenadas a una grilla
+relativa de 20 × 20 y guarda solo un verifier Argon2id; el token se devuelve
+solo en el login.
 
 Ejemplo de petición:
 
