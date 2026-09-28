@@ -23,3 +23,16 @@ class GraphicalPasswordRepository:
                 )
             )
         )
+
+    def list_active_by_user_and_image(
+        self, user_id: UUID, image_id: str
+    ) -> list[GraphicalPassword]:
+        return list(
+            self.session.scalars(
+                select(GraphicalPassword).where(
+                    GraphicalPassword.user_id == user_id,
+                    GraphicalPassword.image_id == image_id,
+                    GraphicalPassword.is_active.is_(True),
+                )
+            )
+        )
