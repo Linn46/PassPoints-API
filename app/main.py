@@ -9,7 +9,6 @@ from app.api.routes.health import router as health_router
 from app.core.config.settings import settings
 from app.infrastructure.database.session import dispose_database_engine
 
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     try:

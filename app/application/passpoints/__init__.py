@@ -1,1 +1,1 @@
-"""Passpoints graphical credential creation and verification."""
+"""Passpoints graphical credential method."""
