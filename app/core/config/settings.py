@@ -10,6 +10,7 @@ class Settings:
 	app_version: str = "1.0.0"
 	host: str = "0.0.0.0"
 	port: int = 8000
+	database_url: str = ""
 
 	@classmethod
 	def from_environment(cls) -> "Settings":
@@ -20,6 +21,7 @@ class Settings:
 			app_version=os.getenv("PASSPOINTS_APP_VERSION", defaults.app_version),
 			host=os.getenv("PASSPOINTS_HOST", defaults.host),
 			port=int(os.getenv("PASSPOINTS_PORT", str(defaults.port))),
+			database_url=os.getenv("DATABASE_URL", defaults.database_url),
 		)
 
 
