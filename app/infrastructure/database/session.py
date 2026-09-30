@@ -36,7 +36,6 @@ def create_session_factory(
 
 
 def get_session_factory() -> sessionmaker[Session]:
-    """Returns the process-wide session factory, creating it on first use."""
     global _engine, _session_factory
     if _session_factory is None:
         with _engine_lock:
@@ -51,7 +50,6 @@ def get_session_factory() -> sessionmaker[Session]:
 
 
 def dispose_database_engine() -> None:
-    """Disposes the shared engine when the application shuts down."""
     global _engine, _session_factory
     with _engine_lock:
         if _engine is not None:
@@ -61,7 +59,6 @@ def dispose_database_engine() -> None:
 
 
 def get_db_session() -> Generator[Session, None, None]:
-    """Provides one request-scoped session and rolls back failed requests."""
     session = get_session_factory()()
     try:
         yield session

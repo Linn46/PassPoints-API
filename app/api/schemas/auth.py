@@ -1,75 +1,102 @@
 import re
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-
 from app.core.config.image_parameters import is_supported_image_size
 
-
-class GraphicalPointInput(BaseModel):
+class PointInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     x: float = Field(ge=0, allow_inf_nan=False)
     y: float = Field(ge=0, allow_inf_nan=False)
 
-
-class AuthRequestBase(BaseModel):
+class RegisterRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     username: str = Field(min_length=3, max_length=100)
-    password: str = Field(min_length=1, max_length=128)
+    email: str = Field(min_length=5, max_length=254)
     image_id: str = Field(min_length=1, max_length=255)
     image_width: int = Field(gt=0)
     image_height: int = Field(gt=0)
-    points: list[GraphicalPointInput] = Field(min_length=5, max_length=5)
+    points: list[PointInput] = Field(min_length=5, max_length=5)
 
     @field_validator("username", mode="before")
     @classmethod
     def normalize_username(cls, value: object) -> object:
-        if not isinstance(value, str):
-            return value
-        normalized = value.strip().lower()
-        if not re.fullmatch(r"[a-z0-9_.-]{3,100}", normalized):
-            raise ValueError("Username may contain letters, digits, '.', '_' and '-'.")
-        return normalized
+        if isinstance(value, str):
+            value = value.strip().lower()
+            if not re.fullmatch(r"[a-z0-9_.-]{3,100}", value):
+                raise ValueError("Invalid username format.")
+        return value
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            value = value.strip().lower()
+            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+                raise ValueError("A valid email address is required.")
+        return value
 
     @field_validator("image_id")
     @classmethod
-    def normalize_image_id(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
+    def clean_image_id(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
             raise ValueError("image_id must not be blank.")
-        return normalized
+        return value
 
     @model_validator(mode="after")
-    def validate_graphical_selection(self) -> "AuthRequestBase":
+    def validate_selection(self) -> "RegisterRequest":
         if not is_supported_image_size(self.image_width, self.image_height):
             raise ValueError("Unsupported image dimensions.")
-        if any(
-            point.x > self.image_width or point.y > self.image_height
-            for point in self.points
-        ):
-            raise ValueError("Graphical points must be inside the image.")
-        coordinates = [(point.x, point.y) for point in self.points]
-        if len(set(coordinates)) != 5:
-            raise ValueError("The five graphical points must be unique.")
+        if any(p.x > self.image_width or p.y > self.image_height for p in self.points):
+            raise ValueError("Points must be inside the image.")
+        if len({(p.x, p.y) for p in self.points}) != 5:
+            raise ValueError("The five points must be unique.")
         return self
 
+class LoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
-class RegisterRequest(AuthRequestBase):
-    password: str = Field(min_length=12, max_length=128)
+    email: str = Field(min_length=5, max_length=254)
+    image_id: str = Field(min_length=1, max_length=255)
+    image_width: int = Field(gt=0)
+    image_height: int = Field(gt=0)
+    points: list[PointInput] = Field(min_length=5, max_length=5)
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            value = value.strip().lower()
+            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+                raise ValueError("A valid email address is required.")
+        return value
 
-class LoginRequest(AuthRequestBase):
-    pass
+    @field_validator("image_id")
+    @classmethod
+    def clean_image_id(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("image_id must not be blank.")
+        return value
 
+    @model_validator(mode="after")
+    def validate_selection(self) -> "LoginRequest":
+        if not is_supported_image_size(self.image_width, self.image_height):
+            raise ValueError("Unsupported image dimensions.")
+        if any(p.x > self.image_width or p.y > self.image_height for p in self.points):
+            raise ValueError("Points must be inside the image.")
+        if len({(p.x, p.y) for p in self.points}) != 5:
+            raise ValueError("The five points must be unique.")
+        return self
 
-class RegisteredUserResponse(BaseModel):
+class UserResponse(BaseModel):
     id: str
     username: str
-
+    email: str
 
 class AuthenticationResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
-    user: RegisteredUserResponse
+    user: UserResponse

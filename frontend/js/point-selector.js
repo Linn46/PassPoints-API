@@ -1,89 +1,89 @@
 const pointsLayer = document.getElementById("points-layer");
 const pointCount = document.getElementById("point-count");
 const clearPointsButton = document.getElementById("clear-points");
-const analyzeButton = document.getElementById("analyze-button");
 const selectedImageElement = document.getElementById("selected-image");
+const pointFeedback = document.getElementById("point-feedback");
 
 const selectedPoints = [];
-
 const MAX_POINTS = 5;
+let pointSelectionLocked = false;
 
-document.addEventListener("image-loaded", () => {
-  selectedPoints.length = 0;
-  pointsLayer.innerHTML = "";
-  updatePointCounter();
-});
+document.addEventListener("image-loaded", resetPoints);
 
 selectedImageElement.addEventListener("click", (event) => {
-  if (selectedPoints.length >= MAX_POINTS) {
+  if (
+    pointSelectionLocked ||
+    selectedPoints.length >= MAX_POINTS ||
+    !getImageData().id
+  )
     return;
-  }
 
   const imageRect = selectedImageElement.getBoundingClientRect();
-  const areaRect = document
-    .getElementById("image-area")
-    .getBoundingClientRect();
-
-  const visualX = event.clientX - imageRect.left;
-  const visualY = event.clientY - imageRect.top;
-
+  const relativeX = Math.max(
+    0,
+    Math.min(1, (event.clientX - imageRect.left) / imageRect.width),
+  );
+  const relativeY = Math.max(
+    0,
+    Math.min(1, (event.clientY - imageRect.top) / imageRect.height),
+  );
   const imageData = getImageData();
-
-  const scaleX = imageData.width / imageRect.width;
-  const scaleY = imageData.height / imageRect.height;
-
-  const originalX = visualX * scaleX;
-  const originalY = visualY * scaleY;
-
-  const point = {
-    x: originalX,
-    y: originalY,
-  };
-
-  selectedPoints.push(point);
-
-  const markerX = imageRect.left - areaRect.left + visualX;
-  const markerY = imageRect.top - areaRect.top + visualY;
-
-  createPointMarker(markerX, markerY, selectedPoints.length);
-
-  updatePointCounter();
+  selectedPoints.push({
+    x: relativeX * imageData.width,
+    y: relativeY * imageData.height,
+    relativeX,
+    relativeY,
+  });
+  renderPoints();
+  document.dispatchEvent(new CustomEvent("points-changed"));
 });
 
-function createPointMarker(x, y, number) {
-  const marker = document.createElement("div");
-
-  marker.className = "point-marker";
-
-  marker.textContent = `P${number}`;
-
-  marker.style.left = `${x}px`;
-  marker.style.top = `${y}px`;
-
-  pointsLayer.appendChild(marker);
-}
-
-function updatePointCounter() {
-  const count = selectedPoints.length;
-
-  pointCount.textContent = `${count} / ${MAX_POINTS}`;
-
-  clearPointsButton.disabled = count === 0;
-
-  analyzeButton.disabled = count !== MAX_POINTS;
-}
-
-clearPointsButton.addEventListener("click", () => {
+function resetPoints() {
   selectedPoints.length = 0;
+  renderPoints();
+  document.dispatchEvent(new CustomEvent("points-changed"));
+}
 
-  pointsLayer.innerHTML = "";
+function renderPoints() {
+  pointsLayer.replaceChildren();
+  selectedPoints.forEach((point, index) => {
+    const marker = document.createElement("span");
+    marker.className = "point-marker";
+    marker.textContent = String(index + 1);
+    marker.style.left = `${point.relativeX * 100}%`;
+    marker.style.top = `${point.relativeY * 100}%`;
+    pointsLayer.appendChild(marker);
+  });
 
-  updatePointCounter();
-});
+  const count = selectedPoints.length;
+  pointCount.textContent = `${count}/5`;
+  clearPointsButton.disabled = pointSelectionLocked || count === 0;
+  pointFeedback.textContent =
+    count === 5
+      ? "Secuencia completa. Puedes analizarla."
+      : count === 0
+        ? "Aún no hay puntos seleccionados."
+        : `Selecciona ${5 - count} punto${count === 4 ? "" : "s"} más.`;
+}
+
+clearPointsButton.addEventListener("click", resetPoints);
 
 function getSelectedPoints() {
-  return selectedPoints.map((point) => ({
-    x: point.x,
-    y: point.y,
+  return selectedPoints.map(({ x, y }) => ({ x, y }));
+}
+
+function getSelectedPointFractions() {
+  return selectedPoints.map(({ relativeX, relativeY }) => ({
+    x: relativeX,
+    y: relativeY,
   }));
+}
+
+function hasFiveSelectedPoints() {
+  return selectedPoints.length === MAX_POINTS;
+}
+
+function setPointSelectionLocked(locked) {
+  pointSelectionLocked = locked;
+  clearPointsButton.disabled = locked || selectedPoints.length === 0;
 }

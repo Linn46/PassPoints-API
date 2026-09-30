@@ -3,254 +3,362 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Passpoints Analyzer</title>
-
+    <meta name="theme-color" content="#f4f8f6" />
+    <title>Passpoints | Autenticación gráfica segura</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
-
   <body>
-    <main class="app">
-      <header class="header">
-        <div>
-          <span class="eyebrow">PASSPOINTS ANALYZER</span>
-
-          <h1>¿Tu contraseña gráfica es débil?</h1>
-
-          <p>
-            Selecciona una imagen, marca los cinco puntos utilizados como
-            contraseña y descubre si presentan patrones geométricos regulares.
-          </p>
-        </div>
+    <main class="app-shell">
+      <header class="site-header">
+        <a class="brand" href="#auth-view" aria-label="Passpoints, inicio">
+          <span class="brand-mark" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><b></b
+          ></span>
+          <span>PASSPOINTS</span>
+        </a>
+        <span class="header-note">Autenticación gráfica segura</span>
       </header>
 
-      <section class="workspace">
-        <div class="toolbar">
-          <div class="toolbar-info">
-            <strong>1. Selecciona una imagen</strong>
+      <section
+        id="auth-view"
+        class="view auth-view"
+        aria-labelledby="view-title"
+      >
+        <div class="intro-column">
+          <p class="eyebrow">TU IMAGEN. TU SECUENCIA.</p>
+          <h1 id="view-title">Una contraseña que se dibuja.</h1>
+          <p class="intro-copy">
+            Passpoints convierte una secuencia de cinco lugares en tu forma
+            personal de iniciar sesión.
+          </p>
 
-            <span id="image-status"> Ninguna imagen seleccionada </span>
+          <div
+            class="mode-switch"
+            role="tablist"
+            aria-label="Acceso a Passpoints"
+          >
+            <button
+              id="register-tab"
+              class="mode-tab is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+            >
+              Crear cuenta
+            </button>
+            <button
+              id="login-tab"
+              class="mode-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+            >
+              Iniciar sesión
+            </button>
           </div>
 
-          <label for="image-input" class="button button-primary">
-            Elegir imagen
-          </label>
+          <form id="auth-form" novalidate>
+            <label class="field-label" for="username">Nombre de usuario</label>
+            <div id="username-field">
+              <label class="field-label" for="username">Nombre</label>
+              <input
+                id="username"
+                name="username"
+                autocomplete="name"
+                minlength="3"
+                maxlength="100"
+                placeholder="Tu nombre"
+              />
+            </div>
 
-          <input id="image-input" type="file" accept="image/*" hidden />
-        </div>
-
-        <div id="image-area" class="image-area empty">
-          <div id="empty-state" class="empty-state">
-            <div class="upload-icon">+</div>
-
-            <h2>Selecciona una imagen</h2>
-
-            <p>
-              Después podrás hacer clic sobre ella para marcar los cinco puntos
-              de tu contraseña.
-            </p>
-          </div>
-
-          <div id="image-wrapper" class="image-wrapper" hidden>
-            <img
-              id="selected-image"
-              alt="Imagen utilizada para la contraseña gráfica"
+            <label class="field-label" for="email">Correo electrónico</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              maxlength="254"
+              required
+              placeholder="nombre@ejemplo.com"
             />
 
-            <svg
-              id="triangulation-layer"
-              class="triangulation-layer"
-              aria-hidden="true"
-            ></svg>
-
-            <div id="points-layer" class="points-layer"></div>
-          </div>
-        </div>
-
-        <div class="instructions">
-          <div class="instruction-step">
-            <span class="step-number">1</span>
-
-            <div>
-              <strong>Selecciona tu imagen</strong>
-              <span
-                >Puede ser cualquier imagen que utilices para Passpoints.</span
+            <div class="section-heading image-heading">
+              <div>
+                <span class="step-kicker">01</span>
+                <h2>Elige una imagen</h2>
+              </div>
+              <span id="image-status" class="subtle-status"
+                >Selecciona una escena</span
               >
             </div>
-          </div>
+            <div
+              id="image-options"
+              class="image-options"
+              aria-label="Imágenes disponibles"
+            ></div>
 
-          <div class="instruction-step">
-            <span class="step-number">2</span>
-
-            <div>
-              <strong>Marca 5 puntos</strong>
-              <span>Haz clic sobre los lugares que forman tu contraseña.</span>
+            <div class="section-heading point-heading">
+              <div>
+                <span class="step-kicker">02</span>
+                <h2>Selecciona 5 puntos</h2>
+              </div>
+              <span class="point-count"
+                >Puntos seleccionados:
+                <strong id="point-count">0/5</strong></span
+              >
             </div>
-          </div>
-
-          <div class="instruction-step">
-            <span class="step-number">3</span>
-
-            <div>
-              <strong>Analiza</strong>
-              <span>El sistema estudiará la distribución geométrica.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="selection-footer">
-          <div class="selection-progress">
-            <span>Puntos seleccionados</span>
-
-            <strong id="point-count">0 / 5</strong>
-          </div>
-
-          <button id="clear-points" class="button button-secondary" disabled>
-            Limpiar puntos
-          </button>
-
-          <button id="analyze-button" class="button button-primary" disabled>
-            Analizar contraseña
-          </button>
-        </div>
-      </section>
-
-      <section id="results" class="results" hidden>
-        <div class="results-header">
-          <div>
-            <span class="eyebrow">RESULTADO DEL ANÁLISIS</span>
-
-            <h2 id="result-title">Análisis completado</h2>
-
-            <p id="result-summary" class="result-summary">
-              El sistema ha analizado la distribución de los puntos.
+            <p id="selection-hint" class="selection-hint">
+              Elige lugares que recuerdes fácilmente, en el orden que prefieras.
             </p>
-          </div>
-        </div>
 
-        <div id="result-banner" class="result-banner">
-          <div class="result-icon" id="result-icon">?</div>
+            <div id="image-stage" class="image-stage is-empty">
+              <div id="stage-empty" class="stage-empty">
+                <span class="empty-symbol" aria-hidden="true">+</span>
+                <strong>Tu imagen aparecerá aquí</strong>
+                <span>Selecciona una de las cinco escenas</span>
+              </div>
+              <div id="image-frame" class="image-frame" hidden>
+                <img
+                  id="selected-image"
+                  alt="Imagen elegida para la contraseña gráfica"
+                  draggable="false"
+                />
+                <div
+                  id="points-layer"
+                  class="points-layer"
+                  aria-hidden="true"
+                ></div>
+              </div>
+            </div>
 
-          <div>
-            <strong id="result-status"> Resultado </strong>
+            <div class="point-actions">
+              <span
+                id="point-feedback"
+                class="point-feedback"
+                aria-live="polite"
+                >Aún no hay puntos seleccionados.</span
+              >
+              <button
+                id="clear-points"
+                class="text-button"
+                type="button"
+                disabled
+              >
+                Reiniciar puntos
+              </button>
+            </div>
 
-            <small id="security-level"> Nivel de seguridad: — </small>
+            <div
+              id="analysis-feedback"
+              class="feedback"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></div>
+            <div
+              id="request-feedback"
+              class="feedback request-feedback"
+              role="alert"
+              aria-live="assertive"
+              hidden
+            ></div>
 
-            <span id="result-explanation"> — </span>
+            <button
+              id="analyze-button"
+              class="secondary-action"
+              type="button"
+              disabled
+            >
+              <span id="analyze-label">Analizar selección</span>
+              <span
+                id="analyze-spinner"
+                class="spinner"
+                aria-hidden="true"
+                hidden
+              ></span>
+            </button>
+            <button
+              id="submit-button"
+              class="primary-button"
+              type="submit"
+              disabled
+            >
+              <span id="submit-label">Crear mi cuenta</span>
+              <span
+                id="submit-spinner"
+                class="spinner"
+                aria-hidden="true"
+                hidden
+              ></span>
+              <span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+          </form>
 
-            <ul id="security-patterns" class="security-patterns"></ul>
-          </div>
-        </div>
-
-        <div class="visual-result">
-          <div class="visual-result-header">
-            <div>
-              <span class="eyebrow">VISUALIZACIÓN</span>
-
-              <h3>Triangulación de Delaunay</h3>
-
+          <section
+            id="weak-patterns"
+            class="education"
+            aria-labelledby="weak-pattern-title"
+          >
+            <div class="education-heading">
+              <span class="eyebrow">UNA ELECCIÓN MÁS FUERTE</span>
+              <h2 id="weak-pattern-title">Evita estos patrones</h2>
               <p>
-                Las líneas muestran cómo se relacionan geométricamente los
-                puntos seleccionados.
+                El análisis comprueba si los puntos se agrupan o forman
+                estructuras demasiado regulares.
               </p>
             </div>
+            <div class="pattern-list">
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-cluster" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Patrón agrupado</strong
+                  ><span>Evita concentrar los puntos en una zona pequeña.</span>
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-line" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Patrón Line / Diag</strong
+                  ><span
+                    >Evita alinear los puntos en una línea recta o
+                    diagonal.</span
+                  >
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-regular" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Patrón regular</strong
+                  ><span
+                    >Evita formas con separaciones y tamaños demasiado
+                    parecidos.</span
+                  >
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-angular" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Patrón angular</strong
+                  ><span
+                    >Evita una disposición que el análisis considere demasiado
+                    ordenada.</span
+                  >
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <aside class="visual-column" aria-label="Información sobre Passpoints">
+          <div class="visual-quote">
+            <span class="quote-mark" aria-hidden="true">“</span>
+            <p>
+              Recuerda una historia en una imagen. Tus puntos siguen el camino.
+            </p>
+            <span class="quote-caption"
+              >AUTENTICACIÓN POR SECUENCIA VISUAL</span
+            >
           </div>
-
-          <div id="result-image-container" class="result-image-container"></div>
-        </div>
-
-        <div class="result-grid">
-          <article class="result-card">
-            <span>Triángulos encontrados</span>
-
-            <strong id="triangle-count">—</strong>
-
-            <small>
-              Estructuras geométricas generadas a partir de tus puntos.
-            </small>
-          </article>
-
-          <article class="result-card">
-            <span>Perímetro medio</span>
-
-            <strong id="average-perimeter">—</strong>
-
-            <small> Tamaño medio de los triángulos obtenidos. </small>
-          </article>
-
-          <article class="result-card">
-            <span>Ángulo máximo medio</span>
-
-            <strong id="average-angle">—</strong>
-
-            <small> Promedio de los ángulos máximos de los triángulos. </small>
-          </article>
-        </div>
-
-        <div class="analysis-explanation">
-          <span class="eyebrow">¿QUÉ SIGNIFICA?</span>
-
-          <h3>Interpretación del resultado</h3>
-
-          <p id="detailed-explanation">—</p>
-        </div>
-
-        <details class="technical-details">
-          <summary>Ver información estadística</summary>
-
-          <div class="statistical-results">
-            <article class="statistical-card">
-              <h3>Test de perímetros</h3>
-
-              <div class="stat-row">
-                <span>Estadístico</span>
-                <strong id="perimeter-statistic">—</strong>
-              </div>
-
-              <div class="stat-row">
-                <span>Valor crítico</span>
-                <strong id="perimeter-critical">—</strong>
-              </div>
-
-              <div class="stat-row">
-                <span>Nivel α</span>
-                <strong id="perimeter-alpha">—</strong>
-              </div>
-
-              <div class="decision">
-                <span>Decisión</span>
-                <strong id="perimeter-decision">—</strong>
-              </div>
-            </article>
-
-            <article class="statistical-card">
-              <h3>Test de ángulos</h3>
-
-              <div class="stat-row">
-                <span>Estadístico</span>
-                <strong id="angle-statistic">—</strong>
-              </div>
-
-              <div class="stat-row">
-                <span>Valor crítico</span>
-                <strong id="angle-critical">—</strong>
-              </div>
-
-              <div class="stat-row">
-                <span>Nivel α</span>
-                <strong id="angle-alpha">—</strong>
-              </div>
-
-              <div class="decision">
-                <span>Decisión</span>
-                <strong id="angle-decision">—</strong>
-              </div>
-            </article>
+          <div class="visual-diagram" aria-hidden="true">
+            <div class="diagram-image"></div>
+            <svg viewBox="0 0 480 430" preserveAspectRatio="none">
+              <path d="M74 302 L183 128 L312 224 L394 92 L345 355" />
+              <circle cx="74" cy="302" r="18" />
+              <circle cx="183" cy="128" r="18" />
+              <circle cx="312" cy="224" r="18" />
+              <circle cx="394" cy="92" r="18" />
+              <circle cx="345" cy="355" r="18" />
+            </svg>
+            <span class="diagram-tag">01 — 05</span>
           </div>
-        </details>
+          <div class="info-note">
+            <span class="info-icon" aria-hidden="true">i</span>
+            <p>
+              Tu secuencia se vincula a la imagen elegida. Para entrar, vuelve a
+              elegir esa imagen y los mismos puntos.
+            </p>
+          </div>
+        </aside>
       </section>
 
-      <div id="error-message" class="error" hidden></div>
+      <section
+        id="private-view"
+        class="view private-view"
+        aria-labelledby="private-title"
+        hidden
+      >
+        <div class="private-topline">
+          <div>
+            <p class="eyebrow">ÁREA PERSONAL</p>
+            <h1 id="private-title">Tu contraseña gráfica</h1>
+          </div>
+          <button id="logout-button" class="quiet-button" type="button">
+            Cerrar sesión
+          </button>
+        </div>
+        <div class="private-status">
+          <span id="private-status-icon" class="status-check" aria-hidden="true"
+            >✓</span
+          >
+          <div>
+            <span id="private-status-label" class="eyebrow"
+              >ACCESO CONFIRMADO</span
+            >
+            <h2 id="private-status-title">Contraseña gráfica segura</h2>
+            <p id="private-status-copy"></p>
+          </div>
+        </div>
+        <div class="private-grid">
+          <section class="private-image-panel">
+            <div class="section-heading">
+              <div>
+                <span class="step-kicker">TU ESCENA</span>
+                <h2 id="private-image-name">Imagen utilizada</h2>
+              </div>
+            </div>
+            <div class="private-image-frame">
+              <img
+                id="private-image"
+                alt="Imagen asociada a la contraseña gráfica"
+              />
+              <div
+                id="private-points"
+                class="private-points"
+                aria-hidden="true"
+              ></div>
+            </div>
+          </section>
+          <section class="private-detail-panel">
+            <span class="step-kicker">TU SECUENCIA</span>
+            <h2>5 puntos seleccionados</h2>
+            <p id="private-detail-copy"></p>
+            <div id="private-metric" class="private-metric" hidden>
+              <span>Evaluación del análisis</span
+              ><strong id="private-level"></strong>
+              <p id="private-pattern-copy"></p>
+            </div>
+            <div
+              class="sequence-preview"
+              id="sequence-preview"
+              aria-label="Secuencia gráfica"
+            ></div>
+          </section>
+        </div>
+        <p id="private-note" class="private-note"></p>
+      </section>
+
+      <footer class="site-footer">
+        <span>PASSPOINTS</span
+        ><span>Proyecto de investigación en seguridad gráfica</span>
+      </footer>
     </main>
 
     <script src="js/image-selector.js"></script>
