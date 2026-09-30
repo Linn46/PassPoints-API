@@ -1,55 +1,68 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+const API_ORIGIN = "http://127.0.0.1:8001";
+const ANALYSIS_URL = `${API_ORIGIN}/api/v1/analysis`;
 
-const DEFAULT_ALPHA = 0.05;
-const ANALYSIS_IMAGE_SIZE = {
-  width: 1920,
-  height: 1080,
-};
+class ApiError extends Error {
+  constructor(status, detail) {
+    super(detail);
+    this.status = status;
+  }
+}
 
-async function analyzePoints(points) {
-  const imageData = getImageData();
-
-  if (imageData.width === 0 || imageData.height === 0) {
-    throw new Error("Debes seleccionar una imagen antes de analizar.");
+async function requestJson(url, payload) {
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error("Passpoints API connection error:", error);
+    throw new ApiError(0, "connection");
   }
 
-  const normalizedPoints = points.map((point) => ({
-    x: (point.x * ANALYSIS_IMAGE_SIZE.width) / imageData.width,
-    y: (point.y * ANALYSIS_IMAGE_SIZE.height) / imageData.height,
-  }));
-
-  const response = await fetch(`${API_BASE_URL}/analysis`, {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-    body: JSON.stringify({
-      image_width: ANALYSIS_IMAGE_SIZE.width,
-      image_height: ANALYSIS_IMAGE_SIZE.height,
-      alpha: DEFAULT_ALPHA,
-      points: normalizedPoints,
-    }),
-  });
-
+  let data = {};
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.error("Passpoints API returned a non-JSON response:", error);
+  }
   if (!response.ok) {
-    let errorMessage = "No se pudo realizar el análisis.";
-
-    try {
-      const errorData = await response.json();
-
-      if (errorData.detail) {
-        errorMessage = Array.isArray(errorData.detail)
-          ? errorData.detail.map((error) => error.msg).join(", ")
-          : errorData.detail;
-      }
-    } catch {
-      // Se mantiene el mensaje genérico.
-    }
-
-    throw new Error(errorMessage);
+    console.error("Passpoints API request failed:", response.status, data);
+    throw new ApiError(response.status, data.detail ?? "request_failed");
   }
+  return data;
+}
 
-  return await response.json();
+function authPayload(image, points) {
+  return {
+    image_id: image.id,
+    image_width: image.width,
+    image_height: image.height,
+    points,
+  };
+}
+
+async function analyzeSelection(image, points) {
+  return requestJson(ANALYSIS_URL, {
+    image_width: image.width,
+    image_height: image.height,
+    alpha: 0.05,
+    points,
+  });
+}
+
+async function registerAccount(username, email, image, points) {
+  return requestJson(`${API_ORIGIN}/auth/register`, {
+    username,
+    email,
+    ...authPayload(image, points),
+  });
+}
+
+async function authenticate(email, image, points) {
+  return requestJson(`${API_ORIGIN}/auth/login`, {
+    email,
+    ...authPayload(image, points),
+  });
 }

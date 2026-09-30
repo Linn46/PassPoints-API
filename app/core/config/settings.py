@@ -23,9 +23,7 @@ class Settings:
 			host=os.getenv("PASSPOINTS_HOST", defaults.host),
 			port=int(os.getenv("PASSPOINTS_PORT", str(defaults.port))),
 			database_url=os.getenv("DATABASE_URL", defaults.database_url),
-			auth_token_secret=os.getenv(
-				"AUTH_TOKEN_SECRET", defaults.auth_token_secret
-			),
+			auth_token_secret=os.getenv("AUTH_TOKEN_SECRET", defaults.auth_token_secret),
 		)
 
 

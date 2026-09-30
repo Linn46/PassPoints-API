@@ -6,15 +6,15 @@ from sqlalchemy.orm import Session
 from app.api.schemas.auth import (
     AuthenticationResponse,
     LoginRequest,
-    RegisteredUserResponse,
     RegisterRequest,
+    UserResponse,
 )
 from app.application.auth.service import (
     AuthService,
-    DuplicateUsernameError,
-    InvalidGraphicalPasswordError,
-    InvalidCredentialsError,
-    WeakGraphicalPasswordError,
+    DuplicateAccountError,
+    InvalidAuthenticationError,
+    InvalidSelectionError,
+    WeakSelectionError,
 )
 from app.application.auth.tokens import TokenConfigurationError
 from app.infrastructure.database.session import get_db_session
@@ -29,35 +29,40 @@ def get_auth_service(
     return AuthService(session)
 
 
-def _points(request: RegisterRequest | LoginRequest) -> list[tuple[float, float]]:
-    return [(point.x, point.y) for point in request.points]
+def make_response(user, token: str, expires_in: int) -> AuthenticationResponse:
+    return AuthenticationResponse(
+        access_token=token,
+        expires_in=expires_in,
+        user=UserResponse(id=str(user.id), username=user.username, email=user.email),
+    )
 
 
-@router.post(
-    "/register",
-    response_model=RegisteredUserResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/register", response_model=AuthenticationResponse, status_code=201)
 def register(
     request: RegisterRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
-) -> RegisteredUserResponse:
+) -> AuthenticationResponse:
     try:
-        user = service.register(
+        user, token, expires_in = service.register(
             request.username,
-            request.password,
+            request.email,
             request.image_id,
             request.image_width,
             request.image_height,
-            _points(request),
+            [(point.x, point.y) for point in request.points],
         )
-    except DuplicateUsernameError as error:
-        raise HTTPException(status_code=409, detail="Username already registered.") from error
-    except WeakGraphicalPasswordError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
-    except InvalidGraphicalPasswordError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
-    return RegisteredUserResponse(id=str(user.id), username=user.username)
+    except DuplicateAccountError as error:
+        raise HTTPException(409, "Username or email already registered.") from error
+    except WeakSelectionError as error:
+        raise HTTPException(422, "This graphical selection is too weak.") from error
+    except InvalidSelectionError as error:
+        raise HTTPException(422, "Invalid Passpoints selection.") from error
+    except TokenConfigurationError as error:
+        raise HTTPException(
+            503,
+            "Authentication is not configured. Set AUTH_TOKEN_SECRET to at least 32 bytes and restart the API.",
+        ) from error
+    return make_response(user, token, expires_in)
 
 
 @router.post("/login", response_model=AuthenticationResponse)
@@ -67,21 +72,17 @@ def login(
 ) -> AuthenticationResponse:
     try:
         user, token, expires_in = service.login(
-            request.username,
-            request.password,
+            request.email,
             request.image_id,
             request.image_width,
             request.image_height,
-            _points(request),
+            [(point.x, point.y) for point in request.points],
         )
-    except InvalidCredentialsError as error:
-        raise HTTPException(status_code=401, detail="Invalid credentials.") from error
+    except InvalidAuthenticationError as error:
+        raise HTTPException(401, "Invalid credentials.") from error
     except TokenConfigurationError as error:
         raise HTTPException(
-            status_code=503, detail="Authentication is not configured."
+            503,
+            "Authentication is not configured. Set AUTH_TOKEN_SECRET to at least 32 bytes and restart the API.",
         ) from error
-    return AuthenticationResponse(
-        access_token=token,
-        expires_in=expires_in,
-        user=RegisteredUserResponse(id=str(user.id), username=user.username),
-    )
+    return make_response(user, token, expires_in)

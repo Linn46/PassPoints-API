@@ -1,1 +1,1 @@
-"""Account registration and authentication use cases."""
+"""Registration and account authentication use cases."""

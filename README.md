@@ -15,13 +15,27 @@ en perímetros y ángulos para identificar patrones potencialmente frágiles.
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+$env:DATABASE_URL = "postgresql+psycopg://<usuario>:<clave>@localhost:5432/passpoints"
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$bytes = New-Object byte[] 48
+$rng.GetBytes($bytes)
+$env:AUTH_TOKEN_SECRET = [Convert]::ToBase64String($bytes)
+python -c "import os; from sqlalchemy import create_engine, text; e=create_engine(os.environ['DATABASE_URL']); print(e.connect().execute(text('select 1')).scalar()); e.dispose()"
+python -m alembic upgrade head
+uvicorn app.main:app --reload --port 8001
 ```
 
-La documentación interactiva queda disponible en `http://localhost:8000/docs`.
+Sustituye `<usuario>` y `<clave>` por los de PostgreSQL. Ejecuta todos los
+comandos en la misma ventana de PowerShell y deja esa ventana abierta mientras
+Uvicorn esté corriendo. Si detienes y vuelves a arrancar la API, conserva el
+mismo `AUTH_TOKEN_SECRET` para que los tokens emitidos sigan siendo válidos.
 
-Para habilitar el login, configura `AUTH_TOKEN_SECRET` con al menos 32 bytes
-aleatorios. La API no usa una clave por defecto.
+La documentación interactiva queda disponible en `http://localhost:8001/docs`.
+
+Para el registro y login gráfico configura `DATABASE_URL` y `AUTH_TOKEN_SECRET`
+(al menos 32 bytes aleatorios). El registro solicita nombre y correo; la imagen
+y los cinco puntos son la credencial Passpoints. No se pide contraseña textual
+en esta fase.
 
 ## Docker
 
@@ -34,9 +48,9 @@ docker run --rm -p 8000:8000 passpoints-api
 
 - `GET /health`: verifica que la API esté disponible.
 - `POST /api/v1/analysis`: analiza cinco puntos Passpoints.
-- `POST /auth/register`: registra usuario y contraseña gráfica.
-- `POST /auth/login`: verifica ambas credenciales y devuelve un bearer JWT
-  válido durante 30 minutos.
+- `POST /auth/register`: registra nombre, correo e imagen con cinco puntos.
+- `POST /auth/login`: autentica con correo e imagen con cinco puntos; devuelve
+  un bearer JWT.
 - `GET /docs`: documentación OpenAPI interactiva.
 
 Registro y login reciben `username`, `password`, `image_id`, dimensiones de la
@@ -62,7 +76,9 @@ Ejemplo de petición:
 }
 ```
 
-Los tamaños de imagen soportados por el test de perímetros son `800x480`,
+Registro recibe `username`, `email`, `image_id`, dimensiones y cinco puntos en
+píxeles. Login recibe `email`, `image_id`, dimensiones y cinco puntos. Los
+tamaños de imagen soportados por el test de perímetros son `800x480`,
 `1366x768` y `1920x1080`.
 
 ## Pruebas

@@ -20,3 +20,9 @@ class UserRepository:
 
     def get_by_username(self, username: str) -> User | None:
         return self.session.scalar(select(User).where(User.username == username))
+
+    def get_by_email(self, email: str) -> User | None:
+        return self.session.scalar(select(User).where(User.email == email))
+
+    def email_exists(self, email: str) -> bool:
+        return self.get_by_email(email) is not None
