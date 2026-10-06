@@ -4,8 +4,14 @@ from app.application.analysis.methods.delaunay_statistical.service import (
     AnalysisResult as DelaunayAnalysisResult,
     AnalysisService as DelaunayAnalysisService,
 )
+from app.application.analysis.methods.mean_distance_convex_hull.service import (
+    AnalysisService as MeanDistanceConvexHullAnalysisService,
+    MeanDistanceConvexHullResult,
+)
 
 __all__ = [
     "DelaunayAnalysisResult",
     "DelaunayAnalysisService",
+    "MeanDistanceConvexHullAnalysisService",
+    "MeanDistanceConvexHullResult",
 ]
