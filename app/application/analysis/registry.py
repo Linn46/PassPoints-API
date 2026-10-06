@@ -1,9 +1,13 @@
 from app.application.analysis.methods.delaunay_statistical.service import (
     AnalysisService as DelaunayAnalysisService,
 )
+from app.application.analysis.methods.mean_distance_convex_hull.service import (
+    AnalysisService as MeanDistanceConvexHullAnalysisService,
+)
 
 ANALYSIS_METHODS = {
     "delaunay_statistical": DelaunayAnalysisService,
+    "mean_distance_convex_hull": MeanDistanceConvexHullAnalysisService,
 }
 
 
