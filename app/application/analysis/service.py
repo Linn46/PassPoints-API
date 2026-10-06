@@ -23,4 +23,5 @@ class AnalysisService:
             alpha=alpha,
         )
 
+
 __all__ = ["AnalysisService"]
