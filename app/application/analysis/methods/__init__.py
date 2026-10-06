@@ -5,8 +5,8 @@ from app.application.analysis.methods.delaunay_statistical.service import (
     AnalysisService as DelaunayAnalysisService,
 )
 from app.application.analysis.methods.mean_distance_convex_hull.service import (
+    AnalysisResult as MeanDistanceConvexHullResult,
     AnalysisService as MeanDistanceConvexHullAnalysisService,
-    MeanDistanceConvexHullResult,
 )
 
 __all__ = [
