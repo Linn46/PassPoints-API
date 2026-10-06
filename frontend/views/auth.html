@@ -1,0 +1,364 @@
+<div class="auth-layout">
+  <section class="auth-panel">
+    <div class="auth-heading">
+      <span class="welcome-label">PASSPOINTS</span>
+      <h1 id="view-title">Una contraseña que se dibuja.</h1>
+      <p>
+        Utiliza una imagen y una secuencia de cinco puntos que solo tú conozcas.
+      </p>
+    </div>
+    <div class="auth-tabs" role="tablist" aria-label="Acceso">
+      <button
+        id="register-tab"
+        class="auth-tab is-active"
+        type="button"
+        role="tab"
+        aria-selected="true"
+      >
+        Crear cuenta
+      </button>
+      <button
+        id="login-tab"
+        class="auth-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+      >
+        Iniciar sesión
+      </button>
+      <span class="tab-indicator"></span>
+    </div>
+    <form id="auth-form" class="auth-form" novalidate>
+      <div id="username-field" class="form-group">
+        <label class="form-label" for="username">Nombre de usuario</label>
+        <div class="input-wrapper">
+          <span class="input-icon" aria-hidden="true">@</span
+          ><input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            minlength="3"
+            maxlength="100"
+            placeholder="Tu nombre"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Correo electrónico</label>
+        <div class="input-wrapper">
+          <span class="input-icon" aria-hidden="true">@</span
+          ><input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="254"
+            required
+            placeholder="nombre@ejemplo.com"
+          />
+        </div>
+      </div>
+      <div class="selection-section">
+        <div class="section-header">
+          <div>
+            <span class="section-number">01</span>
+            <div>
+              <h2>Elige tu imagen</h2>
+              <p>Selecciona una escena que puedas recordar.</p>
+            </div>
+          </div>
+          <span id="image-status" class="section-status">Sin seleccionar</span>
+        </div>
+        <div
+          id="image-options"
+          class="image-options"
+          aria-label="Imágenes disponibles"
+        ></div>
+      </div>
+      <div class="selection-section">
+        <div class="section-header">
+          <div>
+            <span class="section-number">02</span>
+            <div>
+              <h2>Crea tu secuencia</h2>
+              <p>Selecciona exactamente cinco puntos.</p>
+            </div>
+          </div>
+          <div class="point-counter"><strong id="point-count">0/5</strong></div>
+        </div>
+        <p id="selection-hint" class="selection-hint">
+          Primero selecciona una imagen y después marca cinco lugares en el
+          orden que prefieras.
+        </p>
+        <div id="image-stage" class="image-stage is-empty">
+          <div id="stage-empty" class="stage-empty">
+            <div class="empty-illustration">
+              <i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <strong>Selecciona una imagen</strong
+            ><span>Aquí aparecerá tu escena</span>
+          </div>
+          <div id="image-frame" class="image-frame" hidden>
+            <img
+              id="selected-image"
+              src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+              alt="Imagen elegida para la contraseña gráfica"
+              draggable="false"
+            />
+            <div
+              id="points-layer"
+              class="points-layer"
+              aria-hidden="true"
+            ></div>
+          </div>
+        </div>
+        <div class="point-actions">
+          <span id="point-feedback" class="point-feedback" aria-live="polite"
+            >Aún no hay puntos seleccionados.</span
+          ><button
+            id="clear-points"
+            class="reset-button"
+            type="button"
+            disabled
+          >
+            Reiniciar
+          </button>
+        </div>
+      </div>
+      <div
+        id="analysis-feedback"
+        class="feedback feedback-analysis"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
+      <div
+        id="request-feedback"
+        class="feedback feedback-error"
+        role="alert"
+        aria-live="assertive"
+        hidden
+      ></div>
+      <button id="analyze-button" class="analyze-button" type="button" disabled>
+        <span id="analyze-label">Analizar selección</span
+        ><span
+          id="analyze-spinner"
+          class="spinner"
+          aria-hidden="true"
+          hidden
+        ></span>
+      </button>
+      <button id="submit-button" class="submit-button" type="submit" disabled>
+        <span id="submit-label">Crear mi cuenta</span
+        ><span
+          id="submit-spinner"
+          class="spinner"
+          aria-hidden="true"
+          hidden
+        ></span
+        ><span class="submit-arrow" aria-hidden="true">→</span>
+      </button>
+    </form>
+
+    <section
+      id="weak-patterns"
+      class="education"
+      aria-labelledby="weak-pattern-title"
+    >
+      <div class="education-heading">
+        <span class="small-label">SEGURIDAD</span>
+        <h2 id="weak-pattern-title">Una contraseña más difícil de predecir</h2>
+        <p>
+          El análisis comprueba si tus cinco puntos forman patrones demasiado
+          fáciles de anticipar.
+        </p>
+      </div>
+      <div class="pattern-grid">
+        <button class="pattern-card" type="button" data-pattern="cluster">
+          <span class="pattern-visual pattern-cluster" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong>Agrupado</strong><span>Puntos demasiado concentrados.</span
+            ><small>Ver explicación →</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="line">
+          <span class="pattern-visual pattern-line" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong>Line / Diag</strong
+            ><span>Puntos alineados en línea o diagonal.</span
+            ><small>Ver explicación →</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="regular">
+          <span class="pattern-visual pattern-regular" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong>Regular</strong
+            ><span>Puntos separados de forma uniforme.</span
+            ><small>Ver explicación →</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="angular">
+          <span class="pattern-visual pattern-angular" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong>Angular</strong
+            ><span>Una estructura geométrica ordenada.</span
+            ><small>Ver explicación →</small></span
+          >
+        </button>
+      </div>
+    </section>
+  </section>
+
+  <aside class="visual-panel" aria-label="Información sobre Passpoints">
+    <div class="visual-top">
+      <span class="visual-badge">SEGURIDAD GRÁFICA</span>
+      <div class="visual-theme-text">
+        <span>5 puntos</span><span>1 secuencia</span>
+      </div>
+    </div>
+    <div class="visual-card">
+      <div class="visual-card-header">
+        <div>
+          <span>TU CONTRASEÑA</span><strong>Una secuencia visual</strong>
+        </div>
+        <span class="visual-dots">•••</span>
+      </div>
+      <div
+        class="visual-canvas"
+        aria-label="Ejemplo interactivo de una contraseña Passpoints"
+      >
+        <div class="canvas-decoration decoration-one"></div>
+        <div class="canvas-decoration decoration-two"></div>
+        <svg
+          id="interactive-connection"
+          class="connection-line"
+          viewBox="0 0 500 500"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path id="interactive-path" d=""></path>
+        </svg>
+        <div
+          class="visual-point point-1"
+          data-point="1"
+          tabindex="0"
+          role="button"
+          aria-label="Punto 1. Arrastra para moverlo."
+        >
+          <span>1</span>
+        </div>
+        <div
+          class="visual-point point-2"
+          data-point="2"
+          tabindex="0"
+          role="button"
+          aria-label="Punto 2. Arrastra para moverlo."
+        >
+          <span>2</span>
+        </div>
+        <div
+          class="visual-point point-3"
+          data-point="3"
+          tabindex="0"
+          role="button"
+          aria-label="Punto 3. Arrastra para moverlo."
+        >
+          <span>3</span>
+        </div>
+        <div
+          class="visual-point point-4"
+          data-point="4"
+          tabindex="0"
+          role="button"
+          aria-label="Punto 4. Arrastra para moverlo."
+        >
+          <span>4</span>
+        </div>
+        <div
+          class="visual-point point-5"
+          data-point="5"
+          tabindex="0"
+          role="button"
+          aria-label="Punto 5. Arrastra para moverlo."
+        >
+          <span>5</span>
+        </div>
+        <div class="canvas-message">
+          <span>PASSPOINTS</span
+          ><strong>Recuerda el camino,<br />no la contraseña.</strong>
+        </div>
+      </div>
+      <div class="visual-card-footer">
+        <div>
+          <span class="footer-dot"></span><span>Secuencia protegida</span>
+        </div>
+        <span>01 — 05</span>
+      </div>
+    </div>
+    <div class="visual-information">
+      <span class="information-icon">i</span>
+      <div>
+        <strong>¿Cómo funciona?</strong>
+        <p>
+          Elige una imagen, selecciona cinco puntos y utiliza la misma secuencia
+          cada vez que quieras acceder.
+        </p>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-item">
+        <span>01</span><strong>Visual</strong><small>Fácil de recordar</small>
+      </div>
+      <div class="feature-item">
+        <span>02</span><strong>Personal</strong
+        ><small>Tu propia secuencia</small>
+      </div>
+      <div class="feature-item">
+        <span>03</span><strong>Analizada</strong
+        ><small>Detectamos patrones</small>
+      </div>
+    </div>
+  </aside>
+</div>
+<div
+  id="pattern-modal"
+  class="pattern-modal"
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="pattern-modal-title"
+>
+  <div class="pattern-modal-backdrop"></div>
+  <div class="pattern-modal-card">
+    <button
+      id="pattern-modal-close"
+      class="pattern-modal-close"
+      type="button"
+      aria-label="Cerrar explicación"
+    >
+      ×
+    </button>
+    <div
+      id="modal-pattern-visual"
+      class="modal-pattern-visual"
+      aria-hidden="true"
+    ></div>
+    <span id="pattern-modal-label" class="small-label">PATRÓN DÉBIL</span>
+    <h2 id="pattern-modal-title">Patrón agrupado</h2>
+    <p id="pattern-modal-description">
+      Cuando los puntos se concentran demasiado en una zona, la selección puede
+      resultar más predecible.
+    </p>
+    <div class="pattern-modal-tip">
+      <span>Consejo</span
+      ><strong id="pattern-modal-tip-text"
+        >Distribuye los puntos por diferentes zonas de la imagen.</strong
+      >
+    </div>
+  </div>
+</div>

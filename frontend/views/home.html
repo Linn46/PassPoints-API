@@ -1,0 +1,141 @@
+<div class="home-topbar">
+  <div>
+    <span class="small-label">ESPACIO PERSONAL</span>
+    <h1>Tu espacio de seguridad gráfica.</h1>
+    <p>
+      Explora información, recursos y novedades sobre autenticación gráfica.
+    </p>
+  </div>
+  <div id="account-mount"></div>
+</div>
+<div class="home-layout">
+  <div class="home-feed">
+    <section class="credential-panel">
+      <div class="credential-copy">
+        <span class="small-label">TU PASSPOINT</span>
+        <h2 id="home-image-name">Tu contraseña gráfica</h2>
+        <p id="credential-description">
+          Tu acceso está protegido por una secuencia gráfica personal.
+        </p>
+        <div class="credential-state">
+          <span class="status-dot"></span><strong>Contraseña protegida</strong>
+        </div>
+        <div class="credential-sequence">
+          <span class="small-label">SECUENCIA DE CINCO PUNTOS</span>
+          <div id="home-sequence" class="sequence-preview"></div>
+        </div>
+        <button id="security-details-button" class="text-action" type="button">
+          Revisar información de seguridad <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <div class="credential-image">
+        <img
+          id="home-image"
+          src="assets/images/coast.svg"
+          alt="Imagen utilizada para la contraseña gráfica"
+        />
+        <div
+          id="home-image-points"
+          class="home-image-points"
+          aria-hidden="true"
+        ></div>
+      </div>
+    </section>
+    <section class="education-feed">
+      <div class="feed-heading">
+        <div>
+          <span class="small-label">CONOCE PASSPOINTS</span>
+          <h2>Seguridad que puedes recordar</h2>
+        </div>
+      </div>
+      <article class="education-article article-primary">
+        <span class="article-index">01 / CONCEPTO</span>
+        <h3>¿Qué es una contraseña gráfica?</h3>
+        <p>
+          En lugar de recordar una cadena de caracteres, reconoces una imagen y
+          reproduces una secuencia de puntos que elegiste sobre ella.
+        </p>
+      </article>
+      <div class="article-pair">
+        <article class="education-article article-peach">
+          <span class="article-index">02 / TU SECUENCIA</span>
+          <h3>Una imagen, cinco puntos</h3>
+          <p>
+            La imagen sirve como referencia visual. El orden de los cinco puntos
+            forma parte de tu credencial.
+          </p>
+        </article>
+        <article class="education-article article-blue">
+          <span class="article-index">03 / ANÁLISIS</span>
+          <h3>¿Por qué analizamos tus puntos?</h3>
+          <p>
+            El análisis busca patrones geométricos conocidos que podrían volver
+            una selección más predecible.
+          </p>
+        </article>
+      </div>
+    </section>
+    <section class="resource-section">
+      <div class="feed-heading">
+        <div>
+          <span class="small-label">PARA SEGUIR EXPLORANDO</span>
+          <h2>Recursos</h2>
+        </div>
+      </div>
+      <div class="resource-list">
+        <a href="#research-info" data-resource="research"
+          ><span class="resource-number">01</span
+          ><span
+            ><strong>Investigación</strong
+            ><small>Principios y contexto de autenticación gráfica</small></span
+          ><span aria-hidden="true">↗</span></a
+        ><a href="#research-info" data-resource="videos"
+          ><span class="resource-number">02</span
+          ><span
+            ><strong>Videos</strong
+            ><small>Material audiovisual sobre seguridad digital</small></span
+          ><span aria-hidden="true">↗</span></a
+        ><a href="#research-info" data-resource="reading"
+          ><span class="resource-number">03</span
+          ><span
+            ><strong>Lecturas</strong
+            ><small
+              >Conceptos para entender el análisis de patrones</small
+            ></span
+          ><span aria-hidden="true">↗</span></a
+        >
+      </div>
+      <p id="research-info" class="resource-note">
+        Recursos informativos del proyecto Passpoints.
+      </p>
+    </section>
+  </div>
+  <aside class="home-sidebar">
+    <section class="sidebar-section account-security">
+      <span class="small-label">SEGURIDAD DE TU CUENTA</span>
+      <div class="sidebar-status">
+        <span class="status-mark">✓</span>
+        <div>
+          <strong>Acceso gráfico activo</strong
+          ><small>Tu sesión está autenticada</small>
+        </div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <strong>Autenticación gráfica</strong>
+      <p>Tu imagen y la secuencia de puntos se validaron correctamente.</p>
+    </section>
+    <section class="sidebar-section did-you-know">
+      <span class="small-label">¿SABÍAS QUE...?</span>
+      <p>El orden de los puntos es tan importante como su posición.</p>
+      <div class="fact-mark">5<span>puntos en secuencia</span></div>
+    </section>
+    <section class="sidebar-section project-info">
+      <span class="small-label">EL PROYECTO</span>
+      <h3>Passpoints</h3>
+      <p>
+        Proyecto de investigación sobre autenticación gráfica y evaluación de
+        patrones.
+      </p>
+    </section>
+  </aside>
+</div>
