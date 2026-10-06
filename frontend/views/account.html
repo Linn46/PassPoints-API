@@ -1,0 +1,57 @@
+<div class="account-control">
+  <button
+    id="account-trigger"
+    class="account-trigger"
+    type="button"
+    aria-expanded="false"
+    aria-controls="account-panel"
+  >
+    <span id="account-avatar" class="account-avatar">?</span
+    ><span class="account-trigger-copy"
+      ><strong id="account-trigger-name">Mi cuenta</strong
+      ><small>Mi cuenta</small></span
+    ><span aria-hidden="true">⌄</span>
+  </button>
+  <div id="account-panel" class="account-panel" hidden>
+    <div class="account-identity">
+      <span id="account-panel-avatar" class="account-avatar">?</span
+      ><span
+        ><strong id="account-name"></strong><small id="account-email"></small
+      ></span>
+    </div>
+    <nav class="account-actions" aria-label="Opciones de cuenta">
+      <button type="button" data-account-action="profile">Mi perfil</button
+      ><button type="button" data-account-action="security">Seguridad</button
+      ><button type="button" data-account-action="appearance">
+        Apariencia <span id="account-theme-label"></span></button
+      ><button type="button" data-account-action="about">
+        Acerca de Passpoints
+      </button>
+    </nav>
+    <button id="account-logout" class="account-logout" type="button">
+      Cerrar sesión
+    </button>
+  </div>
+</div>
+<div
+  id="account-dialog"
+  class="account-dialog"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="account-dialog-title"
+  hidden
+>
+  <div class="account-dialog-backdrop" data-close-account></div>
+  <section class="account-dialog-card">
+    <button
+      class="account-dialog-close"
+      type="button"
+      aria-label="Cerrar"
+      data-close-account
+    >
+      ×</button
+    ><span class="small-label">MI CUENTA</span>
+    <h2 id="account-dialog-title"></h2>
+    <div id="account-dialog-content"></div>
+  </section>
+</div>

@@ -33,75 +33,78 @@ const PASSPOINT_IMAGES = [
 
 const PASSPOINT_IMAGE_SIZE = { width: 1920, height: 1080 };
 
-const imageOptions = document.getElementById("image-options");
-const selectedImage = document.getElementById("selected-image");
-const imageFrame = document.getElementById("image-frame");
-const imageStage = document.getElementById("image-stage");
-const stageEmpty = document.getElementById("stage-empty");
-const imageStatus = document.getElementById("image-status");
-
 let selectedImageData = null;
 let imageSelectionLocked = false;
 
-function renderImageOptions() {
-  PASSPOINT_IMAGES.forEach((image) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "image-option";
-    button.dataset.imageId = image.id;
-    button.setAttribute("aria-pressed", "false");
-    button.setAttribute("aria-label", `Elegir ${image.name}`);
-    button.disabled = imageSelectionLocked;
+function initializeImageSelector() {
+  const imageOptions = document.getElementById("image-options");
+  const selectedImage = document.getElementById("selected-image");
+  const imageFrame = document.getElementById("image-frame");
+  const imageStage = document.getElementById("image-stage");
+  const stageEmpty = document.getElementById("stage-empty");
+  const imageStatus = document.getElementById("image-status");
 
-    const thumbnail = document.createElement("img");
-    thumbnail.src = image.src;
-    thumbnail.alt = "";
-    thumbnail.loading = "lazy";
+  function renderImageOptions() {
+    PASSPOINT_IMAGES.forEach((image) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "image-option";
+      button.dataset.imageId = image.id;
+      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", `Elegir ${image.name}`);
+      button.disabled = imageSelectionLocked;
 
-    const label = document.createElement("span");
-    label.textContent = image.name;
-    button.append(thumbnail, label);
-    button.addEventListener("click", () => selectImage(image));
-    imageOptions.appendChild(button);
-  });
+      const thumbnail = document.createElement("img");
+      thumbnail.src = image.src;
+      thumbnail.alt = "";
+      thumbnail.loading = "lazy";
+
+      const label = document.createElement("span");
+      label.textContent = image.name;
+      button.append(thumbnail, label);
+      button.addEventListener("click", () => selectImage(image));
+      imageOptions.appendChild(button);
+    });
+  }
+
+  function selectImage(image) {
+    if (imageSelectionLocked) return;
+    selectedImageData = image;
+    imageOptions.querySelectorAll(".image-option").forEach((button) => {
+      const isSelected = button.dataset.imageId === image.id;
+      button.classList.toggle("is-selected", isSelected);
+      button.setAttribute("aria-pressed", String(isSelected));
+    });
+
+    selectedImage.onload = () => {
+      imageFrame.hidden = false;
+      stageEmpty.hidden = true;
+      imageStage.classList.remove("is-empty");
+      imageStatus.textContent = image.name;
+      document.dispatchEvent(
+        new CustomEvent("image-loaded", { detail: getImageData() }),
+      );
+    };
+    selectedImage.src = image.src;
+  }
+
+  function setImageSelectionLocked(locked) {
+    imageSelectionLocked = locked;
+    imageOptions.querySelectorAll(".image-option").forEach((button) => {
+      button.disabled = locked;
+    });
+  }
+
+  function getImageData() {
+    return {
+      id: selectedImageData?.id ?? null,
+      name: selectedImageData?.name ?? "",
+      src: selectedImageData?.src ?? "",
+      width: selectedImageData ? PASSPOINT_IMAGE_SIZE.width : 0,
+      height: selectedImageData ? PASSPOINT_IMAGE_SIZE.height : 0,
+    };
+  }
+
+  Object.assign(window, { getImageData, setImageSelectionLocked, selectImage });
+  renderImageOptions();
 }
-
-function selectImage(image) {
-  if (imageSelectionLocked) return;
-  selectedImageData = image;
-  imageOptions.querySelectorAll(".image-option").forEach((button) => {
-    const isSelected = button.dataset.imageId === image.id;
-    button.classList.toggle("is-selected", isSelected);
-    button.setAttribute("aria-pressed", String(isSelected));
-  });
-
-  selectedImage.onload = () => {
-    imageFrame.hidden = false;
-    stageEmpty.hidden = true;
-    imageStage.classList.remove("is-empty");
-    imageStatus.textContent = image.name;
-    document.dispatchEvent(
-      new CustomEvent("image-loaded", { detail: getImageData() }),
-    );
-  };
-  selectedImage.src = image.src;
-}
-
-function setImageSelectionLocked(locked) {
-  imageSelectionLocked = locked;
-  imageOptions.querySelectorAll(".image-option").forEach((button) => {
-    button.disabled = locked;
-  });
-}
-
-function getImageData() {
-  return {
-    id: selectedImageData?.id ?? null,
-    name: selectedImageData?.name ?? "",
-    src: selectedImageData?.src ?? "",
-    width: selectedImageData ? PASSPOINT_IMAGE_SIZE.width : 0,
-    height: selectedImageData ? PASSPOINT_IMAGE_SIZE.height : 0,
-  };
-}
-
-renderImageOptions();
