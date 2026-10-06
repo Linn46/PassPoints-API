@@ -28,8 +28,13 @@ function renderHome(state) {
     sequence.appendChild(item);
   });
   const userName = state.user.username;
+  const isSpanish = (window.PasspointsCurrentLanguage || "es") === "es";
   document.getElementById("credential-description").textContent =
     state.registered
-      ? `Cuenta creada para ${userName}. El análisis aceptó la selección gráfica.`
-      : `Hola, ${userName}. Tu imagen y secuencia se verificaron correctamente.`;
+      ? isSpanish
+        ? `Cuenta creada para ${userName}. El análisis aceptó la selección gráfica.`
+        : `Account created for ${userName}. The analysis accepted the graphical selection.`
+      : isSpanish
+        ? `Hola, ${userName}. Tu imagen y secuencia se verificaron correctamente.`
+        : `Hello, ${userName}. Your image and sequence were verified successfully.`;
 }

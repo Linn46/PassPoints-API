@@ -100,9 +100,14 @@ function updateAccountUser(user) {
 
 function updateThemeLabel() {
   const label = document.getElementById("account-theme-label");
-  if (label)
+  if (label) {
+    const isDark = document.documentElement.dataset.theme === "dark";
+    const currentLanguage = window.PasspointsCurrentLanguage || "es";
     label.textContent =
-      document.documentElement.dataset.theme === "dark" ? "Claro" : "Oscuro";
+      currentLanguage === "es"
+        ? (isDark ? "Claro" : "Oscuro")
+        : (isDark ? "Light" : "Dark");
+  }
 }
 
 function showAccountDialog(action) {
@@ -110,9 +115,9 @@ function showAccountDialog(action) {
   const title = document.getElementById("account-dialog-title");
   const content = document.getElementById("account-dialog-content");
   const titles = {
-    profile: "Mi perfil",
-    security: "Seguridad",
-    about: "Acerca de Passpoints",
+    profile: window.PasspointsCurrentLanguage === "es" ? "Mi perfil" : "My profile",
+    security: window.PasspointsCurrentLanguage === "es" ? "Seguridad" : "Security",
+    about: window.PasspointsCurrentLanguage === "es" ? "Acerca de Passpoints" : "About Passpoints",
   };
   title.textContent = titles[action];
   content.replaceChildren();
