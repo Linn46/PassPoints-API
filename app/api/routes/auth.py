@@ -71,8 +71,9 @@ def login(
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> AuthenticationResponse:
     try:
+        identifier = request.email or request.username or ""
         user, token, expires_in = service.login(
-            request.email,
+            identifier,
             request.image_id,
             request.image_width,
             request.image_height,
