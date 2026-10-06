@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f5f2" />
     <meta
       name="description"
-      content="Passpoints, autenticación gráfica segura."
+      content="Passpoints, secure graphical authentication."
     />
-    <title>Passpoints | Autenticación gráfica</title>
+    <title>Passpoints | Secure graphical authentication</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/home.css" />
@@ -23,26 +23,26 @@
 
     <div class="app-shell">
       <header class="site-header">
-        <a href="#auth-view" class="brand" aria-label="Passpoints, inicio">
+        <a href="#auth-view" class="brand" aria-label="Passpoints, home">
           <span class="brand-symbol" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i
           ></span>
           <span class="brand-name">passpoints</span>
         </a>
         <div class="header-actions">
-          <span class="header-description">Autenticación gráfica</span>
+          <span class="header-description">Secure graphical authentication</span>
           <input
             id="theme-switch"
             class="theme-switch"
             type="checkbox"
-            aria-label="Usar tema oscuro"
+            aria-label="Use dark mode"
           />
           <label
             id="theme-toggle"
             class="theme-toggle"
             for="theme-switch"
-            title="Cambiar tema"
-            aria-label="Cambiar a modo oscuro"
+            title="Change theme"
+            aria-label="Switch to dark mode"
           >
             <span class="theme-icon" aria-hidden="true">☾</span>
           </label>
@@ -53,13 +53,13 @@
         <section
           id="auth-view"
           class="auth-view"
-          aria-label="Autenticación"
+          aria-label="Authentication"
           data-view="auth"
         ></section>
         <section
           id="home-view"
           class="home-view"
-          aria-label="Inicio"
+          aria-label="Home"
           data-view="home"
           hidden
         ></section>
@@ -67,7 +67,181 @@
 
       <footer class="site-footer">
         <span>PASSPOINTS</span>
-        <span>Proyecto de investigación en seguridad gráfica</span>
+        <span>Project for secure graphical authentication</span>
+      </footer>
+    </div>
+
+    <script src="js/api.js?v=4"></script>
+    <script src="js/image-selector.js?v=5"></script>
+    <script src="js/point-selector.js?v=5"></script>
+    <script src="js/auth.js?v=5"></script>
+    <script src="js/home.js?v=5"></script>
+    <script src="js/account.js?v=5"></script>
+    <script src="js/app.js?v=6"></script>
+  </body>
+</html>
+
+          <section
+            id="weak-patterns"
+            class="education"
+            aria-labelledby="weak-pattern-title"
+          >
+            <div class="education-heading">
+              <span class="eyebrow">A STRONGER CHOICE</span>
+              <h2 id="weak-pattern-title">Avoid these patterns</h2>
+              <p>
+                The analysis checks whether the points cluster together or form
+                structures that are too regular.
+              </p>
+            </div>
+            <div class="pattern-list">
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-cluster" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Cluster pattern</strong
+                  ><span>Avoid concentrating the points in a very small area.</span>
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-line" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Line / diagonal pattern</strong
+                  ><span
+                    >Avoid aligning the points in a straight or diagonal line.</span
+                  >
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-regular" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Regular pattern</strong
+                  ><span
+                    >Avoid shapes with evenly spaced and too-similar distances.</span
+                  >
+                </div>
+              </article>
+              <article class="pattern-item">
+                <div class="pattern-sketch sketch-angular" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div>
+                  <strong>Angular pattern</strong
+                  ><span
+                    >Avoid a layout that the analysis considers too ordered.</span
+                  >
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <aside class="visual-column" aria-label="Information about Passpoints">
+          <div class="visual-quote">
+            <span class="quote-mark" aria-hidden="true">“</span>
+            <p>
+              Remember a story in an image. Your points follow the path.
+            </p>
+            <span class="quote-caption"
+              >VISUAL SEQUENCE AUTHENTICATION</span
+            >
+          </div>
+          <div class="visual-diagram" aria-hidden="true">
+            <div class="diagram-image"></div>
+            <svg viewBox="0 0 480 430" preserveAspectRatio="none">
+              <path d="M74 302 L183 128 L312 224 L394 92 L345 355" />
+              <circle cx="74" cy="302" r="18" />
+              <circle cx="183" cy="128" r="18" />
+              <circle cx="312" cy="224" r="18" />
+              <circle cx="394" cy="92" r="18" />
+              <circle cx="345" cy="355" r="18" />
+            </svg>
+            <span class="diagram-tag">01 — 05</span>
+          </div>
+          <div class="info-note">
+            <span class="info-icon" aria-hidden="true">i</span>
+            <p>
+              Your sequence is linked to the chosen image. To sign in, select the same image and the same points again.
+            </p>
+          </div>
+        </aside>
+      </section>
+
+      <section
+        id="private-view"
+        class="view private-view"
+        aria-labelledby="private-title"
+        hidden
+      >
+        <div class="private-topline">
+          <div>
+            <p class="eyebrow">PERSONAL AREA</p>
+            <h1 id="private-title">Your graphical password</h1>
+          </div>
+          <button id="logout-button" class="quiet-button" type="button">
+            Log out
+          </button>
+        </div>
+        <div class="private-status">
+          <span id="private-status-icon" class="status-check" aria-hidden="true"
+            >✓</span
+          >
+          <div>
+            <span id="private-status-label" class="eyebrow"
+              >ACCESS CONFIRMED</span
+            >
+            <h2 id="private-status-title">Secure graphical password</h2>
+            <p id="private-status-copy"></p>
+          </div>
+        </div>
+        <div class="private-grid">
+          <section class="private-image-panel">
+            <div class="section-heading">
+              <div>
+                <span class="step-kicker">YOUR SCENE</span>
+                <h2 id="private-image-name">Image used</h2>
+              </div>
+            </div>
+            <div class="private-image-frame">
+              <img
+                id="private-image"
+                alt="Image associated with the graphical password"
+              />
+              <div
+                id="private-points"
+                class="private-points"
+                aria-hidden="true"
+              ></div>
+            </div>
+          </section>
+          <section class="private-detail-panel">
+            <span class="step-kicker">YOUR SEQUENCE</span>
+            <h2>5 selected points</h2>
+            <p id="private-detail-copy"></p>
+            <div id="private-metric" class="private-metric" hidden>
+              <span>Analysis assessment</span
+              ><strong id="private-level"></strong>
+              <p id="private-pattern-copy"></p>
+            </div>
+            <div
+              class="sequence-preview"
+              id="sequence-preview"
+              aria-label="Graphical sequence"
+            ></div>
+          </section>
+        </div>
+        <p id="private-note" class="private-note"></p>
+      </section>
+
+      <footer class="site-footer">
+        <span>PASSPOINTS</span
+        ><span>Research project on graphical security</span>
+>>>>>>> 029dc1f (feat: translate frontend copy to english)
       </footer>
     </div>
 

@@ -31,10 +31,10 @@ function initializePointSelector() {
     clearPointsButton.disabled = pointSelectionLocked || count === 0;
     pointFeedback.textContent =
       count === 5
-        ? "Secuencia completa. Puedes analizarla."
+        ? "Sequence complete. You can analyze it."
         : count === 0
-          ? "Aún no hay puntos seleccionados."
-          : `Selecciona ${5 - count} punto${count === 4 ? "" : "s"} más.`;
+          ? "No points selected yet."
+          : `Select ${5 - count} more point${count === 4 ? "" : "s"}.`;
   }
 
   function getSelectedPoints() {
