@@ -22,6 +22,7 @@ def test_analysis_service_executes_complete_analysis():
     )
 
     assert len(result.triangulation.triangles) > 0
+    assert result.method == "delaunay_statistical"
 
     assert result.average_perimeter > 0
 
@@ -86,3 +87,13 @@ def test_analysis_request_accepts_one_or_multiple_methods():
         "delaunay_statistical",
         "mean_distance_convex_hull",
     ]
+
+
+def test_analysis_service_rejects_unregistered_method():
+    with pytest.raises(ValueError, match="Unsupported analysis method"):
+        AnalysisService().analyze(
+            points=[],
+            image_width=1920,
+            image_height=1080,
+            method="unimplemented_method",
+        )
