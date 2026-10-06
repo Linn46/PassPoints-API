@@ -23,3 +23,4 @@ class AnalysisResult:
     average_max_angle: float
     perimeter_test: TestResult | None
     angle_test: TestResult | None
+    method: str = "delaunay_statistical"

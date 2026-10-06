@@ -1,4 +1,4 @@
-"""Compatibility layer for the method-specific analysis implementations."""
+"""Method A: Delaunay triangulation + statistical assessment."""
 
 from app.application.analysis.methods.delaunay_statistical.security import assess_security
 from app.application.analysis.methods.delaunay_statistical.service import (
