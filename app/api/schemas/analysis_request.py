@@ -1,4 +1,8 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+AnalysisMethod = Literal["delaunay_statistical", "mean_distance_convex_hull"]
 
 
 class PointRequest(BaseModel):
@@ -21,6 +25,7 @@ class AnalysisRequest(BaseModel):
                     "image_width": 1920,
                     "image_height": 1080,
                     "alpha": 0.05,
+                    "method": "delaunay_statistical",
                 }
             ]
         }
@@ -52,6 +57,16 @@ class AnalysisRequest(BaseModel):
         description="Nivel de significación estadística.",
     )
 
+    method: AnalysisMethod | None = Field(
+        default=None,
+        description="Metodología de análisis a ejecutar (compatibilidad).",
+    )
+
+    methods: list[AnalysisMethod] | None = Field(
+        default=None,
+        description="Metodologías de análisis a ejecutar. Se puede elegir una o varias.",
+    )
+
     @model_validator(mode="after")
     def validate_coordinates(self):
         for point in self.points:
@@ -64,5 +79,23 @@ class AnalysisRequest(BaseModel):
                 raise ValueError(
                     f"Point y={point.y} is outside the image."
                 )
+
+        if self.methods is None:
+            if self.method is not None:
+                self.methods = [self.method]
+            else:
+                self.methods = ["delaunay_statistical"]
+
+        if self.method is not None and self.method not in self.methods:
+            self.methods = [self.method, *self.methods]
+
+        unique_methods: list[AnalysisMethod] = []
+        for method_name in self.methods:
+            if method_name not in unique_methods:
+                unique_methods.append(method_name)
+        self.methods = unique_methods
+
+        if not self.methods:
+            self.methods = ["delaunay_statistical"]
 
         return self
