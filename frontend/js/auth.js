@@ -16,6 +16,9 @@ function initializeAuth({ onAuthenticated }) {
   const analysisFeedback = document.getElementById("analysis-feedback");
   const requestFeedback = document.getElementById("request-feedback");
   const selectionHint = document.getElementById("selection-hint");
+  const analysisMethodInputs = Array.from(
+    document.querySelectorAll(".analysis-method-input"),
+  );
   const patternModal = document.getElementById("pattern-modal");
   const patternModalClose = document.getElementById("pattern-modal-close");
   const modalPatternVisual = document.getElementById("modal-pattern-visual");
@@ -85,8 +88,14 @@ function initializeAuth({ onAuthenticated }) {
       analysisResult.security?.is_weak === false,
     );
   }
+  function selectedAnalysisMethods() {
+    return analysisMethodInputs
+      .filter((input) => input.checked)
+      .map((input) => input.value);
+  }
   function updateButtons() {
     const image = getImageData();
+    const selectedMethods = selectedAnalysisMethods();
     const ready = Boolean(
       emailInput.validity.valid &&
       emailInput.value.trim().length >= 5 &&
@@ -94,11 +103,16 @@ function initializeAuth({ onAuthenticated }) {
       image.id &&
       hasFiveSelectedPoints(),
     );
+    const methodsReady = selectedMethods.length > 0;
     registerTab.disabled = pending;
     loginTab.disabled = pending;
-    analyzeButton.disabled = pending || mode !== "register" || !ready;
+    analyzeButton.disabled =
+      pending || mode !== "register" || !ready || !methodsReady;
     submitButton.disabled =
-      pending || !ready || (mode === "register" && !hasAcceptedAnalysis());
+      pending ||
+      !ready ||
+      !methodsReady ||
+      (mode === "register" && !hasAcceptedAnalysis());
     submitLabel.textContent =
       mode === "register" ? "Crear mi cuenta" : "Iniciar sesión";
   }
@@ -186,6 +200,7 @@ function initializeAuth({ onAuthenticated }) {
       const result = await analyzeSelection(
         getImageData(),
         getSelectedPoints(),
+        selectedAnalysisMethods(),
       );
       analysisResult = result;
       analysisKey = selectionKey();
@@ -321,6 +336,12 @@ function initializeAuth({ onAuthenticated }) {
   document
     .getElementById("clear-points")
     .addEventListener("click", hideRequestFeedback);
+  analysisMethodInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      invalidateAnalysis();
+      updateButtons();
+    });
+  });
   document.addEventListener("points-changed", invalidateAnalysis);
   document.addEventListener("image-loaded", invalidateAnalysis);
   authView.addEventListener("click", (event) => {

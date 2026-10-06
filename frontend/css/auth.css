@@ -350,6 +350,45 @@
   background: var(--blue-soft);
   color: var(--text-soft);
 }
+.analysis-method-selector {
+  margin-top: 22px;
+  padding: 18px 18px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-solid);
+}
+.method-header {
+  margin-bottom: 0;
+}
+.method-header h2 {
+  font-size: 15px;
+}
+.method-header p {
+  margin-top: 6px;
+}
+.method-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.method-option input {
+  accent-color: var(--primary);
+}
 .analyze-button,
 .submit-button {
   position: relative;
