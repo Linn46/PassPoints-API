@@ -43,12 +43,14 @@ function authPayload(image, points) {
   };
 }
 
-async function analyzeSelection(image, points) {
+async function analyzeSelection(image, points, methods = ["delaunay_statistical"]) {
+  const selectedMethods = methods && methods.length > 0 ? methods : ["delaunay_statistical"];
   return requestJson(ANALYSIS_URL, {
     image_width: image.width,
     image_height: image.height,
     alpha: 0.05,
     points,
+    methods: selectedMethods,
   });
 }
 

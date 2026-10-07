@@ -126,6 +126,37 @@
           </button>
         </div>
       </div>
+      <div class="analysis-method-selector" aria-label="Métodos de análisis">
+        <div class="section-header method-header">
+          <div>
+            <span class="section-number">03</span>
+            <div>
+              <h2>Métodos de análisis</h2>
+              <p>Selecciona uno o varios métodos para evaluar tu contraseña.</p>
+            </div>
+          </div>
+        </div>
+        <div class="method-options" role="group" aria-label="Selecciona un método o varios">
+          <label class="method-option">
+            <input
+              class="analysis-method-input"
+              type="checkbox"
+              value="delaunay_statistical"
+              checked
+            />
+            <span>Delaunay</span>
+          </label>
+          <label class="method-option">
+            <input
+              class="analysis-method-input"
+              type="checkbox"
+              value="mean_distance_convex_hull"
+              checked
+            />
+            <span>Distancia media + convex hull</span>
+          </label>
+        </div>
+      </div>
       <div
         id="analysis-feedback"
         class="feedback feedback-analysis"
