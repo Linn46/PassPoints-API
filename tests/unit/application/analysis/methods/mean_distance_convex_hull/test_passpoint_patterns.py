@@ -17,8 +17,43 @@ def test_mean_distance_detector_identifies_clustered_pattern():
 
     result = evaluate_password(points, 1920, 1080, alpha=0.05)
 
-    assert result.patrones in ([], [AGRUPADO], [REGULAR], [ALEATORIO])
-    assert result.aceptada is not None
+    assert result.patrones == [AGRUPADO]
+    assert result.aceptada is False
+
+
+def test_mean_distance_detector_identifies_regular_pattern():
+    points = [
+        (100, 100),
+        (100, 300),
+        (100, 500),
+        (300, 100),
+        (300, 300),
+        (300, 500),
+        (500, 100),
+        (500, 300),
+        (500, 500),
+        (700, 300),
+    ]
+
+    result = evaluate_password(points, 1920, 1080, alpha=0.05)
+
+    assert result.patrones == [REGULAR]
+    assert result.aceptada is False
+
+
+def test_mean_distance_detector_identifies_linear_pattern():
+    points = [
+        (200, 540),
+        (550, 540),
+        (900, 540),
+        (1250, 540),
+        (1600, 540),
+    ]
+
+    result = evaluate_password(points, 1920, 1080, alpha=0.05)
+
+    assert result.patrones == [REGULAR]
+    assert result.aceptada is False
 
 
 def test_mean_distance_detector_returns_consistent_evaluation():
