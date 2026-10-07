@@ -1,12 +1,18 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.analysis import router as analysis_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
+from app.api.exception_handlers import (
+    delaunay_validation_error_handler,
+    request_validation_error_handler,
+)
 from app.core.config.settings import settings
+from app.geometry.delaunay.validator import DelaunayValidationError
 from app.infrastructure.database.session import dispose_database_engine
 
 @asynccontextmanager
@@ -27,6 +33,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_exception_handler(
+    DelaunayValidationError,
+    delaunay_validation_error_handler,
+)
+
+app.add_exception_handler(
+    RequestValidationError,
+    request_validation_error_handler,
+)
 
 app.add_middleware(
     CORSMiddleware,

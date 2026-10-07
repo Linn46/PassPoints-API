@@ -29,7 +29,14 @@ async function requestJson(url, payload) {
   }
   if (!response.ok) {
     console.error("Passpoints API request failed:", response.status, data);
-    throw new ApiError(response.status, data.detail ?? "request_failed");
+    const detail = Array.isArray(data.errors)
+      ? data.errors
+          .map(({ field, message }) => [field, message].filter(Boolean).join(": "))
+          .join("; ")
+      : Array.isArray(data.detail)
+        ? data.detail.map((error) => error.msg ?? JSON.stringify(error)).join("; ")
+        : data.message ?? data.detail ?? data.error ?? "request_failed";
+    throw new ApiError(response.status, detail);
   }
   return data;
 }
