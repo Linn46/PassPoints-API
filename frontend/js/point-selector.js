@@ -75,12 +75,26 @@ function initializePointSelector() {
       Math.min(1, (event.clientY - imageRect.top) / imageRect.height),
     );
     const imageData = getImageData();
-    selectedPoints.push({
+    const point = {
       x: relativeX * imageData.width,
       y: relativeY * imageData.height,
       relativeX,
       relativeY,
-    });
+    };
+    if (
+      selectedPoints.some(
+        (selectedPoint) =>
+          selectedPoint.x === point.x && selectedPoint.y === point.y,
+      )
+    ) {
+      pointFeedback.textContent =
+        window.PasspointsCurrentLanguage === "es"
+          ? "Ese punto ya está seleccionado. Elige una ubicación diferente."
+          : "That point is already selected. Choose a different location.";
+      return;
+    }
+
+    selectedPoints.push(point);
     renderPoints();
     document.dispatchEvent(new CustomEvent("points-changed"));
   });
