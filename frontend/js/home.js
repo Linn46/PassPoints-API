@@ -8,7 +8,7 @@ function initializeHome() {
     });
 }
 
-function renderHome(state) {
+window.renderHome = function renderHome(state) {
   document.getElementById("home-image-name").textContent = state.image.name;
   document.getElementById("home-image").src = state.image.src;
   const pointsLayer = document.getElementById("home-image-points");
@@ -37,4 +37,4 @@ function renderHome(state) {
       : isSpanish
         ? `Hola, ${userName}. Tu imagen y secuencia se verificaron correctamente.`
         : `Hello, ${userName}. Your image and sequence were verified successfully.`;
-}
+};

@@ -2,18 +2,19 @@
   <section class="auth-panel">
     <div class="auth-heading">
       <span class="welcome-label">PASSPOINTS</span>
-      <h1 id="view-title">Una contraseña que se dibuja.</h1>
-      <p>
+      <h1 id="view-title" data-i18n="authViewTitle">Una contraseña que se dibuja.</h1>
+      <p data-i18n="authIntro">
         Utiliza una imagen y una secuencia de cinco puntos que solo tú conozcas.
       </p>
     </div>
-    <div class="auth-tabs" role="tablist" aria-label="Acceso">
+    <div class="auth-tabs" role="tablist" data-i18n-aria-label="userAccess" aria-label="Acceso">
       <button
         id="register-tab"
         class="auth-tab is-active"
         type="button"
         role="tab"
         aria-selected="true"
+        data-i18n="registerTab"
       >
         Crear cuenta
       </button>
@@ -23,6 +24,7 @@
         type="button"
         role="tab"
         aria-selected="false"
+        data-i18n="loginTab"
       >
         Iniciar sesión
       </button>
@@ -30,7 +32,7 @@
     </div>
     <form id="auth-form" class="auth-form" novalidate>
       <div id="username-field" class="form-group">
-        <label class="form-label" for="username">Nombre de usuario</label>
+        <label class="form-label" for="username" data-i18n="usernameLabel">Nombre de usuario</label>
         <div class="input-wrapper">
           <span class="input-icon" aria-hidden="true">@</span
           ><input
@@ -40,12 +42,13 @@
             autocomplete="username"
             minlength="3"
             maxlength="100"
+            data-i18n-placeholder="usernamePlaceholder"
             placeholder="Tu nombre"
           />
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="email">Correo electrónico</label>
+        <label class="form-label" for="email" data-i18n="emailLabel">Correo electrónico</label>
         <div class="input-wrapper">
           <span class="input-icon" aria-hidden="true">@</span
           ><input
@@ -55,6 +58,7 @@
             autocomplete="email"
             maxlength="254"
             required
+            data-i18n-placeholder="emailPlaceholder"
             placeholder="nombre@ejemplo.com"
           />
         </div>
@@ -64,16 +68,17 @@
           <div>
             <span class="section-number">01</span>
             <div>
-              <h2>Elige tu imagen</h2>
-              <p>Selecciona una escena que puedas recordar.</p>
+              <h2 data-i18n="chooseImage">Elige tu imagen</h2>
+              <p data-i18n="chooseImageHint">Selecciona una escena que puedas recordar.</p>
             </div>
           </div>
-          <span id="image-status" class="section-status">Sin seleccionar</span>
+          <span id="image-status" class="section-status" data-i18n="imageStatus">Sin seleccionar</span>
         </div>
         <div
           id="image-options"
           class="image-options"
           aria-label="Imágenes disponibles"
+          data-i18n-aria-label="chooseImage"
         ></div>
       </div>
       <div class="selection-section">
@@ -81,13 +86,13 @@
           <div>
             <span class="section-number">02</span>
             <div>
-              <h2>Crea tu secuencia</h2>
-              <p>Selecciona exactamente cinco puntos.</p>
+              <h2 data-i18n="createSequence">Crea tu secuencia</h2>
+              <p data-i18n="sequencePrompt">Selecciona exactamente cinco puntos.</p>
             </div>
           </div>
           <div class="point-counter"><strong id="point-count">0/5</strong></div>
         </div>
-        <p id="selection-hint" class="selection-hint">
+        <p id="selection-hint" class="selection-hint" data-i18n="selectionHint">
           Primero selecciona una imagen y después marca cinco lugares en el
           orden que prefieras.
         </p>
@@ -96,8 +101,8 @@
             <div class="empty-illustration">
               <i></i><i></i><i></i><i></i><i></i>
             </div>
-            <strong>Selecciona una imagen</strong
-            ><span>Aquí aparecerá tu escena</span>
+            <strong data-i18n="pickImageStage">Selecciona una imagen</strong
+            ><span data-i18n="imageStageHint">Aquí aparecerá tu escena</span>
           </div>
           <div id="image-frame" class="image-frame" hidden>
             <img
@@ -114,29 +119,29 @@
           </div>
         </div>
         <div class="point-actions">
-          <span id="point-feedback" class="point-feedback" aria-live="polite"
-            >Aún no hay puntos seleccionados.</span
+          <span id="point-feedback" class="point-feedback" aria-live="polite" data-i18n="pointFeedbackWaiting">Aún no hay puntos seleccionados.</span
           ><button
             id="clear-points"
             class="reset-button"
             type="button"
             disabled
+            data-i18n="resetPoints"
           >
             Reiniciar
           </button>
         </div>
       </div>
-      <div class="analysis-method-selector" aria-label="Métodos de análisis">
+      <div class="analysis-method-selector" aria-label="Métodos de análisis" data-i18n-aria-label="analysisMethods">
         <div class="section-header method-header">
           <div>
             <span class="section-number">03</span>
             <div>
-              <h2>Métodos de análisis</h2>
-              <p>Selecciona uno o varios métodos para evaluar tu contraseña.</p>
+              <h2 data-i18n="analysisMethods">Métodos de análisis</h2>
+              <p data-i18n="analysisMethodsHint">Selecciona uno o varios métodos para evaluar tu contraseña.</p>
             </div>
           </div>
         </div>
-        <div class="method-options" role="group" aria-label="Selecciona un método o varios">
+        <div class="method-options" role="group" aria-label="Selecciona un método o varios" data-i18n-aria-label="analysisMethodsHint">
           <label class="method-option">
             <input
               class="analysis-method-input"
@@ -144,7 +149,7 @@
               value="delaunay_statistical"
               checked
             />
-            <span>Delaunay</span>
+            <span data-i18n="delaunayMethodLabel">Delaunay</span>
           </label>
           <label class="method-option">
             <input
@@ -153,7 +158,7 @@
               value="mean_distance_convex_hull"
               checked
             />
-            <span>Distancia media + convex hull</span>
+            <span data-i18n="distanceHullMethodLabel">Distancia media + convex hull</span>
           </label>
         </div>
       </div>
@@ -172,7 +177,7 @@
         hidden
       ></div>
       <button id="analyze-button" class="analyze-button" type="button" disabled>
-        <span id="analyze-label">Analizar selección</span
+        <span id="analyze-label" data-i18n="analyzeSelection">Analizar selección</span
         ><span
           id="analyze-spinner"
           class="spinner"
@@ -181,7 +186,7 @@
         ></span>
       </button>
       <button id="submit-button" class="submit-button" type="submit" disabled>
-        <span id="submit-label">Crear mi cuenta</span
+        <span id="submit-label" data-i18n="createAccount">Crear mi cuenta</span
         ><span
           id="submit-spinner"
           class="spinner"
@@ -198,9 +203,9 @@
       aria-labelledby="weak-pattern-title"
     >
       <div class="education-heading">
-        <span class="small-label">SEGURIDAD</span>
-        <h2 id="weak-pattern-title">Una contraseña más difícil de predecir</h2>
-        <p>
+        <span class="small-label" data-i18n="securitySection">SEGURIDAD</span>
+        <h2 id="weak-pattern-title" data-i18n="securityHeading">Una contraseña más difícil de predecir</h2>
+        <p data-i18n="securityIntro">
           El análisis comprueba si tus cinco puntos forman patrones demasiado
           fáciles de anticipar.
         </p>
@@ -210,52 +215,52 @@
           <span class="pattern-visual pattern-cluster" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i></span
           ><span class="pattern-card-content"
-            ><strong>Agrupado</strong><span>Puntos demasiado concentrados.</span
-            ><small>Ver explicación →</small></span
+            ><strong data-i18n="patternGrouped">Agrupado</strong><span data-i18n="patternGroupDescription">Puntos demasiado concentrados.</span
+            ><small data-i18n="patternDescription">Ver explicación →</small></span
           >
         </button>
         <button class="pattern-card" type="button" data-pattern="line">
           <span class="pattern-visual pattern-line" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i></span
           ><span class="pattern-card-content"
-            ><strong>Line / Diag</strong
-            ><span>Puntos alineados en línea o diagonal.</span
-            ><small>Ver explicación →</small></span
+            ><strong data-i18n="patternLine">Line / Diag</strong
+            ><span data-i18n="patternLineDescription">Puntos alineados en línea o diagonal.</span
+            ><small data-i18n="patternDescription">Ver explicación →</small></span
           >
         </button>
         <button class="pattern-card" type="button" data-pattern="regular">
           <span class="pattern-visual pattern-regular" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i></span
           ><span class="pattern-card-content"
-            ><strong>Regular</strong
-            ><span>Puntos separados de forma uniforme.</span
-            ><small>Ver explicación →</small></span
+            ><strong data-i18n="patternRegular">Regular</strong
+            ><span data-i18n="patternRegularDescription">Puntos separados de forma uniforme.</span
+            ><small data-i18n="patternDescription">Ver explicación →</small></span
           >
         </button>
         <button class="pattern-card" type="button" data-pattern="angular">
           <span class="pattern-visual pattern-angular" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i></span
           ><span class="pattern-card-content"
-            ><strong>Angular</strong
-            ><span>Una estructura geométrica ordenada.</span
-            ><small>Ver explicación →</small></span
+            ><strong data-i18n="patternAngular">Angular</strong
+            ><span data-i18n="patternAngularDescription">Una estructura geométrica ordenada.</span
+            ><small data-i18n="patternDescription">Ver explicación →</small></span
           >
         </button>
       </div>
     </section>
   </section>
 
-  <aside class="visual-panel" aria-label="Información sobre Passpoints">
+  <aside class="visual-panel" aria-label="Información sobre Passpoints" data-i18n-aria-label="panelInfoAriaLabel">
     <div class="visual-top">
-      <span class="visual-badge">SEGURIDAD GRÁFICA</span>
+      <span class="visual-badge" data-i18n="visualBadge">SEGURIDAD GRÁFICA</span>
       <div class="visual-theme-text">
-        <span>5 puntos</span><span>1 secuencia</span>
+        <span data-i18n="visualSummary">5 puntos</span><span data-i18n="visualSequence">1 secuencia</span>
       </div>
     </div>
     <div class="visual-card">
       <div class="visual-card-header">
         <div>
-          <span>TU CONTRASEÑA</span><strong>Una secuencia visual</strong>
+          <span data-i18n="visualPassword">TU CONTRASEÑA</span><strong data-i18n="visualSequenceTitle">Una secuencia visual</strong>
         </div>
         <span class="visual-dots">•••</span>
       </div>
@@ -321,12 +326,12 @@
         </div>
         <div class="canvas-message">
           <span>PASSPOINTS</span
-          ><strong>Recuerda el camino,<br />no la contraseña.</strong>
+          ><strong data-i18n="rememberPath">Recuerda el camino,<br />no la contraseña.</strong>
         </div>
       </div>
       <div class="visual-card-footer">
         <div>
-          <span class="footer-dot"></span><span>Secuencia protegida</span>
+          <span class="footer-dot"></span><span data-i18n="sequenceProtected">Secuencia protegida</span>
         </div>
         <span>01 — 05</span>
       </div>
@@ -334,8 +339,8 @@
     <div class="visual-information">
       <span class="information-icon">i</span>
       <div>
-        <strong>¿Cómo funciona?</strong>
-        <p>
+        <strong data-i18n="howItWorks">¿Cómo funciona?</strong>
+        <p data-i18n="howItWorksText">
           Elige una imagen, selecciona cinco puntos y utiliza la misma secuencia
           cada vez que quieras acceder.
         </p>
@@ -343,15 +348,15 @@
     </div>
     <div class="feature-row">
       <div class="feature-item">
-        <span>01</span><strong>Visual</strong><small>Fácil de recordar</small>
+        <span>01</span><strong data-i18n="visualFeature">Visual</strong><small data-i18n="easyToRemember">Fácil de recordar</small>
       </div>
       <div class="feature-item">
-        <span>02</span><strong>Personal</strong
-        ><small>Tu propia secuencia</small>
+        <span>02</span><strong data-i18n="personalFeature">Personal</strong
+        ><small data-i18n="ownSequence">Tu propia secuencia</small>
       </div>
       <div class="feature-item">
-        <span>03</span><strong>Analizada</strong
-        ><small>Detectamos patrones</small>
+        <span>03</span><strong data-i18n="analyticalFeature">Analizada</strong
+        ><small data-i18n="detectPatterns">Detectamos patrones</small>
       </div>
     </div>
   </aside>
@@ -371,6 +376,7 @@
       class="pattern-modal-close"
       type="button"
       aria-label="Cerrar explicación"
+      data-i18n-aria-label="patternModalClose"
     >
       ×
     </button>
@@ -379,17 +385,15 @@
       class="modal-pattern-visual"
       aria-hidden="true"
     ></div>
-    <span id="pattern-modal-label" class="small-label">PATRÓN DÉBIL</span>
+    <span id="pattern-modal-label" class="small-label" data-i18n="weakPatternModalLabel">PATRÓN DÉBIL</span>
     <h2 id="pattern-modal-title">Patrón agrupado</h2>
     <p id="pattern-modal-description">
       Cuando los puntos se concentran demasiado en una zona, la selección puede
       resultar más predecible.
     </p>
     <div class="pattern-modal-tip">
-      <span>Consejo</span
-      ><strong id="pattern-modal-tip-text"
-        >Distribuye los puntos por diferentes zonas de la imagen.</strong
-      >
+      <span data-i18n="patternModalTipLabel">Consejo</span>
+      <strong id="pattern-modal-tip-text" data-i18n="weakPatternModalTip">Distribuye los puntos por diferentes zonas de la imagen.</strong>
     </div>
   </div>
 </div>
