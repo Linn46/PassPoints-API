@@ -8,8 +8,8 @@
   >
     <span id="account-avatar" class="account-avatar">?</span
     ><span class="account-trigger-copy"
-      ><strong id="account-trigger-name">Mi cuenta</strong
-      ><small>Mi cuenta</small></span
+      ><strong id="account-trigger-name" data-i18n="myAccount">Mi cuenta</strong
+      ><small data-i18n="accountMenu">Mi cuenta</small></span
     ><span aria-hidden="true">⌄</span>
   </button>
   <div id="account-panel" class="account-panel" hidden>
@@ -20,15 +20,15 @@
       ></span>
     </div>
     <nav class="account-actions" aria-label="Opciones de cuenta">
-      <button type="button" data-account-action="profile">Mi perfil</button
-      ><button type="button" data-account-action="security">Seguridad</button
-      ><button type="button" data-account-action="appearance">
+      <button type="button" data-account-action="profile" data-i18n="profile">Mi perfil</button
+      ><button type="button" data-account-action="security" data-i18n="security">Seguridad</button
+      ><button type="button" data-account-action="appearance" data-i18n="appearance">
         Apariencia <span id="account-theme-label"></span></button
-      ><button type="button" data-account-action="about">
+      ><button type="button" data-account-action="about" data-i18n="about">
         Acerca de Passpoints
       </button>
     </nav>
-    <button id="account-logout" class="account-logout" type="button">
+    <button id="account-logout" class="account-logout" type="button" data-i18n="logout">
       Cerrar sesión
     </button>
   </div>
@@ -50,7 +50,7 @@
       data-close-account
     >
       ×</button
-    ><span class="small-label">MI CUENTA</span>
+    ><span class="small-label" data-i18n="myAccount">MI CUENTA</span>
     <h2 id="account-dialog-title"></h2>
     <div id="account-dialog-content"></div>
   </section>

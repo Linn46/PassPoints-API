@@ -1,31 +1,31 @@
 const PASSPOINT_IMAGES = [
   {
     id: "coast-sunset",
-    name: "Costa al atardecer",
+    name: "Coast at sunset",
     src: "assets/images/coast.svg",
     tone: "sand",
   },
   {
     id: "botanical-garden",
-    name: "Jardín botánico",
+    name: "Botanical garden",
     src: "assets/images/botanical.svg",
     tone: "leaf",
   },
   {
     id: "terracotta-house",
-    name: "Casa de terracota",
+    name: "Terracotta house",
     src: "assets/images/architecture.svg",
     tone: "clay",
   },
   {
     id: "desert-palms",
-    name: "Palmeras del desierto",
+    name: "Desert palms",
     src: "assets/images/desert.svg",
     tone: "sun",
   },
   {
     id: "island-shore",
-    name: "Orilla de la isla",
+    name: "Island shore",
     src: "assets/images/coastline.svg",
     tone: "sea",
   },
@@ -51,7 +51,7 @@ function initializeImageSelector() {
       button.className = "image-option";
       button.dataset.imageId = image.id;
       button.setAttribute("aria-pressed", "false");
-      button.setAttribute("aria-label", `Elegir ${image.name}`);
+      button.setAttribute("aria-label", `Choose ${image.name}`);
       button.disabled = imageSelectionLocked;
 
       const thumbnail = document.createElement("img");

@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f5f2" />
     <meta
       name="description"
-      content="Passpoints, autenticación gráfica segura."
+      content="Passpoints, secure graphical authentication."
     />
-    <title>Passpoints | Autenticación gráfica</title>
+    <title>Passpoints | Secure graphical authentication</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/auth.css" />
     <link rel="stylesheet" href="css/home.css" />
@@ -23,26 +23,37 @@
 
     <div class="app-shell">
       <header class="site-header">
-        <a href="#auth-view" class="brand" aria-label="Passpoints, inicio">
+        <a href="#auth-view" class="brand" aria-label="Passpoints, home">
           <span class="brand-symbol" aria-hidden="true"
             ><i></i><i></i><i></i><i></i><i></i
           ></span>
           <span class="brand-name">passpoints</span>
         </a>
         <div class="header-actions">
-          <span class="header-description">Autenticación gráfica</span>
+          <span class="header-description" data-i18n="headerSubtitle">
+            Secure graphical authentication
+          </span>
+          <button
+            id="language-toggle"
+            class="language-toggle"
+            type="button"
+            aria-label="Switch language"
+            title="Cambiar idioma"
+          >
+            ES
+          </button>
           <input
             id="theme-switch"
             class="theme-switch"
             type="checkbox"
-            aria-label="Usar tema oscuro"
+            aria-label="Use dark mode"
           />
           <label
             id="theme-toggle"
             class="theme-toggle"
             for="theme-switch"
-            title="Cambiar tema"
-            aria-label="Cambiar a modo oscuro"
+            title="Change theme"
+            aria-label="Switch to dark mode"
           >
             <span class="theme-icon" aria-hidden="true">☾</span>
           </label>
@@ -53,13 +64,13 @@
         <section
           id="auth-view"
           class="auth-view"
-          aria-label="Autenticación"
+          aria-label="Authentication"
           data-view="auth"
         ></section>
         <section
           id="home-view"
           class="home-view"
-          aria-label="Inicio"
+          aria-label="Home"
           data-view="home"
           hidden
         ></section>
@@ -67,7 +78,7 @@
 
       <footer class="site-footer">
         <span>PASSPOINTS</span>
-        <span>Proyecto de investigación en seguridad gráfica</span>
+        <span data-i18n="footerSubtitle">Project for secure graphical authentication</span>
       </footer>
     </div>
 

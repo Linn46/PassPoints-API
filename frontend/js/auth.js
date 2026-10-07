@@ -41,28 +41,60 @@ function initializeAuth({ onAuthenticated }) {
   };
   const patternInformation = {
     cluster: {
-      title: "Patrón agrupado",
-      description:
-        "Los cinco puntos se encuentran muy cerca unos de otros. Esto reduce el espacio de búsqueda y puede hacer que la contraseña sea más predecible.",
-      tip: "Distribuye los puntos por diferentes zonas de la imagen.",
+      es: {
+        title: "Patrón agrupado",
+        description:
+          "Los cinco puntos se encuentran muy cerca unos de otros. Esto reduce el espacio de búsqueda y puede hacer que la contraseña sea más predecible.",
+        tip: "Distribuye los puntos por diferentes zonas de la imagen.",
+      },
+      en: {
+        title: "Clustered pattern",
+        description:
+          "All five points are very close together. This reduces the search space and can make the password easier to predict.",
+        tip: "Spread the points across different areas of the image.",
+      },
     },
     line: {
-      title: "Patrón Line / Diag",
-      description:
-        "Los puntos siguen aproximadamente una línea recta o diagonal. Estas estructuras presentan una organización geométrica que puede facilitar su predicción.",
-      tip: "Evita colocar los cinco puntos siguiendo una misma dirección.",
+      es: {
+        title: "Patrón Line / Diag",
+        description:
+          "Los puntos siguen aproximadamente una línea recta o diagonal. Estas estructuras presentan una organización geométrica que puede facilitar su predicción.",
+        tip: "Evita colocar los cinco puntos siguiendo una misma dirección.",
+      },
+      en: {
+        title: "Line / Diag pattern",
+        description:
+          "The points follow a straight or diagonal line roughly. This geometric structure can make the selection easier to anticipate.",
+        tip: "Avoid placing all five points along the same direction.",
+      },
     },
     regular: {
-      title: "Patrón regular",
-      description:
-        "Los puntos mantienen separaciones o posiciones demasiado uniformes. La regularidad puede hacer que la selección sea más fácil de anticipar.",
-      tip: "Combina distancias y posiciones diferentes.",
+      es: {
+        title: "Patrón regular",
+        description:
+          "Los puntos mantienen separaciones o posiciones demasiado uniformes. La regularidad puede hacer que la selección sea más fácil de anticipar.",
+        tip: "Combina distancias y posiciones diferentes.",
+      },
+      en: {
+        title: "Regular pattern",
+        description:
+          "The points keep separations or positions that are too uniform. This regularity can make the pattern easier to anticipate.",
+        tip: "Combine different distances and positions.",
+      },
     },
     angular: {
-      title: "Patrón angular",
-      description:
-        "Los puntos forman una estructura geométrica muy ordenada, por ejemplo siguiendo direcciones o ángulos similares.",
-      tip: "Evita construir figuras geométricas demasiado evidentes.",
+      es: {
+        title: "Patrón angular",
+        description:
+          "Los puntos forman una estructura geométrica muy ordenada, por ejemplo siguiendo direcciones o ángulos similares.",
+        tip: "Evita construir figuras geométricas demasiado evidentes.",
+      },
+      en: {
+        title: "Angular pattern",
+        description:
+          "The points form a very ordered geometric structure, such as repeated directions or similar angles.",
+        tip: "Avoid building geometric figures that are too obvious.",
+      },
     },
   };
   let mode = "register";
@@ -114,7 +146,7 @@ function initializeAuth({ onAuthenticated }) {
       !methodsReady ||
       (mode === "register" && !hasAcceptedAnalysis());
     submitLabel.textContent =
-      mode === "register" ? "Crear mi cuenta" : "Iniciar sesión";
+      mode === "register" ? t("createAccount") : t("signIn");
   }
   function setMode(nextMode) {
     if (pending) return;
@@ -127,11 +159,13 @@ function initializeAuth({ onAuthenticated }) {
     usernameField.hidden = !registering;
     usernameInput.required = registering;
     document.getElementById("view-title").textContent = registering
-      ? "Una contraseña que se dibuja."
-      : "Vuelve a tu imagen.";
+      ? t("authViewTitle")
+      : t("authViewTitleLogin");
     selectionHint.textContent = registering
-      ? "Elige lugares que recuerdes fácilmente, en el orden que prefieras."
-      : "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica.";
+      ? t("selectionHint")
+      : window.PasspointsCurrentLanguage === "es"
+        ? "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica."
+        : "Select the same image and the same points you used when creating your graphical password.";
     weakPatterns.hidden = !registering;
     analyzeButton.hidden = !registering;
     analysisFeedback.hidden = true;
@@ -152,41 +186,47 @@ function initializeAuth({ onAuthenticated }) {
     analyzeSpinner.hidden = !(value && action === "analysis");
     submitSpinner.hidden = !(value && action === "submit");
     analyzeLabel.textContent =
-      value && action === "analysis" ? "Analizando" : "Analizar selección";
+      value && action === "analysis" ? t("analyzingSelection") : t("analyzeSelection");
     submitLabel.textContent =
       value && action === "submit"
         ? mode === "register"
-          ? "Creando cuenta"
-          : "Autenticando"
+          ? t("creatingAccount")
+          : t("authenticating")
         : mode === "register"
-          ? "Crear mi cuenta"
-          : "Iniciar sesión";
+          ? t("createAccount")
+          : t("signIn");
     updateButtons();
   }
   function showRequestError(error, fallback) {
     requestFeedback.hidden = false;
+    const isSpanish = window.PasspointsCurrentLanguage === "es";
     if (!(error instanceof ApiError)) {
       console.error("Unexpected Passpoints frontend error:", error);
       requestFeedback.textContent = fallback;
     } else if (error.status === 0)
-      requestFeedback.textContent =
-        "No se pudo conectar con el servicio. Inténtalo nuevamente.";
+      requestFeedback.textContent = isSpanish
+        ? "No se pudo conectar con el servicio. Inténtalo nuevamente."
+        : "The service could not be reached. Please try again.";
     else if (mode === "login" && error.status === 401)
-      requestFeedback.textContent =
-        "No se pudo autenticar. Verifica la imagen y los puntos seleccionados.";
+      requestFeedback.textContent = isSpanish
+        ? "No se pudo autenticar. Verifica la imagen y los puntos seleccionados."
+        : "Authentication failed. Check the image and the selected points.";
     else if (mode === "register" && error.status === 409)
-      requestFeedback.textContent =
-        "Ese nombre o correo ya está asociado a una cuenta.";
+      requestFeedback.textContent = isSpanish
+        ? "Ese nombre o correo ya está asociado a una cuenta."
+        : "That username or email is already linked to an account.";
     else if (error.status === 503)
-      requestFeedback.textContent =
-        "El servicio de autenticación no está configurado. Reinicia la API con DATABASE_URL y AUTH_TOKEN_SECRET definidos.";
+      requestFeedback.textContent = isSpanish
+        ? "El servicio de autenticación no está configurado. Reinicia la API con DATABASE_URL y AUTH_TOKEN_SECRET definidos."
+        : "The authentication service is not configured. Restart the API with DATABASE_URL and AUTH_TOKEN_SECRET defined.";
     else if (
       mode === "register" &&
       error.status === 422 &&
       /weak|déb|pattern/i.test(String(error.message))
     )
-      requestFeedback.textContent =
-        "Esta selección presenta un patrón débil. Prueba con otros puntos.";
+      requestFeedback.textContent = isSpanish
+        ? "Esta selección presenta un patrón débil. Prueba con otros puntos."
+        : "This selection shows a weak pattern. Please try different points.";
     else requestFeedback.textContent = fallback;
   }
   async function runRegistrationAnalysis() {
@@ -195,7 +235,10 @@ function initializeAuth({ onAuthenticated }) {
     setPending(true, "analysis");
     analysisFeedback.hidden = false;
     analysisFeedback.className = "feedback is-pending";
-    analysisFeedback.textContent = "Analizando tu selección…";
+    analysisFeedback.textContent =
+      window.PasspointsCurrentLanguage === "es"
+        ? "Analizando tu selección…"
+        : "Analyzing your selection…";
     try {
       const result = await analyzeSelection(
         getImageData(),
@@ -207,7 +250,9 @@ function initializeAuth({ onAuthenticated }) {
       analysisFeedback.className = `feedback ${result.security.is_weak ? "is-warning" : "is-success"}`;
       analysisFeedback.textContent = result.security.is_weak
         ? weakPatternMessage(result.security)
-        : "Selección aceptada por el análisis. Ya puedes crear tu cuenta.";
+        : window.PasspointsCurrentLanguage === "es"
+          ? "Selección aceptada por el análisis. Ya puedes crear tu cuenta."
+          : "Selection accepted by the analysis. You can now create your account.";
     } catch (error) {
       analysisResult = null;
       analysisKey = "";
@@ -220,18 +265,28 @@ function initializeAuth({ onAuthenticated }) {
     }
   }
   function weakPatternMessage(security) {
-    const labels = {
-      "Patrón agrupado": "Los puntos están demasiado concentrados.",
-      "Patrón Line": "Los puntos forman una alineación.",
-      "Patrón Diag": "Los puntos forman una alineación diagonal.",
-      "Patrón angular":
-        "La disposición presenta una estructura demasiado regular.",
-      "Patrón regular": "Los puntos forman una estructura demasiado regular.",
-    };
+    const isSpanish = window.PasspointsCurrentLanguage === "es";
+    const labels = isSpanish
+      ? {
+          "Patrón agrupado": "Los puntos están demasiado concentrados.",
+          "Patrón Line": "Los puntos forman una alineación.",
+          "Patrón Diag": "Los puntos forman una alineación diagonal.",
+          "Patrón angular": "La disposición presenta una estructura demasiado regular.",
+          "Patrón regular": "Los puntos forman una estructura demasiado regular.",
+        }
+      : {
+          "Clustered pattern": "The points are too concentrated.",
+          "Line pattern": "The points form a straight alignment.",
+          "Diagonal pattern": "The points form a diagonal alignment.",
+          "Angular pattern": "The layout presents an overly regular structure.",
+          "Regular pattern": "The points form a structure that is too regular.",
+        };
     const reason = (security.patterns ?? [])
       .map((pattern) => labels[pattern])
       .filter(Boolean);
-    return `${reason.join(" ") || "Esta selección presenta un patrón débil."} Prueba con otros puntos.`;
+    return isSpanish
+      ? `${reason.join(" ") || "Esta selección presenta un patrón débil."} Prueba con otros puntos.`
+      : `${reason.join(" ") || "This selection shows a weak pattern."} Please try different points.`;
   }
   async function submitAuth(event) {
     event.preventDefault();
@@ -311,7 +366,7 @@ function initializeAuth({ onAuthenticated }) {
     });
   }
   function openPatternModal(pattern) {
-    const data = patternInformation[pattern];
+    const data = patternInformation[pattern]?.[window.PasspointsCurrentLanguage || "es"];
     if (!data) return;
     patternModalTitle.textContent = data.title;
     patternModalDescription.textContent = data.description;
@@ -329,6 +384,25 @@ function initializeAuth({ onAuthenticated }) {
   }
   registerTab.addEventListener("click", () => setMode("register"));
   loginTab.addEventListener("click", () => setMode("login"));
+  window.refreshLanguageUI = function refreshLanguageUI() {
+    registerTab.textContent = t("registerTab");
+    loginTab.textContent = t("loginTab");
+    if (window.currentUserState && typeof window.renderHome === "function") {
+      window.renderHome(window.currentUserState);
+    }
+    if (mode === "register") {
+      document.getElementById("view-title").textContent = t("authViewTitle");
+      selectionHint.textContent = t("selectionHint");
+    } else {
+      document.getElementById("view-title").textContent = t("authViewTitleLogin");
+      selectionHint.textContent =
+        window.PasspointsCurrentLanguage === "es"
+          ? "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica."
+          : "Select the same image and the same points you used when creating your graphical password.";
+    }
+    updateButtons();
+    setMode(mode);
+  };
   usernameInput.addEventListener("input", updateButtons);
   emailInput.addEventListener("input", updateButtons);
   authForm.addEventListener("submit", submitAuth);
