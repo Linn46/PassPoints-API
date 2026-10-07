@@ -9,11 +9,16 @@ function applyTheme(theme) {
   checkbox.checked = dark;
   const toggle = document.getElementById("theme-toggle");
   toggle.querySelector(".theme-icon").textContent = dark ? "☀" : "☾";
+  const isSpanish = (window.PasspointsCurrentLanguage || "es") === "es";
   toggle.setAttribute(
     "aria-label",
-    dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro",
+    dark
+      ? isSpanish ? "Cambiar a modo claro" : "Switch to light mode"
+      : isSpanish ? "Cambiar a modo oscuro" : "Switch to dark mode",
   );
-  toggle.title = dark ? "Modo claro" : "Modo oscuro";
+  toggle.title = dark
+    ? isSpanish ? "Modo claro" : "Light mode"
+    : isSpanish ? "Modo oscuro" : "Dark mode";
   localStorage.setItem("passpoints-theme", theme);
   updateThemeLabel();
 }
@@ -126,8 +131,8 @@ function showAccountDialog(action) {
     const details = document.createElement("dl");
     details.className = "profile-details";
     for (const [label, value] of [
-      ["Nombre", accountUser.username],
-      ["Correo electrónico", accountUser.email],
+      [window.PasspointsCurrentLanguage === "es" ? "Nombre" : "Name", accountUser.username],
+      [window.PasspointsCurrentLanguage === "es" ? "Correo electrónico" : "Email", accountUser.email],
     ]) {
       const row = document.createElement("div");
       const term = document.createElement("dt");
@@ -142,11 +147,17 @@ function showAccountDialog(action) {
     const paragraphs =
       action === "security"
         ? [
-            "Tu cuenta utiliza autenticación gráfica con una imagen y cinco puntos en un orden específico.",
-            "La selección utilizada se conserva solo durante esta sesión en la aplicación.",
+            window.PasspointsCurrentLanguage === "es"
+              ? "Tu cuenta utiliza autenticación gráfica con una imagen y cinco puntos en un orden específico."
+              : "Your account uses graphical authentication with one image and five points in a specific order.",
+            window.PasspointsCurrentLanguage === "es"
+              ? "La selección utilizada se conserva solo durante esta sesión en la aplicación."
+              : "The selected pattern is kept only for this session in the app.",
           ]
         : [
-            "Passpoints es un proyecto de investigación sobre autenticación gráfica y análisis de patrones de selección.",
+            window.PasspointsCurrentLanguage === "es"
+              ? "Passpoints es un proyecto de investigación sobre autenticación gráfica y análisis de patrones de selección."
+              : "Passpoints is a research project on graphical authentication and selection pattern analysis.",
           ];
     paragraphs.forEach((text) => {
       const paragraph = document.createElement("p");
