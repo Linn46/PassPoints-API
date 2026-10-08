@@ -58,6 +58,18 @@ window.PasspointsTranslations = {
     homeSpace: "ESPACIO PERSONAL",
     homeTitle: "Tu espacio de seguridad gráfica.",
     homeIntro: "Explora información, recursos y novedades sobre autenticación gráfica.",
+    homeConceptIndex: "01 / CONCEPTO",
+    homeConceptTitle: "¿Qué es una contraseña gráfica?",
+    homeConceptText:
+      "En lugar de recordar una cadena de caracteres, reconoces una imagen y reproduces una secuencia de puntos que elegiste sobre ella.",
+    homeSequenceIndex: "02 / TU SECUENCIA",
+    homeSequenceTitle: "Una imagen, cinco puntos",
+    homeSequenceText:
+      "La imagen sirve como referencia visual. El orden de los cinco puntos forma parte de tu credencial.",
+    homeAnalysisIndex: "03 / ANÁLISIS",
+    homeAnalysisTitle: "¿Por qué analizamos tus puntos?",
+    homeAnalysisText:
+      "El análisis busca patrones geométricos conocidos que podrían volver una selección más predecible.",
     passpointLabel: "TU PASSPOINT",
     credentialProtected: "Contraseña protegida",
     sequenceLabel: "SECUENCIA DE CINCO PUNTOS",
@@ -183,6 +195,18 @@ window.PasspointsTranslations = {
     homeSpace: "PERSONAL SPACE",
     homeTitle: "Your graphical security space.",
     homeIntro: "Explore information, resources, and updates about graphical authentication.",
+    homeConceptIndex: "01 / CONCEPT",
+    homeConceptTitle: "What is a graphical password?",
+    homeConceptText:
+      "Instead of remembering a string of characters, you recognize an image and reproduce a sequence of points you chose on it.",
+    homeSequenceIndex: "02 / YOUR SEQUENCE",
+    homeSequenceTitle: "One image, five points",
+    homeSequenceText:
+      "The image acts as a visual reference. The order of the five points is part of your credential.",
+    homeAnalysisIndex: "03 / ANALYSIS",
+    homeAnalysisTitle: "Why do we analyze your points?",
+    homeAnalysisText:
+      "The analysis looks for known geometric patterns that could make a selection more predictable.",
     passpointLabel: "YOUR PASSPOINT",
     credentialProtected: "Protected password",
     sequenceLabel: "SEQUENCE OF FIVE POINTS",
@@ -307,7 +331,12 @@ function setLanguage(language) {
 window.refreshLanguageUI = function refreshLanguageUI() {
   if (typeof window.renderHome === "function") {
     const current = window.currentUserState || null;
-    if (current) window.renderHome(current);
+    if (current) {
+      window.renderHome(current);
+      if (typeof window.updateAccountUser === "function") {
+        window.updateAccountUser(current.user);
+      }
+    }
   }
 };
 

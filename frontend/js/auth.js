@@ -387,8 +387,13 @@ function initializeAuth({ onAuthenticated }) {
   window.refreshLanguageUI = function refreshLanguageUI() {
     registerTab.textContent = t("registerTab");
     loginTab.textContent = t("loginTab");
-    if (window.currentUserState && typeof window.renderHome === "function") {
-      window.renderHome(window.currentUserState);
+    if (window.currentUserState) {
+      if (typeof window.renderHome === "function") {
+        window.renderHome(window.currentUserState);
+      }
+      if (typeof window.updateAccountUser === "function") {
+        window.updateAccountUser(window.currentUserState.user);
+      }
     }
     if (mode === "register") {
       document.getElementById("view-title").textContent = t("authViewTitle");
