@@ -80,6 +80,8 @@ class AnalysisRequest(BaseModel):
                     f"Point y={point.y} is outside the image."
                 )
 
+        self._validate_unique_points()
+
         if self.methods is None:
             if self.method is not None:
                 self.methods = [self.method]
@@ -99,3 +101,22 @@ class AnalysisRequest(BaseModel):
             self.methods = ["delaunay_statistical"]
 
         return self
+
+    def _validate_unique_points(self) -> None:
+        """Validate that all points are unique."""
+        point_tuples = [(p.x, p.y) for p in self.points]
+        if len(set(point_tuples)) != len(point_tuples):
+            duplicates = self._find_duplicate_indices(point_tuples)
+            raise ValueError(
+                f"Duplicate points found at indices {duplicates}. "
+                "All five points must be unique."
+            )
+
+    def _find_duplicate_indices(self, points: list[tuple[float, float]]) -> list[tuple[int, int]]:
+        """Find indices of duplicate points."""
+        duplicates = []
+        for i in range(len(points)):
+            for j in range(i + 1, len(points)):
+                if points[i] == points[j]:
+                    duplicates.append((i, j))
+        return duplicates

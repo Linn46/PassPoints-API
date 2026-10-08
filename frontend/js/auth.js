@@ -16,6 +16,9 @@ function initializeAuth({ onAuthenticated }) {
   const analysisFeedback = document.getElementById("analysis-feedback");
   const requestFeedback = document.getElementById("request-feedback");
   const selectionHint = document.getElementById("selection-hint");
+  const analysisMethodSelector = document.querySelector(
+    ".analysis-method-selector",
+  );
   const analysisMethodInputs = Array.from(
     document.querySelectorAll(".analysis-method-input"),
   );
@@ -167,6 +170,7 @@ function initializeAuth({ onAuthenticated }) {
         ? "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica."
         : "Select the same image and the same points you used when creating your graphical password.";
     weakPatterns.hidden = !registering;
+    analysisMethodSelector.hidden = !registering;
     analyzeButton.hidden = !registering;
     analysisFeedback.hidden = true;
     hideRequestFeedback();
