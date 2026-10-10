@@ -21,7 +21,7 @@ El proyecto utiliza una arquitectura modular en la que se comparten los componen
     │       │   │   └── triangulation.py
     │       │   │
     │       │   └── mean_distance_convex_hull/
-    │       │       └── 
+    │       │       └──
     │       │
     │       ├── registry.py
     │       ├── result_mapper.py
@@ -85,28 +85,38 @@ Docker también está disponible como alternativa para ejecutar la API.
 ## Instalación desde cero
 
 ### 1. Clonar el proyecto
+
 ```
     git clone <repository-url>
     cd passpoints-api
 ```
+
 Si el repositorio ya fue descargado:
+
 ```
     cd passpoints-api
 ```
+
 ### 2. Crear el entorno virtual
+
 ```
     python3 -m venv .venv
 ```
+
 Activar el entorno virtual:
+
 ```
     source .venv/bin/activate
 ```
+
 ### 3. Instalar las dependencias
+
 ```
     python -m pip install --upgrade pip
 
     python -m pip install -r requirements.txt
 ```
+
 ## Configuración de PostgreSQL
 
 El proyecto utiliza PostgreSQL para la persistencia de los datos.
@@ -116,14 +126,17 @@ Antes de ejecutar las migraciones, PostgreSQL debe estar instalado y ejecutándo
 ### Crear la base de datos
 
 Crear una base de datos llamada `passpoints`:
+
 ```
     CREATE DATABASE passpoints;
 ```
+
 El usuario y la contraseña utilizados dependen de la instalación local de PostgreSQL.
 
 ### Configurar `DATABASE_URL`
 
 En Bash:
+
 ```
     export DATABASE_URL="postgresql+psycopg://<usuario>:<clave>@localhost:5432/passpoints"
 ```
@@ -132,15 +145,19 @@ Sustituye `<usuario>` y `<clave>` por las credenciales correspondientes a tu ins
 
 No coloques credenciales reales en el README ni las subas al repositorio.
 Puedes comprobar que la variable quedó configurada con:
+
 ```
     echo "$DATABASE_URL"
 ```
+
 ### Comprobar la conexión
 
 Ejecuta:
+
 ```
     python -c "import os; from sqlalchemy import create_engine, text; e=create_engine(os.environ['DATABASE_URL']); print(e.connect().execute(text('select 1')).scalar()); e.dispose()"
 ```
+
 Si la conexión es correcta, debe mostrarse:
 
     1
@@ -150,29 +167,37 @@ Si la conexión es correcta, debe mostrarse:
 La autenticación utiliza `AUTH_TOKEN_SECRET` para la generación y validación de los tokens.
 
 Genera un secreto aleatorio:
+
 ```
     export AUTH_TOKEN_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 ```
+
 Puedes comprobar que existe con:
+
 ```
     echo "$AUTH_TOKEN_SECRET"
 ```
+
 No compartas este valor ni lo almacenes directamente en el repositorio.
 
 ## Ejecutar las migraciones
 
 Una vez configurada la conexión con PostgreSQL:
+
 ```
     python -m alembic upgrade head
 ```
+
 Este comando aplica las migraciones existentes y crea o actualiza las tablas necesarias de la base de datos.
 
 ## Ejecutar la API
 
 Con el entorno virtual activado y las variables de entorno configuradas:
+
 ```
     uvicorn app.main:app --reload --port 8001
 ```
+
 La API estará disponible en:
 
     http://localhost:8001
@@ -350,6 +375,7 @@ Si la ejecución mediante Docker requiere variables de entorno, deben proporcion
 ## Flujo de desarrollo recomendado
 
 Para trabajar con el proyecto desde cero:
+
 ```
     cd passpoints-api
 
@@ -370,10 +396,13 @@ Para trabajar con el proyecto desde cero:
 
     uvicorn app.main:app --reload --port 8001
 ```
+
 En otra terminal, con el entorno virtual activado:
+
 ```
     python -m http.server 5500 -d frontend
 ```
+
 Después:
 
     API:
