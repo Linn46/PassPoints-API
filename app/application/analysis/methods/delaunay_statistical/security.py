@@ -9,7 +9,6 @@ from app.geometry.triangle.perimeter import triangle_perimeter
 from app.statistics.angle_test.test import AngleTestResult
 from app.statistics.perimeter_test.test import PerimeterTestStatistic
 
-
 def assess_security(
     perimeter_test: PerimeterTestStatistic,
     angle_test: AngleTestResult,
@@ -77,12 +76,10 @@ def assess_security(
         ),
     )
 
-
 def _join_evidence(evidence: list[str]) -> str:
     if len(evidence) == 1:
         return evidence[0]
     return " y ".join(evidence)
-
 
 def _triangles_are_regular(triangles: tuple[Triangle, ...]) -> bool:
     perimeters = [triangle_perimeter(triangle) for triangle in triangles]
@@ -102,7 +99,6 @@ def _triangles_are_regular(triangles: tuple[Triangle, ...]) -> bool:
 
     return perimeter_variation <= 0.1 and angle_variation <= 0.1
 
-
 def _points_are_grouped(
     points: list[Point],
     image_width: int,
@@ -116,7 +112,6 @@ def _points_are_grouped(
     grouping_distance = min(image_width, image_height) * 0.25
 
     return maximum_distance <= grouping_distance
-
 
 def _angular_pattern(
     points: list[Point],
