@@ -2,12 +2,19 @@
   <section class="auth-panel">
     <div class="auth-heading">
       <span class="welcome-label">PASSPOINTS</span>
-      <h1 id="view-title" data-i18n="authViewTitle">Una contraseña que se dibuja.</h1>
+      <h1 id="view-title" data-i18n="authViewTitle">
+        Una contraseña que se dibuja.
+      </h1>
       <p data-i18n="authIntro">
         Utiliza una imagen y una secuencia de cinco puntos que solo tú conozcas.
       </p>
     </div>
-    <div class="auth-tabs" role="tablist" data-i18n-aria-label="userAccess" aria-label="Acceso">
+    <div
+      class="auth-tabs"
+      role="tablist"
+      data-i18n-aria-label="userAccess"
+      aria-label="Acceso"
+    >
       <button
         id="register-tab"
         class="auth-tab is-active"
@@ -32,7 +39,9 @@
     </div>
     <form id="auth-form" class="auth-form" novalidate>
       <div id="username-field" class="form-group">
-        <label class="form-label" for="username" data-i18n="usernameLabel">Nombre de usuario</label>
+        <label class="form-label" for="username" data-i18n="usernameLabel"
+          >Nombre de usuario</label
+        >
         <div class="input-wrapper">
           <span class="input-icon" aria-hidden="true">@</span
           ><input
@@ -48,7 +57,9 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="email" data-i18n="emailLabel">Correo electrónico</label>
+        <label class="form-label" for="email" data-i18n="emailLabel"
+          >Correo electrónico</label
+        >
         <div class="input-wrapper">
           <span class="input-icon" aria-hidden="true">@</span
           ><input
@@ -69,10 +80,14 @@
             <span class="section-number">01</span>
             <div>
               <h2 data-i18n="chooseImage">Elige tu imagen</h2>
-              <p data-i18n="chooseImageHint">Selecciona una escena que puedas recordar.</p>
+              <p data-i18n="chooseImageHint">
+                Selecciona una escena que puedas recordar.
+              </p>
             </div>
           </div>
-          <span id="image-status" class="section-status" data-i18n="imageStatus">Sin seleccionar</span>
+          <span id="image-status" class="section-status" data-i18n="imageStatus"
+            >Sin seleccionar</span
+          >
         </div>
         <div
           id="image-options"
@@ -87,7 +102,9 @@
             <span class="section-number">02</span>
             <div>
               <h2 data-i18n="createSequence">Crea tu secuencia</h2>
-              <p data-i18n="sequencePrompt">Selecciona exactamente cinco puntos.</p>
+              <p data-i18n="sequencePrompt">
+                Selecciona exactamente cinco puntos.
+              </p>
             </div>
           </div>
           <div class="point-counter"><strong id="point-count">0/5</strong></div>
@@ -119,7 +136,12 @@
           </div>
         </div>
         <div class="point-actions">
-          <span id="point-feedback" class="point-feedback" aria-live="polite" data-i18n="pointFeedbackWaiting">Aún no hay puntos seleccionados.</span
+          <span
+            id="point-feedback"
+            class="point-feedback"
+            aria-live="polite"
+            data-i18n="pointFeedbackWaiting"
+            >Aún no hay puntos seleccionados.</span
           ><button
             id="clear-points"
             class="reset-button"
@@ -131,17 +153,28 @@
           </button>
         </div>
       </div>
-      <div class="analysis-method-selector" aria-label="Métodos de análisis" data-i18n-aria-label="analysisMethods">
+      <div
+        class="analysis-method-selector"
+        aria-label="Métodos de análisis"
+        data-i18n-aria-label="analysisMethods"
+      >
         <div class="section-header method-header">
           <div>
             <span class="section-number">03</span>
             <div>
               <h2 data-i18n="analysisMethods">Métodos de análisis</h2>
-              <p data-i18n="analysisMethodsHint">Selecciona uno o varios métodos para evaluar tu contraseña.</p>
+              <p data-i18n="analysisMethodsHint">
+                Selecciona uno o varios métodos para evaluar tu contraseña.
+              </p>
             </div>
           </div>
         </div>
-        <div class="method-options" role="group" aria-label="Selecciona un método o varios" data-i18n-aria-label="analysisMethodsHint">
+        <div
+          class="method-options"
+          role="group"
+          aria-label="Selecciona un método o varios"
+          data-i18n-aria-label="analysisMethodsHint"
+        >
           <label class="method-option">
             <input
               class="analysis-method-input"
@@ -149,7 +182,9 @@
               value="delaunay_statistical"
               checked
             />
-            <span data-i18n="delaunayMethodLabel">Delaunay</span>
+            <span data-i18n="delaunayMethodLabel"
+              >Trinagulación de Delaunay</span
+            >
           </label>
           <label class="method-option">
             <input
@@ -158,7 +193,9 @@
               value="mean_distance_convex_hull"
               checked
             />
-            <span data-i18n="distanceHullMethodLabel">Distancia media + convex hull</span>
+            <span data-i18n="distanceHullMethodLabel"
+              >Distancia media + convex hull</span
+            >
           </label>
         </div>
       </div>
@@ -177,7 +214,8 @@
         hidden
       ></div>
       <button id="analyze-button" class="analyze-button" type="button" disabled>
-        <span id="analyze-label" data-i18n="analyzeSelection">Analizar selección</span
+        <span id="analyze-label" data-i18n="analyzeSelection"
+          >Analizar selección</span
         ><span
           id="analyze-spinner"
           class="spinner"
@@ -196,73 +234,28 @@
         ><span class="submit-arrow" aria-hidden="true">→</span>
       </button>
     </form>
-
-    <section
-      id="weak-patterns"
-      class="education"
-      aria-labelledby="weak-pattern-title"
-    >
-      <div class="education-heading">
-        <span class="small-label" data-i18n="securitySection">SEGURIDAD</span>
-        <h2 id="weak-pattern-title" data-i18n="securityHeading">Una contraseña más difícil de predecir</h2>
-        <p data-i18n="securityIntro">
-          El análisis comprueba si tus cinco puntos forman patrones demasiado
-          fáciles de anticipar.
-        </p>
-      </div>
-      <div class="pattern-grid">
-        <button class="pattern-card" type="button" data-pattern="cluster">
-          <span class="pattern-visual pattern-cluster" aria-hidden="true"
-            ><i></i><i></i><i></i><i></i><i></i></span
-          ><span class="pattern-card-content"
-            ><strong data-i18n="patternGrouped">Agrupado</strong><span data-i18n="patternGroupDescription">Puntos demasiado concentrados.</span
-            ><small data-i18n="patternDescription">Ver explicación →</small></span
-          >
-        </button>
-        <button class="pattern-card" type="button" data-pattern="line">
-          <span class="pattern-visual pattern-line" aria-hidden="true"
-            ><i></i><i></i><i></i><i></i><i></i></span
-          ><span class="pattern-card-content"
-            ><strong data-i18n="patternLine">Line / Diag</strong
-            ><span data-i18n="patternLineDescription">Puntos alineados en línea o diagonal.</span
-            ><small data-i18n="patternDescription">Ver explicación →</small></span
-          >
-        </button>
-        <button class="pattern-card" type="button" data-pattern="regular">
-          <span class="pattern-visual pattern-regular" aria-hidden="true"
-            ><i></i><i></i><i></i><i></i><i></i></span
-          ><span class="pattern-card-content"
-            ><strong data-i18n="patternRegular">Regular</strong
-            ><span data-i18n="patternRegularDescription">Puntos separados de forma uniforme.</span
-            ><small data-i18n="patternDescription">Ver explicación →</small></span
-          >
-        </button>
-        <button class="pattern-card" type="button" data-pattern="angular">
-          <span class="pattern-visual pattern-angular" aria-hidden="true"
-            ><i></i><i></i><i></i><i></i><i></i></span
-          ><span class="pattern-card-content"
-            ><strong data-i18n="patternAngular">Angular</strong
-            ><span data-i18n="patternAngularDescription">Una estructura geométrica ordenada.</span
-            ><small data-i18n="patternDescription">Ver explicación →</small></span
-          >
-        </button>
-      </div>
-    </section>
   </section>
 
-  <aside class="visual-panel" aria-label="Información sobre Passpoints" data-i18n-aria-label="panelInfoAriaLabel">
+  <aside
+    class="visual-panel"
+    aria-label="Información sobre Passpoints"
+    data-i18n-aria-label="panelInfoAriaLabel"
+  >
     <div class="visual-top">
-      <span class="visual-badge" data-i18n="visualBadge">SEGURIDAD GRÁFICA</span>
+      <span class="visual-badge" data-i18n="visualBadge"
+        >SEGURIDAD GRÁFICA</span
+      >
       <div class="visual-theme-text">
-        <span data-i18n="visualSummary">5 puntos</span><span data-i18n="visualSequence">1 secuencia</span>
+        <span data-i18n="visualSummary">5 puntos</span
+        ><span data-i18n="visualSequence">1 secuencia</span>
       </div>
     </div>
     <div class="visual-card">
       <div class="visual-card-header">
         <div>
-          <span data-i18n="visualPassword">TU CONTRASEÑA</span><strong data-i18n="visualSequenceTitle">Una secuencia visual</strong>
+          <span data-i18n="visualPassword">TU CONTRASEÑA</span
+          ><strong data-i18n="visualSequenceTitle">Una secuencia visual</strong>
         </div>
-        <span class="visual-dots">•••</span>
       </div>
       <div
         class="visual-canvas"
@@ -326,12 +319,15 @@
         </div>
         <div class="canvas-message">
           <span>PASSPOINTS</span
-          ><strong data-i18n="rememberPath">Recuerda el camino,<br />no la contraseña.</strong>
+          ><strong data-i18n="rememberPath"
+            >Recuerda el camino,<br />no la contraseña.</strong
+          >
         </div>
       </div>
       <div class="visual-card-footer">
         <div>
-          <span class="footer-dot"></span><span data-i18n="sequenceProtected">Secuencia protegida</span>
+          <span class="footer-dot"></span
+          ><span data-i18n="sequenceProtected">Secuencia protegida</span>
         </div>
         <span>01 — 05</span>
       </div>
@@ -346,19 +342,65 @@
         </p>
       </div>
     </div>
-    <div class="feature-row">
-      <div class="feature-item">
-        <span>01</span><strong data-i18n="visualFeature">Visual</strong><small data-i18n="easyToRemember">Fácil de recordar</small>
+
+    <section
+      id="weak-patterns"
+      class="education"
+      aria-labelledby="weak-pattern-title"
+    >
+      <div class="education-heading">
+        <span class="small-label" data-i18n="securitySection">SEGURIDAD</span>
+        <h2 id="weak-pattern-title" data-i18n="securityHeading">
+          Una contraseña más difícil de predecir
+        </h2>
+        <p data-i18n="securityIntro">
+          El análisis comprueba si tus cinco puntos forman patrones demasiado
+          fáciles de anticipar.
+        </p>
       </div>
-      <div class="feature-item">
-        <span>02</span><strong data-i18n="personalFeature">Personal</strong
-        ><small data-i18n="ownSequence">Tu propia secuencia</small>
+      <div class="pattern-grid">
+        <button class="pattern-card" type="button" data-pattern="cluster">
+          <span class="pattern-visual pattern-cluster" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong data-i18n="patternGrouped">Agrupado</strong
+            ><span data-i18n="patternGroupDescription"
+              >Puntos demasiado concentrados.</span
+            ><small data-i18n="patternDescription">Ver más</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="line">
+          <span class="pattern-visual pattern-line" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong data-i18n="patternLine">Line / Diag</strong
+            ><span data-i18n="patternLineDescription"
+              >Puntos alineados en línea o diagonal.</span
+            ><small data-i18n="patternDescription">Ver más</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="regular">
+          <span class="pattern-visual pattern-regular" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong data-i18n="patternRegular">Regular</strong
+            ><span data-i18n="patternRegularDescription"
+              >Puntos separados de forma uniforme.</span
+            ><small data-i18n="patternDescription">Ver más</small></span
+          >
+        </button>
+        <button class="pattern-card" type="button" data-pattern="angular">
+          <span class="pattern-visual pattern-angular" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i><i></i></span
+          ><span class="pattern-card-content"
+            ><strong data-i18n="patternAngular">Angular</strong
+            ><span data-i18n="patternAngularDescription"
+              >Una estructura geométrica ordenada.</span
+            ><small data-i18n="patternDescription">Ver más</small></span
+          >
+        </button>
       </div>
-      <div class="feature-item">
-        <span>03</span><strong data-i18n="analyticalFeature">Analizada</strong
-        ><small data-i18n="detectPatterns">Detectamos patrones</small>
-      </div>
-    </div>
+    </section>
   </aside>
 </div>
 <div
@@ -385,7 +427,12 @@
       class="modal-pattern-visual"
       aria-hidden="true"
     ></div>
-    <span id="pattern-modal-label" class="small-label" data-i18n="weakPatternModalLabel">PATRÓN DÉBIL</span>
+    <span
+      id="pattern-modal-label"
+      class="small-label"
+      data-i18n="weakPatternModalLabel"
+      >PATRÓN DÉBIL</span
+    >
     <h2 id="pattern-modal-title">Patrón agrupado</h2>
     <p id="pattern-modal-description">
       Cuando los puntos se concentran demasiado en una zona, la selección puede
@@ -393,7 +440,9 @@
     </p>
     <div class="pattern-modal-tip">
       <span data-i18n="patternModalTipLabel">Consejo</span>
-      <strong id="pattern-modal-tip-text" data-i18n="weakPatternModalTip">Distribuye los puntos por diferentes zonas de la imagen.</strong>
+      <strong id="pattern-modal-tip-text" data-i18n="weakPatternModalTip"
+        >Distribuye los puntos por diferentes zonas de la imagen.</strong
+      >
     </div>
   </div>
 </div>
