@@ -90,6 +90,31 @@ class LoginRequest(BaseModel):
             raise ValueError("The five points must be unique.")
         return self
 
+
+class LoginImagesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=5, max_length=254)
+    image_ids: list[str] = Field(min_length=1, max_length=100)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            value = value.strip().lower()
+            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+                raise ValueError("A valid email address is required.")
+        return value
+
+    @field_validator("image_ids")
+    @classmethod
+    def clean_image_ids(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value or len(value) > 255 for value in cleaned):
+            raise ValueError("Image IDs must be non-blank and at most 255 characters.")
+        return cleaned
+
+
 class UserResponse(BaseModel):
     id: str
     username: str
@@ -100,3 +125,7 @@ class AuthenticationResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: UserResponse
+
+
+class LoginImagesResponse(BaseModel):
+    image_ids: list[str] = Field(min_length=3, max_length=3)

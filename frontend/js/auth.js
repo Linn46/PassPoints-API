@@ -104,6 +104,9 @@ function initializeAuth({ onAuthenticated }) {
   let pending = false;
   let analysisResult = null;
   let analysisKey = "";
+  let loginImagesReady = true;
+  let loginImageRequestId = 0;
+  let loginImageTimer = null;
 
   function hideRequestFeedback() {
     requestFeedback.hidden = true;
@@ -147,14 +150,23 @@ function initializeAuth({ onAuthenticated }) {
       pending ||
       !ready ||
       !methodsReady ||
+      (mode === "login" && !loginImagesReady) ||
       (mode === "register" && !hasAcceptedAnalysis());
     submitLabel.textContent =
       mode === "register" ? t("createAccount") : t("signIn");
   }
   function setMode(nextMode) {
     if (pending) return;
+    const modeChanged = mode !== nextMode;
     mode = nextMode;
     const registering = mode === "register";
+    if (modeChanged) {
+      clearTimeout(loginImageTimer);
+      loginImageRequestId += 1;
+      loginImagesReady = registering;
+      setImageSelectionMode(mode);
+      if (!registering) refreshLoginImageOptions();
+    }
     registerTab.classList.toggle("is-active", registering);
     loginTab.classList.toggle("is-active", !registering);
     registerTab.setAttribute("aria-selected", String(registering));
@@ -167,14 +179,49 @@ function initializeAuth({ onAuthenticated }) {
     selectionHint.textContent = registering
       ? t("selectionHint")
       : window.PasspointsCurrentLanguage === "es"
-        ? "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica."
-        : "Select the same image and the same points you used when creating your graphical password.";
+        ? "Introduce tu correo, elige tu imagen entre las tres opciones y marca los mismos puntos de siempre."
+        : "Enter your email, choose your image from the three options, and select your usual points.";
     weakPatterns.hidden = !registering;
     analysisMethodSelector.hidden = !registering;
     analyzeButton.hidden = !registering;
     analysisFeedback.hidden = true;
     hideRequestFeedback();
     updateButtons();
+  }
+  function refreshLoginImageOptions() {
+    if (mode !== "login") return;
+    clearTimeout(loginImageTimer);
+    const requestId = ++loginImageRequestId;
+    const email = emailInput.value.trim().toLowerCase();
+    loginImagesReady = false;
+    setImageSelectionMode("login");
+    hideRequestFeedback();
+    updateButtons();
+    if (!emailInput.validity.valid || email.length < 5) return;
+
+    loginImageTimer = setTimeout(async () => {
+      try {
+        const response = await getLoginImageOptions(email, getImageCatalogIds());
+        if (
+          requestId !== loginImageRequestId ||
+          mode !== "login" ||
+          email !== emailInput.value.trim().toLowerCase()
+        )
+          return;
+        setLoginImageOptions(response.image_ids);
+        loginImagesReady = true;
+      } catch (error) {
+        if (requestId !== loginImageRequestId || mode !== "login") return;
+        showRequestError(
+          error,
+          window.PasspointsCurrentLanguage === "es"
+            ? "No se pudieron cargar las imágenes de acceso."
+            : "The login images could not be loaded.",
+        );
+      } finally {
+        if (requestId === loginImageRequestId) updateButtons();
+      }
+    }, 250);
   }
   function invalidateAnalysis() {
     analysisResult = null;
@@ -413,7 +460,10 @@ function initializeAuth({ onAuthenticated }) {
     setMode(mode);
   };
   usernameInput.addEventListener("input", updateButtons);
-  emailInput.addEventListener("input", updateButtons);
+  emailInput.addEventListener("input", () => {
+    if (mode === "login") refreshLoginImageOptions();
+    updateButtons();
+  });
   authForm.addEventListener("submit", submitAuth);
   analyzeButton.addEventListener("click", runRegistrationAnalysis);
   document

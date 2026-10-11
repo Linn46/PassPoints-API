@@ -5,9 +5,15 @@ from sqlalchemy.orm import Session
 
 from app.api.schemas.auth import (
     AuthenticationResponse,
+    LoginImagesRequest,
+    LoginImagesResponse,
     LoginRequest,
     RegisterRequest,
     UserResponse,
+)
+from app.application.auth.image_selection import (
+    InsufficientImageCatalogError,
+    RegisteredImageUnavailableError,
 )
 from app.application.auth.service import (
     AuthService,
@@ -63,6 +69,24 @@ def register(
             "Authentication is not configured. Set AUTH_TOKEN_SECRET to at least 32 bytes and restart the API.",
         ) from error
     return make_response(user, token, expires_in)
+
+
+@router.post("/login-images", response_model=LoginImagesResponse)
+def login_images(
+    request: LoginImagesRequest,
+    service: Annotated[AuthService, Depends(get_auth_service)],
+) -> LoginImagesResponse:
+    try:
+        image_ids = service.login_image_options(request.email, request.image_ids)
+    except InsufficientImageCatalogError as error:
+        raise HTTPException(
+            422, "At least three different images are required."
+        ) from error
+    except RegisteredImageUnavailableError as error:
+        raise HTTPException(
+            409, "The registered image is unavailable in the current catalog."
+        ) from error
+    return LoginImagesResponse(image_ids=image_ids)
 
 
 @router.post("/login", response_model=AuthenticationResponse)
