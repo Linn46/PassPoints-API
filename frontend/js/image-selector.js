@@ -182,7 +182,11 @@ function initializeImageSelector() {
       const label = document.createElement("span");
       label.textContent = image.name;
       button.append(thumbnail, label);
-      button.addEventListener("click", () => selectImage(image));
+      button.addEventListener("click", () => {
+        selectImage(image).catch((error) => {
+          console.error("Could not load the selected Passpoints image:", error);
+        });
+      });
       imageOptions.appendChild(button);
     });
   }
@@ -194,23 +198,41 @@ function initializeImageSelector() {
     )
       return;
     selectedImageData = image;
+    document.dispatchEvent(
+      new CustomEvent("image-selection-started", { detail: getImageData() }),
+    );
     imageOptions.querySelectorAll(".image-option").forEach((button) => {
       const isSelected = button.dataset.imageId === image.id;
       button.classList.toggle("is-selected", isSelected);
       button.setAttribute("aria-pressed", String(isSelected));
     });
 
-    selectedImage.onload = () => {
-      if (selectedImageData?.id !== image.id) return;
-      imageFrame.hidden = false;
-      stageEmpty.hidden = true;
-      imageStage.classList.remove("is-empty");
-      imageStatus.textContent = image.name;
-      document.dispatchEvent(
-        new CustomEvent("image-loaded", { detail: getImageData() }),
-      );
-    };
-    selectedImage.src = image.src;
+    return new Promise((resolve, reject) => {
+      selectedImage.onload = () => {
+        if (selectedImageData?.id !== image.id) {
+          resolve(null);
+          return;
+        }
+        imageFrame.hidden = false;
+        stageEmpty.hidden = true;
+        imageStage.classList.remove("is-empty");
+        imageStatus.textContent = image.name;
+        document.dispatchEvent(
+          new CustomEvent("image-loaded", { detail: getImageData() }),
+        );
+        resolve(getImageData());
+      };
+      selectedImage.onerror = () => {
+        if (selectedImageData?.id === image.id) {
+          selectedImageData = null;
+          imageFrame.hidden = true;
+          stageEmpty.hidden = false;
+          imageStage.classList.add("is-empty");
+        }
+        reject(new Error(`Could not load image ${image.id}.`));
+      };
+      selectedImage.src = image.src;
+    });
   }
 
   function clearSelection() {
@@ -231,6 +253,19 @@ function initializeImageSelector() {
     clearSelection();
   }
 
+  function setRegistrationImageOptions(imageIds) {
+    if (!Array.isArray(imageIds) || imageIds.length !== 5 || new Set(imageIds).size !== 5)
+      throw new Error("Registration requires exactly five different image options.");
+    const imagesById = new Map(PASSPOINT_IMAGES.map((image) => [image.id, image]));
+    const images = imageIds.map((id) => imagesById.get(id));
+    if (images.some((image) => !image))
+      throw new Error("Registration options contain an image missing from the catalog.");
+    currentImageOptions = images;
+    imageOptions.dataset.mode = "register";
+    renderImageOptions();
+    clearSelection();
+  }
+
   function setLoginImageOptions(imageIds) {
     if (!Array.isArray(imageIds) || imageIds.length !== 3 || new Set(imageIds).size !== 3)
       throw new Error("Login requires exactly three different image options.");
@@ -242,6 +277,10 @@ function initializeImageSelector() {
     imageOptions.dataset.mode = "login";
     renderImageOptions();
     clearSelection();
+  }
+
+  function getCatalogImage(imageId) {
+    return PASSPOINT_IMAGES.find((image) => image.id === imageId) ?? null;
   }
 
   function setImageSelectionLocked(locked) {
@@ -264,8 +303,11 @@ function initializeImageSelector() {
   Object.assign(window, {
     getImageData,
     getImageCatalogIds: () => PASSPOINT_IMAGES.map((image) => image.id),
+    getImageOptionIds: () => currentImageOptions.map((image) => image.id),
+    getCatalogImage,
     setImageSelectionLocked,
     setImageSelectionMode,
+    setRegistrationImageOptions,
     setLoginImageOptions,
     selectImage,
   });
