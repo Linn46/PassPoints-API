@@ -75,3 +75,10 @@ async function authenticate(email, image, points) {
     ...authPayload(image, points),
   });
 }
+
+async function getLoginImageOptions(email, imageIds) {
+  return requestJson(`${API_ORIGIN}/auth/login-images`, {
+    email,
+    image_ids: imageIds,
+  });
+}

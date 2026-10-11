@@ -29,12 +29,131 @@ const PASSPOINT_IMAGES = [
     src: "assets/images/coastline.svg",
     tone: "sea",
   },
+  {
+    id: "mountain-lake",
+    name: "Mountain lake",
+    src: "assets/images/mountain-lake.svg",
+    tone: "sea",
+  },
+  {
+    id: "forest-trail",
+    name: "Forest trail",
+    src: "assets/images/forest-trail.svg",
+    tone: "leaf",
+  },
+  {
+    id: "city-night",
+    name: "City at night",
+    src: "assets/images/city-night.svg",
+    tone: "blue",
+  },
+  {
+    id: "coral-reef",
+    name: "Coral reef",
+    src: "assets/images/coral-reef.svg",
+    tone: "sea",
+  },
+  {
+    id: "snow-cabin",
+    name: "Snow cabin",
+    src: "assets/images/snow-cabin.svg",
+    tone: "sand",
+  },
+  {
+    id: "autumn-park",
+    name: "Autumn park",
+    src: "assets/images/autumn-park.svg",
+    tone: "clay",
+  },
+  {
+    id: "lavender-field",
+    name: "Lavender field",
+    src: "assets/images/lavender-field.svg",
+    tone: "leaf",
+  },
+  {
+    id: "waterfall",
+    name: "Waterfall",
+    src: "assets/images/waterfall.svg",
+    tone: "sea",
+  },
+  {
+    id: "lighthouse",
+    name: "Lighthouse",
+    src: "assets/images/lighthouse.svg",
+    tone: "sand",
+  },
+  {
+    id: "red-canyon",
+    name: "Red canyon",
+    src: "assets/images/red-canyon.svg",
+    tone: "clay",
+  },
+  {
+    id: "night-sky",
+    name: "Night sky",
+    src: "assets/images/night-sky.svg",
+    tone: "blue",
+  },
+  {
+    id: "vineyard",
+    name: "Vineyard",
+    src: "assets/images/vineyard.svg",
+    tone: "leaf",
+  },
+  {
+    id: "bamboo-grove",
+    name: "Bamboo grove",
+    src: "assets/images/bamboo-grove.svg",
+    tone: "leaf",
+  },
+  {
+    id: "harbor",
+    name: "Harbor",
+    src: "assets/images/harbor.svg",
+    tone: "sea",
+  },
+  {
+    id: "meadow",
+    name: "Wildflower meadow",
+    src: "assets/images/meadow.svg",
+    tone: "leaf",
+  },
+  {
+    id: "city-canal",
+    name: "City canal",
+    src: "assets/images/city-canal.svg",
+    tone: "blue",
+  },
 ];
 
 const PASSPOINT_IMAGE_SIZE = { width: 1920, height: 1080 };
 
 let selectedImageData = null;
 let imageSelectionLocked = false;
+let currentImageOptions = [];
+
+function selectRandomImages(images, count, random = Math.random) {
+  const uniqueImages = [];
+  const seenIds = new Set();
+  for (const image of images) {
+    if (!image || typeof image.id !== "string" || !image.id || seenIds.has(image.id))
+      continue;
+    seenIds.add(image.id);
+    uniqueImages.push(image);
+  }
+  if (!Number.isInteger(count) || count < 0 || uniqueImages.length < count)
+    throw new RangeError(`Cannot choose ${count} images from a catalog of ${uniqueImages.length}.`);
+
+  for (let index = uniqueImages.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [uniqueImages[index], uniqueImages[swapIndex]] = [
+      uniqueImages[swapIndex],
+      uniqueImages[index],
+    ];
+  }
+  return uniqueImages.slice(0, count);
+}
 
 function initializeImageSelector() {
   const imageOptions = document.getElementById("image-options");
@@ -45,7 +164,8 @@ function initializeImageSelector() {
   const imageStatus = document.getElementById("image-status");
 
   function renderImageOptions() {
-    PASSPOINT_IMAGES.forEach((image) => {
+    imageOptions.replaceChildren();
+    currentImageOptions.forEach((image) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "image-option";
@@ -68,7 +188,11 @@ function initializeImageSelector() {
   }
 
   function selectImage(image) {
-    if (imageSelectionLocked) return;
+    if (
+      imageSelectionLocked ||
+      !currentImageOptions.some((option) => option.id === image.id)
+    )
+      return;
     selectedImageData = image;
     imageOptions.querySelectorAll(".image-option").forEach((button) => {
       const isSelected = button.dataset.imageId === image.id;
@@ -77,6 +201,7 @@ function initializeImageSelector() {
     });
 
     selectedImage.onload = () => {
+      if (selectedImageData?.id !== image.id) return;
       imageFrame.hidden = false;
       stageEmpty.hidden = true;
       imageStage.classList.remove("is-empty");
@@ -86,6 +211,37 @@ function initializeImageSelector() {
       );
     };
     selectedImage.src = image.src;
+  }
+
+  function clearSelection() {
+    selectedImageData = null;
+    imageFrame.hidden = true;
+    stageEmpty.hidden = false;
+    imageStage.classList.add("is-empty");
+    imageStatus.textContent =
+      window.PasspointsCurrentLanguage === "en" ? "Not selected" : "Sin seleccionar";
+    document.dispatchEvent(new CustomEvent("image-loaded", { detail: null }));
+  }
+
+  function setImageSelectionMode(mode) {
+    imageOptions.dataset.mode = mode;
+    currentImageOptions =
+      mode === "register" ? selectRandomImages(PASSPOINT_IMAGES, 5) : [];
+    renderImageOptions();
+    clearSelection();
+  }
+
+  function setLoginImageOptions(imageIds) {
+    if (!Array.isArray(imageIds) || imageIds.length !== 3 || new Set(imageIds).size !== 3)
+      throw new Error("Login requires exactly three different image options.");
+    const imagesById = new Map(PASSPOINT_IMAGES.map((image) => [image.id, image]));
+    const images = imageIds.map((id) => imagesById.get(id));
+    if (images.some((image) => !image))
+      throw new Error("Login options contain an image missing from the catalog.");
+    currentImageOptions = images;
+    imageOptions.dataset.mode = "login";
+    renderImageOptions();
+    clearSelection();
   }
 
   function setImageSelectionLocked(locked) {
@@ -105,6 +261,13 @@ function initializeImageSelector() {
     };
   }
 
-  Object.assign(window, { getImageData, setImageSelectionLocked, selectImage });
-  renderImageOptions();
+  Object.assign(window, {
+    getImageData,
+    getImageCatalogIds: () => PASSPOINT_IMAGES.map((image) => image.id),
+    setImageSelectionLocked,
+    setImageSelectionMode,
+    setLoginImageOptions,
+    selectImage,
+  });
+  setImageSelectionMode("register");
 }

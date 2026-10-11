@@ -2,6 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.application.analysis.service import AnalysisService
+from app.application.auth.image_selection import select_login_images
 from app.application.auth.tokens import (
     ACCESS_TOKEN_TTL_SECONDS,
     TokenConfigurationError,
@@ -85,6 +86,21 @@ class AuthService:
             self._session.rollback()
             raise
         return user, token, ACCESS_TOKEN_TTL_SECONDS
+
+    def login_image_options(
+        self, email: str, catalog_image_ids: list[str]
+    ) -> list[str]:
+        user = self._users.get_by_email(email)
+        registered_image_id = None
+        if user is not None and user.is_active:
+            credentials = self._credentials.list_by_user(user.id)
+            active_credential = next(
+                (credential for credential in credentials if credential.is_active),
+                None,
+            )
+            if active_credential is not None:
+                registered_image_id = active_credential.image_id
+        return select_login_images(catalog_image_ids, registered_image_id)
 
     def login(
         self,
