@@ -153,7 +153,8 @@ function initializeAuth({ onAuthenticated }) {
     try {
       usernameInput.value =
         typeof progress.username === "string" ? progress.username : "";
-      emailInput.value = typeof progress.email === "string" ? progress.email : "";
+      emailInput.value =
+        typeof progress.email === "string" ? progress.email : "";
       if (Array.isArray(progress.methods)) {
         analysisMethodInputs.forEach((input) => {
           input.checked = progress.methods.includes(input.value);
@@ -288,11 +289,6 @@ function initializeAuth({ onAuthenticated }) {
     document.getElementById("view-title").textContent = registering
       ? t("authViewTitle")
       : t("authViewTitleLogin");
-    selectionHint.textContent = registering
-      ? t("selectionHint")
-      : window.PasspointsCurrentLanguage === "es"
-        ? "Introduce tu correo, elige tu imagen entre las tres opciones y marca los mismos puntos de siempre."
-        : "Enter your email, choose your image from the three options, and select your usual points.";
     weakPatterns.hidden = !registering;
     analysisMethodSelector.hidden = !registering;
     analyzeButton.hidden = !registering;
@@ -313,7 +309,10 @@ function initializeAuth({ onAuthenticated }) {
 
     loginImageTimer = setTimeout(async () => {
       try {
-        const response = await getLoginImageOptions(email, getImageCatalogIds());
+        const response = await getLoginImageOptions(
+          email,
+          getImageCatalogIds(),
+        );
         if (
           requestId !== loginImageRequestId ||
           mode !== "login" ||
@@ -349,7 +348,9 @@ function initializeAuth({ onAuthenticated }) {
     analyzeSpinner.hidden = !(value && action === "analysis");
     submitSpinner.hidden = !(value && action === "submit");
     analyzeLabel.textContent =
-      value && action === "analysis" ? t("analyzingSelection") : t("analyzeSelection");
+      value && action === "analysis"
+        ? t("analyzingSelection")
+        : t("analyzeSelection");
     submitLabel.textContent =
       value && action === "submit"
         ? mode === "register"
@@ -434,8 +435,10 @@ function initializeAuth({ onAuthenticated }) {
           "Patrón agrupado": "Los puntos están demasiado concentrados.",
           "Patrón Line": "Los puntos forman una alineación.",
           "Patrón Diag": "Los puntos forman una alineación diagonal.",
-          "Patrón angular": "La disposición presenta una estructura demasiado regular.",
-          "Patrón regular": "Los puntos forman una estructura demasiado regular.",
+          "Patrón angular":
+            "La disposición presenta una estructura demasiado regular.",
+          "Patrón regular":
+            "Los puntos forman una estructura demasiado regular.",
         }
       : {
           "Clustered pattern": "The points are too concentrated.",
@@ -530,7 +533,8 @@ function initializeAuth({ onAuthenticated }) {
     });
   }
   function openPatternModal(pattern) {
-    const data = patternInformation[pattern]?.[window.PasspointsCurrentLanguage || "es"];
+    const data =
+      patternInformation[pattern]?.[window.PasspointsCurrentLanguage || "es"];
     if (!data) return;
     patternModalTitle.textContent = data.title;
     patternModalDescription.textContent = data.description;
@@ -563,11 +567,8 @@ function initializeAuth({ onAuthenticated }) {
       document.getElementById("view-title").textContent = t("authViewTitle");
       selectionHint.textContent = t("selectionHint");
     } else {
-      document.getElementById("view-title").textContent = t("authViewTitleLogin");
-      selectionHint.textContent =
-        window.PasspointsCurrentLanguage === "es"
-          ? "Introduce tu correo, elige tu imagen entre las tres opciones y marca los mismos puntos de siempre."
-          : "Enter your email, choose your image from the three options, and select your usual points.";
+      document.getElementById("view-title").textContent =
+        t("authViewTitleLogin");
     }
     updateButtons();
     setMode(mode);

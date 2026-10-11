@@ -6,11 +6,19 @@ function initializePointSelector() {
   const pointsLayer = document.getElementById("points-layer");
   const pointCount = document.getElementById("point-count");
   const clearPointsButton = document.getElementById("clear-points");
+  const undoPointButton = document.getElementById("undo-point");
   const selectedImageElement = document.getElementById("selected-image");
   const pointFeedback = document.getElementById("point-feedback");
 
   function resetPoints() {
     selectedPoints.length = 0;
+    renderPoints();
+    document.dispatchEvent(new CustomEvent("points-changed"));
+  }
+
+  function undoLastPoint() {
+    if (pointSelectionLocked || selectedPoints.length === 0) return;
+    selectedPoints.pop();
     renderPoints();
     document.dispatchEvent(new CustomEvent("points-changed"));
   }
@@ -29,6 +37,7 @@ function initializePointSelector() {
     const count = selectedPoints.length;
     pointCount.textContent = `${count}/5`;
     clearPointsButton.disabled = pointSelectionLocked || count === 0;
+    undoPointButton.disabled = pointSelectionLocked || count === 0;
     pointFeedback.textContent =
       count === 5
         ? "Sequence complete. You can analyze it."
@@ -90,6 +99,7 @@ function initializePointSelector() {
   function setPointSelectionLocked(locked) {
     pointSelectionLocked = locked;
     clearPointsButton.disabled = locked || selectedPoints.length === 0;
+    undoPointButton.disabled = locked || selectedPoints.length === 0;
   }
 
   document.addEventListener("image-selection-started", resetPoints);
@@ -135,6 +145,7 @@ function initializePointSelector() {
     document.dispatchEvent(new CustomEvent("points-changed"));
   });
   clearPointsButton.addEventListener("click", resetPoints);
+  undoPointButton.addEventListener("click", undoLastPoint);
   Object.assign(window, {
     getSelectedPoints,
     getSelectedPointFractions,

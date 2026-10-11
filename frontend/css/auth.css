@@ -316,11 +316,17 @@
   gap: 16px;
   margin-top: 10px;
 }
+.point-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .point-feedback {
   color: var(--text-muted);
   font-size: 11px;
 }
-.reset-button {
+.reset-button,
+.undo-button {
   padding: 5px 0;
   background: transparent;
   color: var(--text-muted);
@@ -328,7 +334,19 @@
   font-weight: 700;
   cursor: pointer;
 }
-.reset-button:disabled {
+.undo-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+.undo-button span {
+  font-size: 21px;
+  line-height: 1;
+}
+.reset-button:disabled,
+.undo-button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
