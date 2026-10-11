@@ -342,13 +342,15 @@ window.refreshLanguageUI = function refreshLanguageUI() {
 
 let currentUser = null;
 
-function showView(viewName) {
+const AUTHENTICATED_STATE_KEY = "passpoints_authenticated_state";
+
+function showView(viewName, { scroll = true } = {}) {
   const authView = document.getElementById("auth-view");
   const homeView = document.getElementById("home-view");
   const authenticated = viewName === "home";
   authView.hidden = authenticated;
   homeView.hidden = !authenticated;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function loadView(viewName) {
@@ -362,6 +364,19 @@ async function loadView(viewName) {
 function handleAuthenticated(userState) {
   currentUser = userState;
   window.currentUserState = userState;
+  try {
+    sessionStorage.setItem(
+      AUTHENTICATED_STATE_KEY,
+      JSON.stringify({
+        user: userState.user,
+        imageId: userState.image.id,
+        fractions: userState.fractions,
+        registered: userState.registered,
+      }),
+    );
+  } catch (error) {
+    console.error("Could not preserve the authenticated feed state:", error);
+  }
   renderHome(currentUser);
   updateAccountUser(currentUser.user);
   showView("home");
@@ -369,11 +384,67 @@ function handleAuthenticated(userState) {
 
 function logout() {
   sessionStorage.removeItem("passpoints_access_token");
+  sessionStorage.removeItem(AUTHENTICATED_STATE_KEY);
+  sessionStorage.removeItem("passpoints_auth_progress");
   currentUser = null;
   window.currentUserState = null;
   closeAccountMenu();
   resetAuth();
+  sessionStorage.removeItem("passpoints_auth_progress");
   showView("auth");
+}
+
+function restoreAuthenticatedState() {
+  const token = sessionStorage.getItem("passpoints_access_token");
+  const saved = sessionStorage.getItem(AUTHENTICATED_STATE_KEY);
+  if (!token || !saved) {
+    if (saved && !token) sessionStorage.removeItem(AUTHENTICATED_STATE_KEY);
+    return false;
+  }
+
+  try {
+    const state = JSON.parse(saved);
+    const image = getCatalogImage(state.imageId);
+    const fractionsAreValid =
+      Array.isArray(state.fractions) &&
+      state.fractions.length === 5 &&
+      state.fractions.every(
+        ({ x, y } = {}) =>
+          Number.isFinite(x) &&
+          Number.isFinite(y) &&
+          x >= 0 &&
+          x <= 1 &&
+          y >= 0 &&
+          y <= 1,
+      );
+    if (
+      !image ||
+      !fractionsAreValid ||
+      typeof state.user?.id !== "string" ||
+      typeof state.user?.username !== "string" ||
+      typeof state.user?.email !== "string" ||
+      typeof state.registered !== "boolean"
+    )
+      throw new Error("Saved authenticated state is incomplete.");
+
+    currentUser = {
+      user: state.user,
+      image,
+      fractions: state.fractions,
+      security: null,
+      registered: state.registered,
+    };
+    window.currentUserState = currentUser;
+    renderHome(currentUser);
+    updateAccountUser(currentUser.user);
+    showView("home", { scroll: false });
+    return true;
+  } catch (error) {
+    console.error("Could not restore the authenticated feed state:", error);
+    sessionStorage.removeItem(AUTHENTICATED_STATE_KEY);
+    sessionStorage.removeItem("passpoints_access_token");
+    return false;
+  }
 }
 
 async function initializeApp() {
@@ -396,11 +467,13 @@ async function initializeApp() {
 
   initializeImageSelector();
   initializePointSelector();
-  initializeAuth({ onAuthenticated: handleAuthenticated });
+  const restoreForm = initializeAuth({ onAuthenticated: handleAuthenticated });
   initializeHome();
   initializeAccount({ onLogout: logout });
   applyLanguageStrings();
-  showView("auth");
+  if (restoreAuthenticatedState()) return;
+  await restoreForm();
+  showView("auth", { scroll: false });
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp, { once: true });

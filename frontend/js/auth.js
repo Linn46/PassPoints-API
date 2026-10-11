@@ -1,4 +1,5 @@
 function initializeAuth({ onAuthenticated }) {
+  const AUTH_PROGRESS_KEY = "passpoints_auth_progress";
   const authView = document.getElementById("auth-view");
   const authForm = document.getElementById("auth-form");
   const usernameInput = document.getElementById("username");
@@ -107,10 +108,121 @@ function initializeAuth({ onAuthenticated }) {
   let loginImagesReady = true;
   let loginImageRequestId = 0;
   let loginImageTimer = null;
+  let restoringProgress = false;
 
   function hideRequestFeedback() {
     requestFeedback.hidden = true;
     requestFeedback.textContent = "";
+  }
+  function persistAuthProgress() {
+    if (restoringProgress) return;
+    const progress = {
+      version: 1,
+      mode,
+      username: usernameInput.value,
+      email: emailInput.value,
+      imageId: getImageData().id,
+      imageOptionIds: getImageOptionIds(),
+      points: getSelectedPointFractions(),
+      methods: selectedAnalysisMethods(),
+      analysisResult,
+    };
+    try {
+      sessionStorage.setItem(AUTH_PROGRESS_KEY, JSON.stringify(progress));
+    } catch (error) {
+      console.error("Could not preserve the authentication form state:", error);
+    }
+  }
+  async function restoreAuthProgress() {
+    const saved = sessionStorage.getItem(AUTH_PROGRESS_KEY);
+    if (!saved) return;
+    let progress;
+    try {
+      progress = JSON.parse(saved);
+    } catch (error) {
+      console.error("Saved authentication form state is invalid:", error);
+      sessionStorage.removeItem(AUTH_PROGRESS_KEY);
+      return;
+    }
+    if (!progress || progress.version !== 1) {
+      sessionStorage.removeItem(AUTH_PROGRESS_KEY);
+      return;
+    }
+
+    restoringProgress = true;
+    try {
+      usernameInput.value =
+        typeof progress.username === "string" ? progress.username : "";
+      emailInput.value = typeof progress.email === "string" ? progress.email : "";
+      if (Array.isArray(progress.methods)) {
+        analysisMethodInputs.forEach((input) => {
+          input.checked = progress.methods.includes(input.value);
+        });
+      }
+
+      const restoredMode = progress.mode === "login" ? "login" : "register";
+      setMode(restoredMode);
+      const catalogIds = new Set(getImageCatalogIds());
+      const expectedOptionCount = restoredMode === "login" ? 3 : 5;
+      const optionsAreValid =
+        Array.isArray(progress.imageOptionIds) &&
+        progress.imageOptionIds.length === expectedOptionCount &&
+        new Set(progress.imageOptionIds).size === expectedOptionCount &&
+        progress.imageOptionIds.every((id) => catalogIds.has(id));
+      if (optionsAreValid) {
+        clearTimeout(loginImageTimer);
+        loginImageRequestId += 1;
+        if (restoredMode === "login") {
+          setLoginImageOptions(progress.imageOptionIds);
+          loginImagesReady = true;
+        } else {
+          setRegistrationImageOptions(progress.imageOptionIds);
+        }
+      }
+
+      const selectedImage =
+        typeof progress.imageId === "string" &&
+        optionsAreValid &&
+        progress.imageOptionIds.includes(progress.imageId)
+          ? getCatalogImage(progress.imageId)
+          : null;
+      if (selectedImage) {
+        await selectImage(selectedImage);
+        if (Array.isArray(progress.points)) {
+          setSelectedPointFractions(progress.points);
+        }
+      }
+
+      if (
+        progress.analysisResult &&
+        typeof progress.analysisResult.security?.is_weak === "boolean"
+      ) {
+        analysisResult = progress.analysisResult;
+        analysisKey = selectionKey();
+        analysisFeedback.hidden = false;
+        analysisFeedback.className = analysisResult.security.is_weak
+          ? "feedback is-warning"
+          : "feedback is-success";
+        analysisFeedback.textContent = analysisResult.security.is_weak
+          ? weakPatternMessage(analysisResult.security)
+          : window.PasspointsCurrentLanguage === "es"
+            ? "Selección aceptada por el análisis. Ya puedes crear tu cuenta."
+            : "Selection accepted by the analysis. You can now create your account.";
+      }
+    } catch (error) {
+      console.error("Could not restore the authentication form state:", error);
+      sessionStorage.removeItem(AUTH_PROGRESS_KEY);
+      showRequestError(
+        error,
+        window.PasspointsCurrentLanguage === "es"
+          ? "No se pudo restaurar el formulario. Vuelve a seleccionar la imagen y los puntos."
+          : "The form could not be restored. Select the image and points again.",
+      );
+    } finally {
+      restoringProgress = false;
+      updateButtons();
+      persistAuthProgress();
+    }
   }
   function selectionKey() {
     return JSON.stringify({
@@ -357,6 +469,7 @@ function initializeAuth({ onAuthenticated }) {
             )
           : await authenticate(emailInput.value.trim(), image, points);
       sessionStorage.setItem("passpoints_access_token", result.access_token);
+      sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       onAuthenticated({
         user: result.user,
         image,
@@ -453,15 +566,19 @@ function initializeAuth({ onAuthenticated }) {
       document.getElementById("view-title").textContent = t("authViewTitleLogin");
       selectionHint.textContent =
         window.PasspointsCurrentLanguage === "es"
-          ? "Selecciona la misma imagen y los mismos puntos que utilizaste al crear tu contraseña gráfica."
-          : "Select the same image and the same points you used when creating your graphical password.";
+          ? "Introduce tu correo, elige tu imagen entre las tres opciones y marca los mismos puntos de siempre."
+          : "Enter your email, choose your image from the three options, and select your usual points.";
     }
     updateButtons();
     setMode(mode);
   };
-  usernameInput.addEventListener("input", updateButtons);
+  usernameInput.addEventListener("input", () => {
+    persistAuthProgress();
+    updateButtons();
+  });
   emailInput.addEventListener("input", () => {
     if (mode === "login") refreshLoginImageOptions();
+    persistAuthProgress();
     updateButtons();
   });
   authForm.addEventListener("submit", submitAuth);
@@ -472,11 +589,22 @@ function initializeAuth({ onAuthenticated }) {
   analysisMethodInputs.forEach((input) => {
     input.addEventListener("change", () => {
       invalidateAnalysis();
+      persistAuthProgress();
       updateButtons();
     });
   });
-  document.addEventListener("points-changed", invalidateAnalysis);
-  document.addEventListener("image-loaded", invalidateAnalysis);
+  document.addEventListener("points-changed", () => {
+    invalidateAnalysis();
+    persistAuthProgress();
+  });
+  document.addEventListener("image-selection-started", () => {
+    invalidateAnalysis();
+    persistAuthProgress();
+  });
+  document.addEventListener("image-loaded", () => {
+    invalidateAnalysis();
+    persistAuthProgress();
+  });
   authView.addEventListener("click", (event) => {
     const card = event.target.closest(".pattern-card[data-pattern]");
     if (card) openPatternModal(card.dataset.pattern);
@@ -538,6 +666,7 @@ function initializeAuth({ onAuthenticated }) {
     updateVisualPoint(Number(number), position.x, position.y),
   );
   setMode("register");
+  return restoreAuthProgress;
 }
 
 function resetAuth() {

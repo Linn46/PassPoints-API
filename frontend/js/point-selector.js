@@ -48,6 +48,41 @@ function initializePointSelector() {
     }));
   }
 
+  function setSelectedPointFractions(points) {
+    if (
+      !Array.isArray(points) ||
+      points.length > MAX_POINTS ||
+      points.some(
+        ({ x, y } = {}) =>
+          !Number.isFinite(x) ||
+          !Number.isFinite(y) ||
+          x < 0 ||
+          x > 1 ||
+          y < 0 ||
+          y > 1,
+      )
+    )
+      throw new Error("Saved Passpoints coordinates are invalid.");
+
+    const image = getImageData();
+    if (!image.id && points.length) return false;
+    const restored = points.map(({ x, y }) => ({
+      x: x * image.width,
+      y: y * image.height,
+      relativeX: x,
+      relativeY: y,
+    }));
+    if (
+      new Set(restored.map(({ x, y }) => `${x}:${y}`)).size !== restored.length
+    )
+      throw new Error("Saved Passpoints coordinates must be unique.");
+
+    selectedPoints.splice(0, selectedPoints.length, ...restored);
+    renderPoints();
+    document.dispatchEvent(new CustomEvent("points-changed"));
+    return true;
+  }
+
   function hasFiveSelectedPoints() {
     return selectedPoints.length === MAX_POINTS;
   }
@@ -57,6 +92,7 @@ function initializePointSelector() {
     clearPointsButton.disabled = locked || selectedPoints.length === 0;
   }
 
+  document.addEventListener("image-selection-started", resetPoints);
   document.addEventListener("image-loaded", resetPoints);
   selectedImageElement.addEventListener("click", (event) => {
     if (
@@ -102,6 +138,7 @@ function initializePointSelector() {
   Object.assign(window, {
     getSelectedPoints,
     getSelectedPointFractions,
+    setSelectedPointFractions,
     hasFiveSelectedPoints,
     setPointSelectionLocked,
   });
