@@ -72,7 +72,10 @@ def test_registration_is_graphical_only_and_returns_authenticated_session(
 ) -> None:
     client, factory = auth_client
 
-    response = client.post("/auth/register", json=payload())
+    response = client.post(
+        "/auth/register",
+        json={**payload(), "confirmation_points": [POINTS, POINTS]},
+    )
 
     assert response.status_code == 201
     body = response.json()
@@ -90,6 +93,8 @@ def test_registration_is_graphical_only_and_returns_authenticated_session(
         assert user is not None
         assert user.password_hash is not None
         assert user.password_hash.startswith("$argon2id$")
+        assert user.graphical_password_repetition_count == 2
+        assert user.graphical_password_verified is True
         credential = session.scalar(
             select(GraphicalPassword).where(GraphicalPassword.user_id == user.id)
         )
@@ -97,6 +102,29 @@ def test_registration_is_graphical_only_and_returns_authenticated_session(
         assert credential.image_id == "botanical-garden"
         assert credential.verifier.startswith("$argon2id$")
         assert user.password_hash == credential.verifier
+
+
+def test_registration_rejects_non_matching_confirmation_attempts(
+    auth_client: tuple[TestClient, sessionmaker[Session]],
+) -> None:
+    client, _ = auth_client
+
+    mismatched_payload = payload()
+    mismatched_payload["confirmation_points"] = [
+        POINTS,
+        [
+            {"x": 10, "y": 10},
+            {"x": 20, "y": 20},
+            {"x": 30, "y": 30},
+            {"x": 40, "y": 40},
+            {"x": 50, "y": 50},
+        ],
+    ]
+
+    response = client.post("/auth/register", json=mismatched_payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "The graphical password must be repeated consistently two more times."
 
 
 def test_login_uses_email_and_graphical_credential(

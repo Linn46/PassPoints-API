@@ -24,7 +24,9 @@ function initializeAuth({ onAuthenticated }) {
     document.querySelectorAll(".analysis-method-input"),
   );
   const patternModal = document.getElementById("pattern-modal");
+  const confirmationModal = document.getElementById("confirmation-feedback-modal");
   const patternModalClose = document.getElementById("pattern-modal-close");
+  const confirmationModalClose = document.getElementById("confirmation-feedback-close");
   const modalPatternVisual = document.getElementById("modal-pattern-visual");
   const patternModalTitle = document.getElementById("pattern-modal-title");
   const patternModalDescription = document.getElementById(
@@ -105,6 +107,28 @@ function initializeAuth({ onAuthenticated }) {
   let pending = false;
   let analysisResult = null;
   let analysisKey = "";
+  let confirmationSequences = [];
+  let registrationStep = 0; // 0: Initial, 1: Confirm 1, 2: Confirm 2
+  
+  function updateUIForStep() {
+    const title = document.querySelector('[data-i18n="createSequence"]');
+    const hint = document.getElementById("selection-hint");
+    const count = document.getElementById("point-count");
+    
+    if (registrationStep === 0) {
+      title.textContent = "Crea tu secuencia (1/3)";
+      hint.textContent = "Selecciona cinco puntos para tu contraseña.";
+    } else {
+      title.textContent = `Confirma tu secuencia (${registrationStep}/2)`;
+      hint.textContent = "Repite los mismos cinco puntos para confirmar.";
+    }
+    // Reset point counter in UI
+    count.textContent = "0/5";
+    document.dispatchEvent(new CustomEvent("reset-points"));
+  }
+
+  // ... (inside initializeAuth) ...
+  // Note: I will need to hook into existing reset logic for "reset-points"
   let loginImagesReady = true;
   let loginImageRequestId = 0;
   let loginImageTimer = null;
@@ -375,7 +399,15 @@ function initializeAuth({ onAuthenticated }) {
       requestFeedback.textContent = isSpanish
         ? "No se pudo autenticar. Verifica la imagen y los puntos seleccionados."
         : "Authentication failed. Check the image and the selected points.";
-    else if (mode === "register" && error.status === 409)
+        else if (
+      mode === "register" &&
+      error.status === 422 &&
+      String(error.message).includes("repeated consistently")
+    )
+      requestFeedback.textContent = isSpanish
+        ? "La contraseña debe repetirse de forma consistente. Inténtalo de nuevo."
+        : "The password must be repeated consistently. Please try again.";
+else if (mode === "register" && error.status === 409)
       requestFeedback.textContent = isSpanish
         ? "Ese nombre o correo ya está asociado a una cuenta."
         : "That username or email is already linked to an account.";
@@ -457,28 +489,46 @@ function initializeAuth({ onAuthenticated }) {
   async function submitAuth(event) {
     event.preventDefault();
     if (submitButton.disabled) return;
+
+    const points = getSelectedPoints();
+    if (points.length !== 5) return;
+
+    if (mode === "register" && registrationStep < 2) {
+      // Guardar intento y avanzar paso
+      confirmationSequences.push(points);
+      registrationStep++;
+      updateUIForStep();
+      showConfirmationModal(); // <--- Llamada añadida
+      return; // No enviar al servidor aún
+    }
+
     hideRequestFeedback();
     setPending(true, "submit");
     try {
       const image = getImageData();
-      const points = getSelectedPoints();
-      const result =
-        mode === "register"
-          ? await registerAccount(
-              usernameInput.value.trim(),
-              emailInput.value.trim(),
-              image,
-              points,
-            )
-          : await authenticate(emailInput.value.trim(), image, points);
+      
+      let result;
+      if (mode === "register") {
+        // En el paso 2, enviamos la selección inicial y las 2 confirmaciones
+        result = await registerAccount(
+          usernameInput.value.trim(),
+          emailInput.value.trim(),
+          image,
+          confirmationSequences[0], // Primera selección (análisis)
+          confirmationSequences.slice(1).concat([points]), // Confirmaciones
+          3 // Total intentos (1 inicial + 2 confirmaciones)
+        );
+      } else {
+        result = await authenticate(emailInput.value.trim(), image, points);
+      }
+      
       sessionStorage.setItem("passpoints_access_token", result.access_token);
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       onAuthenticated({
         user: result.user,
         image,
         fractions: getSelectedPointFractions(),
-        security:
-          mode === "register" ? (analysisResult?.security ?? null) : null,
+        security: mode === "register" ? (analysisResult?.security ?? null) : null,
         registered: mode === "register",
       });
     } catch (error) {
@@ -550,6 +600,34 @@ function initializeAuth({ onAuthenticated }) {
     patternModal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
+
+  function showConfirmationModal() {
+    const title = document.getElementById("confirmation-feedback-title");
+    const desc = document.getElementById("confirmation-feedback-description");
+    const btn = document.getElementById("confirmation-feedback-close");
+
+    const remaining = 3 - registrationStep;
+    
+    title.textContent = t("passwordConfirmationTitle");
+    
+    if (remaining === 1) {
+        desc.textContent = t("passwordConfirmationLast");
+    } else {
+        desc.textContent = t("passwordConfirmationHint", { n: remaining });
+    }
+    btn.textContent = t("passwordConfirmationButton");
+
+    confirmationModal.classList.add("is-open");
+    confirmationModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    confirmationModalClose.focus();
+  }
+  function closeConfirmationModal() {
+    confirmationModal.classList.remove("is-open");
+    confirmationModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  confirmationModalClose.addEventListener("click", closeConfirmationModal);
   registerTab.addEventListener("click", () => setMode("register"));
   loginTab.addEventListener("click", () => setMode("login"));
   window.refreshLanguageUI = function refreshLanguageUI() {
