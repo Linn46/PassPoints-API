@@ -103,16 +103,7 @@ function initializePointSelector() {
   }
 
   document.addEventListener("image-selection-started", resetPoints);
-  function getGridCell(x, y, width, height) {
-    const GRID_DIVISIONS = 5;
-    return [
-      Math.min(GRID_DIVISIONS, Math.floor((x / width) * GRID_DIVISIONS + 0.5)),
-      Math.min(GRID_DIVISIONS, Math.floor((y / height) * GRID_DIVISIONS + 0.5))
-    ];
-  }
-
   document.addEventListener("image-loaded", resetPoints);
-  document.addEventListener("reset-points", resetPoints);
   selectedImageElement.addEventListener("click", (event) => {
     if (
       pointSelectionLocked ||
@@ -136,17 +127,6 @@ function initializePointSelector() {
       relativeX,
       relativeY,
     };
-    
-    // Validación de celda distinta (Passpoints rule)
-    const newCell = getGridCell(point.x, point.y, imageData.width, imageData.height);
-    if (selectedPoints.some(p => {
-        const pCell = getGridCell(p.x, p.y, imageData.width, imageData.height);
-        return pCell[0] === newCell[0] && pCell[1] === newCell[1];
-    })) {
-        pointFeedback.textContent = t("pointsTooClose");
-        return;
-    }
-
     if (
       selectedPoints.some(
         (selectedPoint) =>

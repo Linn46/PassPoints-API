@@ -98,11 +98,6 @@ window.PasspointsTranslations = {
     projectDescription: "Proyecto de investigación sobre autenticación gráfica y evaluación de patrones.",
     myAccount: "Mi cuenta",
     accountMenu: "Mi cuenta",
-    passwordConfirmationTitle: "¡Secuencia aceptada!",
-    passwordConfirmationHint: "Repite la secuencia. Te faltan {n} veces.",
-    passwordConfirmationLast: "Repite la secuencia una última vez.",
-    passwordConfirmationButton: "Continuar",
-    pointsTooClose: "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
     profile: "Mi perfil",
     security: "Seguridad",
     appearance: "Apariencia",
@@ -281,25 +276,14 @@ window.PasspointsTranslations = {
     notSelected: "Not selected",
     accountThemeLabelLight: "Light",
     accountThemeLabelDark: "Dark",
-    passwordConfirmationTitle: "Sequence accepted!",
-    passwordConfirmationHint: "Repeat the sequence. You have {n} times left.",
-    passwordConfirmationLast: "Repeat the sequence one last time.",
-    passwordConfirmationButton: "Continue",
-    pointsTooClose: "Some points are too close, they must be in different grid cells.",
   },
 };
 
 window.PasspointsCurrentLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "es";
 
-function t(key, params = {}) {
+function t(key) {
   const language = window.PasspointsCurrentLanguage || "es";
-  let translation = window.PasspointsTranslations?.[language]?.[key] || key;
-  
-  Object.entries(params).forEach(([key, value]) => {
-    translation = translation.replace(`{${key}}`, value);
-  });
-  
-  return translation;
+  return window.PasspointsTranslations?.[language]?.[key] || key;
 }
 
 function applyLanguageStrings() {

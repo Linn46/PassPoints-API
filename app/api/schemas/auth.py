@@ -8,8 +8,6 @@ class PointInput(BaseModel):
     x: float = Field(ge=0, allow_inf_nan=False)
     y: float = Field(ge=0, allow_inf_nan=False)
 
-GraphicalPointInput = PointInput
-
 class RegisterRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -19,13 +17,6 @@ class RegisterRequest(BaseModel):
     image_width: int = Field(gt=0)
     image_height: int = Field(gt=0)
     points: list[PointInput] = Field(min_length=5, max_length=5)
-    confirmation_points: list[list[PointInput]] | None = Field(
-        default=None,
-        min_length=2,
-        max_length=2,
-    )
-    repetition_count: int | None = Field(default=None, ge=2)
-    tolerance_grid_divisions: int = Field(default=5, ge=1, le=5)
 
     @field_validator("username", mode="before")
     @classmethod
@@ -61,16 +52,6 @@ class RegisterRequest(BaseModel):
             raise ValueError("Points must be inside the image.")
         if len({(p.x, p.y) for p in self.points}) != 5:
             raise ValueError("The five points must be unique.")
-        if self.confirmation_points is not None:
-            if len(self.confirmation_points) != 2:
-                raise ValueError("Exactly two confirmation point sequences are required.")
-            for confirmation in self.confirmation_points:
-                if len(confirmation) != 5:
-                    raise ValueError("Each confirmation sequence must have exactly 5 points.")
-                if any(p.x > self.image_width or p.y > self.image_height for p in confirmation):
-                    raise ValueError("Confirmation points must be inside the image.")
-                if len({(p.x, p.y) for p in confirmation}) != 5:
-                    raise ValueError("The five points in each confirmation must be unique.")
         return self
 
 class LoginRequest(BaseModel):
