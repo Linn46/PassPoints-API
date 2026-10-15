@@ -32,10 +32,6 @@ class WeakSelectionError(ValueError):
     pass
 
 
-class InconsistentPasswordError(ValueError):
-    pass
-
-
 class InvalidAuthenticationError(ValueError):
     pass
 
@@ -55,9 +51,6 @@ class AuthService:
         image_width: int,
         image_height: int,
         points: list[tuple[float, float]],
-        confirmation_points: list[list[tuple[float, float]]] | None = None,
-        repetition_count: int | None = None,
-        tolerance_grid_divisions: int = 5,
     ) -> tuple[User, str, int]:
         if self._users.get_by_username(username) or self._users.get_by_email(email):
             raise DuplicateAccountError
@@ -70,39 +63,12 @@ class AuthService:
             raise WeakSelectionError
         try:
             verifier = Passpoints.create_credential(
-                image_id, image_width, image_height, points, grid_divisions=tolerance_grid_divisions
+                image_id, image_width, image_height, points
             )
         except ValueError as error:
-            print(f"DEBUG: Error en create_credential: {error}") # Log añadido
             raise InvalidSelectionError from error
 
-        if confirmation_points is not None:
-            if len(confirmation_points) != 2:
-                raise InconsistentPasswordError(
-                    "The graphical password must be repeated consistently two more times."
-                )
-            for attempt_points in confirmation_points:
-                if not Passpoints.verify_credential(
-                    image_id, image_width, image_height, attempt_points, verifier, grid_divisions=tolerance_grid_divisions
-                ):
-                    raise InconsistentPasswordError(
-                        "The graphical password must be repeated consistently two more times."
-                    )
-
-        actual_repetition_count = (
-            repetition_count
-            if repetition_count is not None
-            else (len(confirmation_points) if confirmation_points is not None else 2)
-        )
-
-        user = User(
-            username=username,
-            email=email,
-            password_hash=verifier,
-            graphical_password_repetition_count=actual_repetition_count,
-            graphical_password_verified=True,
-            tolerance_grid_divisions=tolerance_grid_divisions,
-        )
+        user = User(username=username, email=email, password_hash=verifier)
         graphical_password = GraphicalPassword(
             user=user,
             image_id=image_id,

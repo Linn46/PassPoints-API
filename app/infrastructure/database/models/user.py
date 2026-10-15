@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, String, func
+from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database.base import Base
@@ -28,15 +28,6 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    graphical_password_repetition_count: Mapped[int] = mapped_column(
-        Integer, default=2, server_default="2", nullable=False
-    )
-    graphical_password_verified: Mapped[bool] = mapped_column(
-        Boolean, default=True, server_default="true", nullable=False
-    )
-    tolerance_grid_divisions: Mapped[int] = mapped_column(
-        Integer, default=5, server_default="5", nullable=False
-    )
 
     graphical_passwords: Mapped[list["GraphicalPassword"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

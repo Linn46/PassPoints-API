@@ -29,16 +29,12 @@ async function requestJson(url, payload) {
   }
   if (!response.ok) {
     console.error("Passpoints API request failed:", response.status, data);
-    
-    // LOG DETALLADO PARA DEPURACIÓN
-    console.log("Detalles del error recibido:", data);
-
     const detail = Array.isArray(data.errors)
       ? data.errors
           .map(({ field, message }) => [field, message].filter(Boolean).join(": "))
           .join("; ")
       : Array.isArray(data.detail)
-        ? data.detail.map((error) => `${error.loc[1]}: ${error.msg}`).join("; ") // Mejoramos el detalle de Pydantic
+        ? data.detail.map((error) => error.msg ?? JSON.stringify(error)).join("; ")
         : data.message ?? data.detail ?? data.error ?? "request_failed";
     throw new ApiError(response.status, detail);
   }
@@ -65,19 +61,12 @@ async function analyzeSelection(image, points, methods = ["delaunay_statistical"
   });
 }
 
-async function registerAccount(username, email, image, points, confirmationPoints = null, repetitionCount = null) {
-  const payload = {
+async function registerAccount(username, email, image, points) {
+  return requestJson(`${API_ORIGIN}/auth/register`, {
     username,
     email,
     ...authPayload(image, points),
-  };
-  if (confirmationPoints && confirmationPoints.length > 0) {
-    payload.confirmation_points = confirmationPoints;
-  }
-  if (repetitionCount !== null) {
-    payload.repetition_count = repetitionCount;
-  }
-  return requestJson(`${API_ORIGIN}/auth/register`, payload);
+  });
 }
 
 async function authenticate(email, image, points) {
