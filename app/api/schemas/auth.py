@@ -2,6 +2,20 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.core.config.image_parameters import is_supported_image_size
 
+_EMAIL_PATTERN = re.compile(
+    r"[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+    r"@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?"
+    r"(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)*\.[A-Z]{2,63}",
+    re.IGNORECASE,
+)
+
+def _normalize_email(value: object) -> object:
+    if isinstance(value, str):
+        value = value.strip().lower()
+        if len(value) > 254 or not _EMAIL_PATTERN.fullmatch(value):
+            raise ValueError("A valid email address is required.")
+    return value
+
 class PointInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -39,11 +53,7 @@ class RegisterRequest(BaseModel):
     @field_validator("email", mode="before")
     @classmethod
     def normalize_email(cls, value: object) -> object:
-        if isinstance(value, str):
-            value = value.strip().lower()
-            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
-                raise ValueError("A valid email address is required.")
-        return value
+        return _normalize_email(value)
 
     @field_validator("image_id")
     @classmethod
@@ -85,11 +95,7 @@ class LoginRequest(BaseModel):
     @field_validator("email", mode="before")
     @classmethod
     def normalize_email(cls, value: object) -> object:
-        if isinstance(value, str):
-            value = value.strip().lower()
-            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
-                raise ValueError("A valid email address is required.")
-        return value
+        return _normalize_email(value)
 
     @field_validator("image_id")
     @classmethod
@@ -109,7 +115,6 @@ class LoginRequest(BaseModel):
             raise ValueError("The five points must be unique.")
         return self
 
-
 class LoginImagesRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -119,11 +124,7 @@ class LoginImagesRequest(BaseModel):
     @field_validator("email", mode="before")
     @classmethod
     def normalize_email(cls, value: object) -> object:
-        if isinstance(value, str):
-            value = value.strip().lower()
-            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
-                raise ValueError("A valid email address is required.")
-        return value
+        return _normalize_email(value)
 
     @field_validator("image_ids")
     @classmethod
@@ -132,7 +133,6 @@ class LoginImagesRequest(BaseModel):
         if any(not value or len(value) > 255 for value in cleaned):
             raise ValueError("Image IDs must be non-blank and at most 255 characters.")
         return cleaned
-
 
 class UserResponse(BaseModel):
     id: str
@@ -144,7 +144,6 @@ class AuthenticationResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: UserResponse
-
 
 class LoginImagesResponse(BaseModel):
     image_ids: list[str] = Field(min_length=3, max_length=3)
