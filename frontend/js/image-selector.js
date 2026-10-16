@@ -137,13 +137,20 @@ function selectRandomImages(images, count, random = Math.random) {
   const uniqueImages = [];
   const seenIds = new Set();
   for (const image of images) {
-    if (!image || typeof image.id !== "string" || !image.id || seenIds.has(image.id))
+    if (
+      !image ||
+      typeof image.id !== "string" ||
+      !image.id ||
+      seenIds.has(image.id)
+    )
       continue;
     seenIds.add(image.id);
     uniqueImages.push(image);
   }
   if (!Number.isInteger(count) || count < 0 || uniqueImages.length < count)
-    throw new RangeError(`Cannot choose ${count} images from a catalog of ${uniqueImages.length}.`);
+    throw new RangeError(
+      `Cannot choose ${count} images from a catalog of ${uniqueImages.length}.`,
+    );
 
   for (let index = uniqueImages.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
@@ -157,11 +164,13 @@ function selectRandomImages(images, count, random = Math.random) {
 
 function initializeImageSelector() {
   const imageOptions = document.getElementById("image-options");
+  const refreshImagesButton = document.getElementById("refresh-images");
   const selectedImage = document.getElementById("selected-image");
   const imageFrame = document.getElementById("image-frame");
   const imageStage = document.getElementById("image-stage");
   const stageEmpty = document.getElementById("stage-empty");
   const imageStatus = document.getElementById("image-status");
+  const sequenceSection = document.getElementById("sequence-section");
 
   function renderImageOptions() {
     imageOptions.replaceChildren();
@@ -183,9 +192,21 @@ function initializeImageSelector() {
       label.textContent = image.name;
       button.append(thumbnail, label);
       button.addEventListener("click", () => {
-        selectImage(image).catch((error) => {
-          console.error("Could not load the selected Passpoints image:", error);
-        });
+        selectImage(image)
+          .then((selectedImageData) => {
+            if (selectedImageData) {
+              sequenceSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Could not load the selected Passpoints image:",
+              error,
+            );
+          });
       });
       imageOptions.appendChild(button);
     });
@@ -241,7 +262,9 @@ function initializeImageSelector() {
     stageEmpty.hidden = false;
     imageStage.classList.add("is-empty");
     imageStatus.textContent =
-      window.PasspointsCurrentLanguage === "en" ? "Not selected" : "Sin seleccionar";
+      window.PasspointsCurrentLanguage === "en"
+        ? "Not selected"
+        : "Sin seleccionar";
     document.dispatchEvent(new CustomEvent("image-loaded", { detail: null }));
   }
 
@@ -249,17 +272,44 @@ function initializeImageSelector() {
     imageOptions.dataset.mode = mode;
     currentImageOptions =
       mode === "register" ? selectRandomImages(PASSPOINT_IMAGES, 5) : [];
+    refreshImagesButton.hidden = mode !== "register";
     renderImageOptions();
     clearSelection();
   }
 
+  function refreshRegistrationImageOptions() {
+    if (imageSelectionLocked || imageOptions.dataset.mode !== "register")
+      return;
+    const currentIds = new Set(currentImageOptions.map((image) => image.id));
+    let nextOptions = selectRandomImages(PASSPOINT_IMAGES, 5);
+    if (nextOptions.every((image) => currentIds.has(image.id))) {
+      const replacementIndex = Math.floor(Math.random() * nextOptions.length);
+      const replacements = PASSPOINT_IMAGES.filter(
+        (image) => !currentIds.has(image.id),
+      );
+      nextOptions[replacementIndex] =
+        replacements[Math.floor(Math.random() * replacements.length)];
+    }
+    setRegistrationImageOptions(nextOptions.map((image) => image.id));
+  }
+
   function setRegistrationImageOptions(imageIds) {
-    if (!Array.isArray(imageIds) || imageIds.length !== 5 || new Set(imageIds).size !== 5)
-      throw new Error("Registration requires exactly five different image options.");
-    const imagesById = new Map(PASSPOINT_IMAGES.map((image) => [image.id, image]));
+    if (
+      !Array.isArray(imageIds) ||
+      imageIds.length !== 5 ||
+      new Set(imageIds).size !== 5
+    )
+      throw new Error(
+        "Registration requires exactly five different image options.",
+      );
+    const imagesById = new Map(
+      PASSPOINT_IMAGES.map((image) => [image.id, image]),
+    );
     const images = imageIds.map((id) => imagesById.get(id));
     if (images.some((image) => !image))
-      throw new Error("Registration options contain an image missing from the catalog.");
+      throw new Error(
+        "Registration options contain an image missing from the catalog.",
+      );
     currentImageOptions = images;
     imageOptions.dataset.mode = "register";
     renderImageOptions();
@@ -267,12 +317,20 @@ function initializeImageSelector() {
   }
 
   function setLoginImageOptions(imageIds) {
-    if (!Array.isArray(imageIds) || imageIds.length !== 3 || new Set(imageIds).size !== 3)
+    if (
+      !Array.isArray(imageIds) ||
+      imageIds.length !== 3 ||
+      new Set(imageIds).size !== 3
+    )
       throw new Error("Login requires exactly three different image options.");
-    const imagesById = new Map(PASSPOINT_IMAGES.map((image) => [image.id, image]));
+    const imagesById = new Map(
+      PASSPOINT_IMAGES.map((image) => [image.id, image]),
+    );
     const images = imageIds.map((id) => imagesById.get(id));
     if (images.some((image) => !image))
-      throw new Error("Login options contain an image missing from the catalog.");
+      throw new Error(
+        "Login options contain an image missing from the catalog.",
+      );
     currentImageOptions = images;
     imageOptions.dataset.mode = "login";
     renderImageOptions();
@@ -285,10 +343,16 @@ function initializeImageSelector() {
 
   function setImageSelectionLocked(locked) {
     imageSelectionLocked = locked;
+    refreshImagesButton.disabled = locked;
     imageOptions.querySelectorAll(".image-option").forEach((button) => {
       button.disabled = locked;
     });
   }
+
+  refreshImagesButton.addEventListener(
+    "click",
+    refreshRegistrationImageOptions,
+  );
 
   function getImageData() {
     return {
@@ -307,6 +371,7 @@ function initializeImageSelector() {
     getCatalogImage,
     setImageSelectionLocked,
     setImageSelectionMode,
+    refreshRegistrationImageOptions,
     setRegistrationImageOptions,
     setLoginImageOptions,
     selectImage,
