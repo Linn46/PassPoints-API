@@ -6,7 +6,8 @@ window.PasspointsTranslations = {
     footerSubtitle: "Proyecto de investigación en seguridad gráfica",
     authViewTitle: "Una contraseña que se dibuja.",
     authViewTitleLogin: "Vuelve a tu imagen.",
-    authIntro: "Utiliza una imagen y una secuencia de cinco puntos que solo tú conozcas.",
+    authIntro:
+      "Utiliza una imagen y una secuencia de cinco puntos que solo tú conozcas.",
     registerTab: "Crear cuenta",
     loginTab: "Iniciar sesión",
     userAccess: "Acceso",
@@ -16,34 +17,53 @@ window.PasspointsTranslations = {
     emailPlaceholder: "nombre@ejemplo.com",
     chooseImage: "Elige tu imagen",
     chooseImageHint: "Selecciona una escena que puedas recordar.",
+    refreshImages: "Cambiar imágenes",
     imageStatus: "Sin seleccionar",
     createSequence: "Crea tu secuencia",
+    repeatSequence: "Repite tu secuencia",
     sequencePrompt: "Selecciona exactamente cinco puntos.",
-    selectionHint: "Primero selecciona una imagen y después marca cinco lugares en el orden que prefieras.",
+    selectionHint:
+      "Primero selecciona una imagen y después marca cinco lugares en el orden que prefieras.",
+    repeatSequenceHint:
+      "Selecciona los mismos cinco puntos en el mismo orden.",
+    passwordConfirmationProgress: "Repeticiones restantes: {n}.",
+    passwordConfirmedTitle: "Contraseña confirmada",
+    passwordConfirmedHint: "Ya puedes crear tu cuenta.",
+    passwordConfirmed: "La secuencia se confirmó correctamente.",
     pickImageStage: "Selecciona una imagen",
     imageStageHint: "Aquí aparecerá tu escena",
     resetPoints: "Reiniciar",
     undoPoint: "Deshacer el último punto",
     analysisMethods: "Métodos de análisis",
-    analysisMethodsHint: "Selecciona uno o varios métodos para evaluar tu contraseña.",
+    analysisMethodsHint:
+      "Opcional: selecciona uno o varios métodos si quieres analizar tu contraseña.",
     delaunayMethodLabel: "Delaunay",
     distanceHullMethodLabel: "Distancia media + convex hull",
     analyzeSelection: "Analizar selección",
     analyzingSelection: "Analizando",
-    createAccount: "Crear mi cuenta",
+    savePassword: "Guardar contraseña",
+    repeatPassword: "Repetir contraseña",
+    restartPassword: "Guardar otra contraseña",
+    passwordMismatch: "La secuencia no coincide. Inténtalo de nuevo.",
+    passwordMismatchPersistent:
+      "La secuencia sigue sin coincidir. ¿Quieres guardar una contraseña nueva? Puedes reintentar o cambiar la contraseña inicial.",
+    createAccount: "Crear cuenta",
     creatingAccount: "Creando cuenta",
     signIn: "Iniciar sesión",
     authenticating: "Autenticando",
     weakPatternModalLabel: "PATRÓN DÉBIL",
-    weakPatternModalTip: "Distribuye los puntos por diferentes zonas de la imagen.",
+    weakPatternModalTip:
+      "Distribuye los puntos por diferentes zonas de la imagen.",
     patternModalClose: "Cerrar explicación",
     patternModalTipLabel: "Consejo",
     panelInfoAriaLabel: "Información sobre Passpoints",
     pointFeedbackWaiting: "Aún no hay puntos seleccionados.",
-    pointFeedbackAccepted: "Selección aceptada por el análisis. Ya puedes crear tu cuenta.",
+    pointFeedbackAccepted:
+      "Selección aceptada por el análisis. Ya puedes guardar la contraseña.",
     securitySection: "SEGURIDAD",
     securityHeading: "Una contraseña más difícil de predecir",
-    securityIntro: "El análisis comprueba si tus cinco puntos forman patrones demasiado fáciles de anticipar.",
+    securityIntro:
+      "El análisis comprueba si tus cinco puntos forman patrones demasiado fáciles de anticipar.",
     patternGrouped: "Agrupado",
     patternGroupDescription: "Puntos demasiado concentrados.",
     patternLine: "Line / Diag",
@@ -52,13 +72,14 @@ window.PasspointsTranslations = {
     patternRegularDescription: "Puntos separados de forma uniforme.",
     patternAngular: "Angular",
     patternAngularDescription: "Una estructura geométrica ordenada.",
-    patternDescription: "Ver explicación →",
+    patternDescription: "Ver más",
     visualBadge: "SEGURIDAD GRÁFICA",
     visualSummary: "5 puntos",
     visualSequence: "1 secuencia",
     homeSpace: "ESPACIO PERSONAL",
     homeTitle: "Tu espacio de seguridad gráfica.",
-    homeIntro: "Explora información, recursos y novedades sobre autenticación gráfica.",
+    homeIntro:
+      "Explora información, recursos y novedades sobre autenticación gráfica.",
     homeConceptIndex: "01 / CONCEPTO",
     homeConceptTitle: "¿Qué es una contraseña gráfica?",
     homeConceptText:
@@ -90,19 +111,18 @@ window.PasspointsTranslations = {
     graphicalAccess: "Acceso gráfico activo",
     sessionAuthenticated: "Tu sesión está autenticada",
     graphicalAuth: "Autenticación gráfica",
-    validatedMessage: "Tu imagen y la secuencia de puntos se validaron correctamente.",
+    validatedMessage:
+      "Tu imagen y la secuencia de puntos se validaron correctamente.",
     didYouKnow: "¿SABÍAS QUE...?",
     pointOrder: "El orden de los puntos es tan importante como su posición.",
     pointsInSequence: "puntos en secuencia",
     theProject: "EL PROYECTO",
-    projectDescription: "Proyecto de investigación sobre autenticación gráfica y evaluación de patrones.",
+    projectDescription:
+      "Proyecto de investigación sobre autenticación gráfica y evaluación de patrones.",
     myAccount: "Mi cuenta",
     accountMenu: "Mi cuenta",
-    passwordConfirmationTitle: "¡Secuencia aceptada!",
-    passwordConfirmationHint: "Repite la secuencia. Te faltan {n} veces.",
-    passwordConfirmationLast: "Repite la secuencia una última vez.",
-    passwordConfirmationButton: "Continuar",
-    pointsTooClose: "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
+    pointsTooClose:
+      "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
     profile: "Mi perfil",
     security: "Seguridad",
     appearance: "Apariencia",
@@ -118,15 +138,19 @@ window.PasspointsTranslations = {
     themeToggleDark: "Cambiar a modo oscuro",
     profileNameLabel: "Nombre",
     profileEmailLabel: "Correo electrónico",
-    profileCopy: "Tu cuenta utiliza autenticación gráfica con una imagen y cinco puntos en un orden específico.",
-    securityCopy: "La selección utilizada se conserva solo durante esta sesión en la aplicación.",
-    aboutCopy: "Passpoints es un proyecto de investigación sobre autenticación gráfica y análisis de patrones de selección.",
+    profileCopy:
+      "Tu cuenta utiliza autenticación gráfica con una imagen y cinco puntos en un orden específico.",
+    securityCopy:
+      "La selección utilizada se conserva solo durante esta sesión en la aplicación.",
+    aboutCopy:
+      "Passpoints es un proyecto de investigación sobre autenticación gráfica y análisis de patrones de selección.",
     visualPassword: "Tu contraseña",
     visualSequenceTitle: "Una secuencia visual",
     rememberPath: "Recuerda el camino, no la contraseña.",
     sequenceProtected: "Secuencia protegida",
     howItWorks: "¿Cómo funciona?",
-    howItWorksText: "Elige una imagen, selecciona cinco puntos y utiliza la misma secuencia cada vez que quieras acceder.",
+    howItWorksText:
+      "Elige una imagen, selecciona cinco puntos y utiliza la misma secuencia cada vez que quieras acceder.",
     visualFeature: "Visual",
     personalFeature: "Personal",
     analyticalFeature: "Analizada",
@@ -159,34 +183,52 @@ window.PasspointsTranslations = {
     emailPlaceholder: "name@example.com",
     chooseImage: "Choose your image",
     chooseImageHint: "Select a scene you can remember.",
+    refreshImages: "Randomize images",
     imageStatus: "Not selected",
     createSequence: "Create your sequence",
+    repeatSequence: "Repeat your sequence",
     sequencePrompt: "Select exactly five points.",
-    selectionHint: "First select an image and then mark five places in the order you prefer.",
+    selectionHint:
+      "First select an image and then mark five places in the order you prefer.",
+    repeatSequenceHint: "Select the same five points in the same order.",
+    passwordConfirmationProgress: "Confirmations remaining: {n}.",
+    passwordConfirmedTitle: "Password confirmed",
+    passwordConfirmedHint: "You can now create your account.",
+    passwordConfirmed: "The sequence was confirmed successfully.",
     pickImageStage: "Select an image",
     imageStageHint: "Your scene will appear here",
     resetPoints: "Reset",
     undoPoint: "Undo the last point",
     analysisMethods: "Analysis methods",
-    analysisMethodsHint: "Select one or more methods to evaluate your password.",
+    analysisMethodsHint:
+      "Optional: select one or more methods if you want to analyze your password.",
     delaunayMethodLabel: "Delaunay",
     distanceHullMethodLabel: "Mean distance + convex hull",
     analyzeSelection: "Analyze selection",
     analyzingSelection: "Analyzing",
-    createAccount: "Create my account",
+    savePassword: "Save password",
+    repeatPassword: "Repeat password",
+    restartPassword: "Save a different password",
+    passwordMismatch: "The sequence does not match. Please try again.",
+    passwordMismatchPersistent:
+      "The sequence still does not match. Would you like to save a new password? You can retry or change the initial password.",
+    createAccount: "Create account",
     creatingAccount: "Creating account",
     signIn: "Sign in",
     authenticating: "Authenticating",
     weakPatternModalLabel: "WEAK PATTERN",
-    weakPatternModalTip: "Spread the points across different areas of the image.",
+    weakPatternModalTip:
+      "Spread the points across different areas of the image.",
     patternModalClose: "Close explanation",
     patternModalTipLabel: "Tip",
     panelInfoAriaLabel: "Information about Passpoints",
     pointFeedbackWaiting: "No points selected yet.",
-    pointFeedbackAccepted: "Selection accepted by the analysis. You can now create your account.",
+    pointFeedbackAccepted:
+      "Selection accepted by the analysis. You can now save your password.",
     securitySection: "SECURITY",
     securityHeading: "A password that is harder to predict",
-    securityIntro: "The analysis checks whether your five points form patterns that are too easy to anticipate.",
+    securityIntro:
+      "The analysis checks whether your five points form patterns that are too easy to anticipate.",
     patternGrouped: "Grouped",
     patternGroupDescription: "Points clustered too closely.",
     patternLine: "Line / Diag",
@@ -195,13 +237,14 @@ window.PasspointsTranslations = {
     patternRegularDescription: "Points spaced too evenly.",
     patternAngular: "Angular",
     patternAngularDescription: "A highly ordered geometric structure.",
-    patternDescription: "See explanation →",
+    patternDescription: "See explanation",
     visualBadge: "GRAPHICAL SECURITY",
     visualSummary: "5 points",
     visualSequence: "1 sequence",
     homeSpace: "PERSONAL SPACE",
     homeTitle: "Your graphical security space.",
-    homeIntro: "Explore information, resources, and updates about graphical authentication.",
+    homeIntro:
+      "Explore information, resources, and updates about graphical authentication.",
     homeConceptIndex: "01 / CONCEPT",
     homeConceptTitle: "What is a graphical password?",
     homeConceptText:
@@ -233,12 +276,14 @@ window.PasspointsTranslations = {
     graphicalAccess: "Active graphical access",
     sessionAuthenticated: "Your session is authenticated",
     graphicalAuth: "Graphical authentication",
-    validatedMessage: "Your image and point sequence were validated successfully.",
+    validatedMessage:
+      "Your image and point sequence were validated successfully.",
     didYouKnow: "DID YOU KNOW...?",
     pointOrder: "The order of the points matters as much as their position.",
     pointsInSequence: "points in sequence",
     theProject: "THE PROJECT",
-    projectDescription: "Research project on graphical authentication and pattern evaluation.",
+    projectDescription:
+      "Research project on graphical authentication and pattern evaluation.",
     myAccount: "My account",
     accountMenu: "My account",
     profile: "My profile",
@@ -256,15 +301,19 @@ window.PasspointsTranslations = {
     themeToggleDark: "Switch to dark mode",
     profileNameLabel: "Name",
     profileEmailLabel: "Email",
-    profileCopy: "Your account uses graphical authentication with one image and five points in a specific order.",
-    securityCopy: "The selected pattern is only kept during this session in the app.",
-    aboutCopy: "Passpoints is a research project on graphical authentication and selection pattern analysis.",
+    profileCopy:
+      "Your account uses graphical authentication with one image and five points in a specific order.",
+    securityCopy:
+      "The selected pattern is only kept during this session in the app.",
+    aboutCopy:
+      "Passpoints is a research project on graphical authentication and selection pattern analysis.",
     visualPassword: "Your password",
     visualSequenceTitle: "A visual sequence",
     rememberPath: "Remember the path, not the password.",
     sequenceProtected: "Protected sequence",
     howItWorks: "How it works",
-    howItWorksText: "Choose an image, select five points, and use the same sequence every time you access the app.",
+    howItWorksText:
+      "Choose an image, select five points, and use the same sequence every time you access the app.",
     visualFeature: "Visual",
     personalFeature: "Personal",
     analyticalFeature: "Analyzed",
@@ -281,24 +330,22 @@ window.PasspointsTranslations = {
     notSelected: "Not selected",
     accountThemeLabelLight: "Light",
     accountThemeLabelDark: "Dark",
-    passwordConfirmationTitle: "Sequence accepted!",
-    passwordConfirmationHint: "Repeat the sequence. You have {n} times left.",
-    passwordConfirmationLast: "Repeat the sequence one last time.",
-    passwordConfirmationButton: "Continue",
-    pointsTooClose: "Some points are too close, they must be in different grid cells.",
+    pointsTooClose:
+      "Some points are too close, they must be in different grid cells.",
   },
 };
 
-window.PasspointsCurrentLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "es";
+window.PasspointsCurrentLanguage =
+  localStorage.getItem(LANGUAGE_STORAGE_KEY) || "es";
 
 function t(key, params = {}) {
   const language = window.PasspointsCurrentLanguage || "es";
   let translation = window.PasspointsTranslations?.[language]?.[key] || key;
-  
+
   Object.entries(params).forEach(([key, value]) => {
     translation = translation.replace(`{${key}}`, value);
   });
-  
+
   return translation;
 }
 
@@ -323,7 +370,8 @@ function applyLanguageStrings() {
   });
   const languageToggle = document.getElementById("language-toggle");
   if (languageToggle) {
-    languageToggle.textContent = window.PasspointsCurrentLanguage === "es" ? "EN" : "ES";
+    languageToggle.textContent =
+      window.PasspointsCurrentLanguage === "es" ? "EN" : "ES";
     languageToggle.setAttribute(
       "aria-label",
       window.PasspointsCurrentLanguage === "es"
@@ -470,7 +518,8 @@ async function initializeApp() {
   if (languageToggle) {
     languageToggle.addEventListener("click", () => {
       setLanguage(window.PasspointsCurrentLanguage === "es" ? "en" : "es");
-      if (typeof window.refreshLanguageUI === "function") window.refreshLanguageUI();
+      if (typeof window.refreshLanguageUI === "function")
+        window.refreshLanguageUI();
     });
   }
 
