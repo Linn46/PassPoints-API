@@ -1,7 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.application.analysis.service import AnalysisService
 from app.application.auth.image_selection import select_login_images
 from app.application.auth.tokens import (
     ACCESS_TOKEN_TTL_SECONDS,
@@ -10,8 +9,6 @@ from app.application.auth.tokens import (
 )
 from app.application.passpoints.method import Passpoints
 from app.core.config.settings import settings
-from app.domain.point import Point
-from app.geometry.delaunay.validator import DelaunayValidationError
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
 from app.infrastructure.database.models.user import User
 from app.infrastructure.database.repositories.graphical_password_repository import (
@@ -25,10 +22,6 @@ class DuplicateAccountError(ValueError):
 
 
 class InvalidSelectionError(ValueError):
-    pass
-
-
-class WeakSelectionError(ValueError):
     pass
 
 
@@ -61,13 +54,6 @@ class AuthService:
     ) -> tuple[User, str, int]:
         if self._users.get_by_username(username) or self._users.get_by_email(email):
             raise DuplicateAccountError
-        domain_points = [Point(x, y) for x, y in points]
-        try:
-            analysis = AnalysisService().analyze(domain_points, image_width, image_height)
-        except DelaunayValidationError as error:
-            raise InvalidSelectionError from error
-        if analysis.security.is_weak:
-            raise WeakSelectionError
         try:
             verifier = Passpoints.create_credential(
                 image_id, image_width, image_height, points, grid_divisions=tolerance_grid_divisions

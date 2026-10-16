@@ -21,7 +21,6 @@ from app.application.auth.service import (
     InconsistentPasswordError,
     InvalidAuthenticationError,
     InvalidSelectionError,
-    WeakSelectionError,
 )
 from app.application.auth.tokens import TokenConfigurationError
 from app.infrastructure.database.session import get_db_session
@@ -72,8 +71,6 @@ def register(
             422,
             "The graphical password must be repeated consistently two more times.",
         ) from error
-    except WeakSelectionError as error:
-        raise HTTPException(422, "This graphical selection is too weak.") from error
     except InvalidSelectionError as error:
         raise HTTPException(422, "Invalid Passpoints selection.") from error
     except TokenConfigurationError as error:

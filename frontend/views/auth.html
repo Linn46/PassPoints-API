@@ -89,6 +89,15 @@
             >Sin seleccionar</span
           >
         </div>
+        <button
+          id="refresh-images"
+          class="refresh-images-button"
+          type="button"
+          data-i18n="refreshImages"
+          data-i18n-aria-label="refreshImages"
+        >
+          Cambiar imágenes
+        </button>
         <div
           id="image-options"
           class="image-options"
@@ -96,7 +105,7 @@
           data-i18n-aria-label="chooseImage"
         ></div>
       </div>
-      <div class="selection-section">
+      <div id="sequence-section" class="selection-section">
         <div class="section-header">
           <div>
             <span class="section-number">02</span>
@@ -113,6 +122,13 @@
           Primero selecciona una imagen y después marca cinco lugares en el
           orden que prefieras.
         </p>
+        <p
+          id="password-stage-status"
+          class="password-stage-status"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></p>
         <div id="image-stage" class="image-stage is-empty">
           <div id="stage-empty" class="stage-empty">
             <div class="empty-illustration">
@@ -193,7 +209,6 @@
               class="analysis-method-input"
               type="checkbox"
               value="delaunay_statistical"
-              checked
             />
             <span data-i18n="delaunayMethodLabel"
               >Trinagulación de Delaunay</span
@@ -204,7 +219,6 @@
               class="analysis-method-input"
               type="checkbox"
               value="mean_distance_convex_hull"
-              checked
             />
             <span data-i18n="distanceHullMethodLabel"
               >Distancia media + convex hull</span
@@ -237,14 +251,23 @@
         ></span>
       </button>
       <button id="submit-button" class="submit-button" type="submit" disabled>
-        <span id="submit-label" data-i18n="createAccount">Crear mi cuenta</span
+        <span id="submit-label" data-i18n="savePassword"
+          >Guardar contraseña</span
         ><span
           id="submit-spinner"
           class="spinner"
           aria-hidden="true"
           hidden
-        ></span
-        ><span class="submit-arrow" aria-hidden="true">→</span>
+        ></span>
+      </button>
+      <button
+        id="restart-password-button"
+        class="restart-password-button"
+        type="button"
+        data-i18n="restartPassword"
+        hidden
+      >
+        Guardar otra contraseña
       </button>
     </form>
   </section>
@@ -457,23 +480,5 @@
         >Distribuye los puntos por diferentes zonas de la imagen.</strong
       >
     </div>
-  </div>
-</div>
-<div
-  id="confirmation-feedback-modal"
-  class="pattern-modal"
-  aria-hidden="true"
-  role="dialog"
-  aria-modal="true"
->
-  <div class="pattern-modal-backdrop"></div>
-  <div class="pattern-modal-card">
-    <h2 id="confirmation-feedback-title" data-i18n="passwordConfirmationTitle">¡Secuencia aceptada!</h2>
-    <p id="confirmation-feedback-description" data-i18n="passwordConfirmationHint">
-      Repite la secuencia para confirmar. Te faltan {n} veces.
-    </p>
-    <button id="confirmation-feedback-close" class="submit-button" type="button" data-i18n="passwordConfirmationButton">
-      Continuar
-    </button>
   </div>
 </div>
