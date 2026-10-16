@@ -15,9 +15,10 @@ class Passpoints:
         image_width: int,
         image_height: int,
         points: Sequence[tuple[float, float]],
+        grid_divisions: int = GRID_DIVISIONS,
     ) -> str:
         return hash_secret(
-            cls._representation(image_id, image_width, image_height, points)
+            cls._representation(image_id, image_width, image_height, points, grid_divisions=grid_divisions)
         )
 
     @classmethod
@@ -28,17 +29,20 @@ class Passpoints:
         image_height: int,
         points: Sequence[tuple[float, float]],
         verifier: str,
+        grid_divisions: int = GRID_DIVISIONS,
     ) -> bool:
         try:
             current = cls._representation(
                 image_id, image_width, image_height, points,
                 version=3,
-                grid_divisions=GRID_DIVISIONS,
+                grid_divisions=grid_divisions,
             )
             if verify_secret(current, verifier):
                 return True
-
-            for version, grid_divisions in zip(
+            # Legacy support might be broken if we change grid_divisions
+            # But the user specifically asked for configurable divisions
+            # I will keep legacy support but it will use hardcoded divisions
+            for version, old_grid_divisions in zip(
                 (2, 1), PREVIOUS_GRID_DIVISIONS
             ):
                 previous = cls._representation(
@@ -47,7 +51,7 @@ class Passpoints:
                     image_height,
                     points,
                     version=version,
-                    grid_divisions=grid_divisions,
+                    grid_divisions=old_grid_divisions,
                 )
                 if verify_secret(previous, verifier):
                     return True
