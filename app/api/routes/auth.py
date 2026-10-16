@@ -18,6 +18,7 @@ from app.application.auth.image_selection import (
 from app.application.auth.service import (
     AuthService,
     DuplicateAccountError,
+    InconsistentPasswordError,
     InvalidAuthenticationError,
     InvalidSelectionError,
     WeakSelectionError,
@@ -49,6 +50,11 @@ def register(
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> AuthenticationResponse:
     try:
+        confirmation_points = (
+            [[(point.x, point.y) for point in seq] for seq in request.confirmation_points]
+            if request.confirmation_points is not None
+            else None
+        )
         user, token, expires_in = service.register(
             request.username,
             request.email,
@@ -56,9 +62,16 @@ def register(
             request.image_width,
             request.image_height,
             [(point.x, point.y) for point in request.points],
+            confirmation_points=confirmation_points,
+            repetition_count=request.repetition_count,
         )
     except DuplicateAccountError as error:
         raise HTTPException(409, "Username or email already registered.") from error
+    except InconsistentPasswordError as error:
+        raise HTTPException(
+            422,
+            "The graphical password must be repeated consistently two more times.",
+        ) from error
     except WeakSelectionError as error:
         raise HTTPException(422, "This graphical selection is too weak.") from error
     except InvalidSelectionError as error:
