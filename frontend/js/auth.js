@@ -11,6 +11,7 @@ function initializeAuth({ onAuthenticated }) {
   const analyzeButton = document.getElementById("analyze-button");
   const analyzeLabel = document.getElementById("analyze-label");
   const analyzeSpinner = document.getElementById("analyze-spinner");
+  const changePasswordButton = document.getElementById("change-password");
   const submitButton = document.getElementById("submit-button");
   const submitLabel = document.getElementById("submit-label");
   const submitSpinner = document.getElementById("submit-spinner");
@@ -25,6 +26,12 @@ function initializeAuth({ onAuthenticated }) {
   );
   const patternModal = document.getElementById("pattern-modal");
   const patternModalClose = document.getElementById("pattern-modal-close");
+  const confirmationModal = document.getElementById(
+    "confirmation-feedback-modal",
+  );
+  const confirmationModalClose = document.getElementById(
+    "confirmation-feedback-close",
+  );
   const passwordStageStatus = document.getElementById("password-stage-status");
   const restartPasswordButton = document.getElementById(
     "restart-password-button",
@@ -109,47 +116,78 @@ function initializeAuth({ onAuthenticated }) {
   let pending = false;
   let analysisResult = null;
   let analysisKey = "";
-  let confirmationSequences = [];
-  let initialPasswordPoints = null;
-  let registrationStep = 0;
-  let consecutivePasswordMismatches = 0;
+  let registrationId = null;
+  let consecutiveSuccesses = 0;
+  let registrationCancellation = null;
 
-  function updateUIForStep(resetPoints = true) {
+  function updateUIForStep() {
     const title = document.querySelector('[data-i18n="createSequence"]');
     const count = document.getElementById("point-count");
+    changePasswordButton.hidden = !registrationId;
+    const isRepeatingPassword = mode === "register" && Boolean(registrationId);
 
-    if (registrationStep === 0) {
-      title.textContent = t("createSequence");
-      selectionHint.textContent = t("selectionHint");
-      passwordStageStatus.hidden = true;
-    } else {
-      title.textContent =
-        registrationStep === 3
-          ? t("passwordConfirmedTitle")
-          : t("repeatSequence");
-      selectionHint.textContent =
-        registrationStep === 3
-          ? t("passwordConfirmedHint")
-          : t("repeatSequenceHint");
-      passwordStageStatus.textContent =
-        registrationStep === 3
-          ? t("passwordConfirmed")
-          : t("passwordConfirmationProgress", {
-              n: 3 - registrationStep,
-            });
-      passwordStageStatus.hidden = false;
+    analysisMethodSelector.hidden = mode !== "register" || isRepeatingPassword;
+    analyzeButton.hidden = mode !== "register" || isRepeatingPassword;
+
+    if (isRepeatingPassword) {
+      analysisFeedback.hidden = true;
     }
-    analysisMethodSelector.hidden = mode !== "register" || registrationStep > 0;
-    analyzeButton.hidden = mode !== "register" || registrationStep > 0;
-    restartPasswordButton.hidden = consecutivePasswordMismatches < 3;
-    if (resetPoints) {
-      document.dispatchEvent(new CustomEvent("reset-points"));
-      count.textContent = "0/5";
+
+    // El análisis solo se muestra antes de iniciar las repeticiones.
+    const repeatingPassword = Boolean(registrationId);
+
+    analysisMethodSelector.hidden = mode !== "register" || repeatingPassword;
+
+    analyzeButton.hidden = mode !== "register" || repeatingPassword;
+
+    analysisFeedback.hidden =
+      mode !== "register" || repeatingPassword || !analysisResult;
+    if (!registrationId) {
+      title.textContent =
+        window.PasspointsCurrentLanguage === "es"
+          ? "Crea tu secuencia"
+          : "Create your sequence";
+      selectionHint.textContent = t("selectionHint");
+    } else {
+      const repetition = Math.max(1, consecutiveSuccesses);
+      title.textContent =
+        window.PasspointsCurrentLanguage === "es"
+          ? `Confirma tu secuencia (${repetition}/3)`
+          : `Confirm your sequence (${repetition}/3)`;
+      selectionHint.textContent =
+        window.PasspointsCurrentLanguage === "es"
+          ? "Repite los mismos cinco puntos. Un error reinicia la racha."
+          : "Repeat the same five points. A mistake resets the streak.";
+    }
+    count.textContent = "0/5";
+    document.dispatchEvent(new CustomEvent("reset-points"));
+  }
+  function resetRegistrationProgress() {
+    const previousRegistrationId = registrationId;
+    registrationId = null;
+    consecutiveSuccesses = 0;
+    usernameInput.readOnly = false;
+    emailInput.readOnly = false;
+    updateUIForStep();
+    if (previousRegistrationId) {
+      registrationCancellation = cancelRegistration(previousRegistrationId)
+        .catch((error) => {
+          console.error("Could not cancel the pending registration:", error);
+          showRequestError(
+            error,
+            window.PasspointsCurrentLanguage === "es"
+              ? "No se pudo reiniciar el registro. Inténtalo de nuevo."
+              : "The registration could not be reset. Please try again.",
+          );
+        })
+        .finally(() => {
+          registrationCancellation = null;
+          updateButtons();
+        });
+      updateButtons();
     }
   }
 
-  // ... (inside initializeAuth) ...
-  // Note: I will need to hook into existing reset logic for "reset-points"
   let loginImagesReady = true;
   let loginImageRequestId = 0;
   let loginImageTimer = null;
@@ -162,7 +200,7 @@ function initializeAuth({ onAuthenticated }) {
   function persistAuthProgress() {
     if (restoringProgress) return;
     const progress = {
-      version: 1,
+      version: 2,
       mode,
       username: usernameInput.value,
       email: emailInput.value,
@@ -171,6 +209,8 @@ function initializeAuth({ onAuthenticated }) {
       points: getSelectedPointFractions(),
       methods: selectedAnalysisMethods(),
       analysisResult,
+      registrationId,
+      consecutiveSuccesses,
     };
     try {
       sessionStorage.setItem(AUTH_PROGRESS_KEY, JSON.stringify(progress));
@@ -189,7 +229,7 @@ function initializeAuth({ onAuthenticated }) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
-    if (!progress || progress.version !== 1) {
+    if (!progress || ![1, 2].includes(progress.version)) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
@@ -238,6 +278,30 @@ function initializeAuth({ onAuthenticated }) {
           setSelectedPointFractions(progress.points);
         }
       }
+      if (
+        restoredMode === "register" &&
+        selectedImage &&
+        typeof progress.registrationId === "string" &&
+        Number.isInteger(progress.consecutiveSuccesses) &&
+        progress.consecutiveSuccesses >= 0 &&
+        progress.consecutiveSuccesses < 3
+      ) {
+        registrationId = progress.registrationId;
+        consecutiveSuccesses = progress.consecutiveSuccesses;
+        usernameInput.readOnly = true;
+        emailInput.readOnly = true;
+        updateUIForStep();
+        if (Array.isArray(progress.points)) {
+          setSelectedPointFractions(progress.points);
+        }
+      } else if (
+        typeof progress.registrationId === "string" &&
+        !selectedImage
+      ) {
+        cancelRegistration(progress.registrationId).catch((error) => {
+          console.error("Could not cancel the restored registration:", error);
+        });
+      }
 
       if (
         progress.analysisResult &&
@@ -245,7 +309,8 @@ function initializeAuth({ onAuthenticated }) {
       ) {
         analysisResult = progress.analysisResult;
         analysisKey = selectionKey();
-        analysisFeedback.hidden = false;
+        analysisFeedback.hidden =
+          mode !== "register" || Boolean(registrationId);
         analysisFeedback.className = analysisResult.security.is_weak
           ? "feedback is-warning"
           : "feedback is-success";
@@ -295,30 +360,29 @@ function initializeAuth({ onAuthenticated }) {
     analyzeButton.disabled =
       pending ||
       mode !== "register" ||
-      registrationStep !== 0 ||
+      Boolean(registrationId) ||
       !ready ||
       !methodsReady;
     submitButton.disabled =
       pending ||
-      (mode === "register" &&
-        (!ready || (registrationStep > 0 && !initialPasswordPoints))) ||
-      (mode === "login" && !loginReady) ||
-      (mode === "login" && !loginImagesReady);
+      !ready ||
+      (mode === "login" && (!loginImagesReady || !loginReady)) ||
+      registrationCancellation !== null;
     submitLabel.textContent =
       mode !== "register"
         ? t("signIn")
         : pending
           ? t("creatingAccount")
-          : registrationStep === 0
-            ? t("savePassword")
-            : registrationStep === 3
-              ? t("createAccount")
-              : t("repeatPassword");
+          : registrationId
+            ? t("repeatPassword")
+            : t("savePassword");
   }
   function setMode(nextMode) {
     if (pending) return;
     const modeChanged = mode !== nextMode;
-    if (modeChanged) resetRegistrationProgress();
+    if (modeChanged && mode === "register" && registrationId) {
+      resetRegistrationProgress();
+    }
     mode = nextMode;
     const registering = mode === "register";
     if (modeChanged) {
@@ -338,8 +402,8 @@ function initializeAuth({ onAuthenticated }) {
       ? t("authViewTitle")
       : t("authViewTitleLogin");
     weakPatterns.hidden = !registering;
-    analysisMethodSelector.hidden = !registering || registrationStep > 0;
-    analyzeButton.hidden = !registering || registrationStep > 0;
+    analysisMethodSelector.hidden = !registering || Boolean(registrationId);
+    analyzeButton.hidden = !registering || Boolean(registrationId);
     analysisFeedback.hidden = true;
     hideRequestFeedback();
     updateButtons();
@@ -406,11 +470,9 @@ function initializeAuth({ onAuthenticated }) {
           ? t("signIn")
           : value && action === "submit"
             ? t("creatingAccount")
-            : registrationStep === 0
-              ? t("savePassword")
-              : registrationStep === 3
-                ? t("createAccount")
-                : t("repeatPassword");
+            : registrationId
+              ? t("repeatPassword")
+              : t("savePassword");
     updateButtons();
   }
   function showRequestError(error, fallback) {
@@ -518,7 +580,7 @@ function initializeAuth({ onAuthenticated }) {
     event.preventDefault();
     if (pending || submitButton.disabled) return;
 
-    if (mode === "register" && registrationStep > 0 && registrationStep < 3) {
+    if (mode === "register" && !registrationId) {
       const isSpanish = window.PasspointsCurrentLanguage === "es";
       const missingFields = [];
       const username = usernameInput.value.trim();
@@ -557,47 +619,6 @@ function initializeAuth({ onAuthenticated }) {
     const points = getSelectedPoints();
     if (points.length !== 5) return;
 
-    if (mode === "register" && registrationStep === 0) {
-      initialPasswordPoints = points;
-      confirmationSequences = [];
-      consecutivePasswordMismatches = 0;
-      registrationStep = 1;
-      hideRequestFeedback();
-      updateUIForStep();
-      persistAuthProgress();
-      updateButtons();
-      return;
-    }
-
-    if (mode === "register") {
-      if (!initialPasswordPoints) return;
-      if (!matchesInitialPassword(points)) {
-        consecutivePasswordMismatches += 1;
-        requestFeedback.hidden = false;
-        requestFeedback.textContent =
-          consecutivePasswordMismatches >= 3
-            ? t("passwordMismatchPersistent")
-            : t("passwordMismatch");
-        updateUIForStep();
-        persistAuthProgress();
-        updateButtons();
-        return;
-      }
-
-      confirmationSequences.push(points);
-      registrationStep = confirmationSequences.length + 1;
-      consecutivePasswordMismatches = 0;
-      hideRequestFeedback();
-      if (confirmationSequences.length < 2) {
-        updateUIForStep();
-        persistAuthProgress();
-        updateButtons();
-        return;
-      }
-      updateUIForStep(false);
-      updateButtons();
-    }
-
     hideRequestFeedback();
     setPending(true, "submit");
     try {
@@ -605,20 +626,41 @@ function initializeAuth({ onAuthenticated }) {
 
       let result;
       if (mode === "register") {
-        result = await registerAccount(
-          usernameInput.value.trim(),
-          emailInput.value.trim(),
-          image,
-          initialPasswordPoints,
-          confirmationSequences,
-          3,
-        );
+        if (!registrationId) {
+          const progress = await registerAccount(
+            usernameInput.value.trim(),
+            emailInput.value.trim(),
+            image,
+            points,
+          );
+          registrationId = progress.registration_id;
+          consecutiveSuccesses = progress.consecutive_successes;
+          usernameInput.readOnly = true;
+          emailInput.readOnly = true;
+          updateUIForStep();
+          persistAuthProgress();
+          showConfirmationModal(true, consecutiveSuccesses);
+          return;
+        }
+
+        result = await registerRepetition(registrationId, points);
+        consecutiveSuccesses = result.consecutive_successes;
+        if (!result.completed) {
+          updateUIForStep();
+          persistAuthProgress();
+          showConfirmationModal(result.attempt_correct, consecutiveSuccesses);
+          return;
+        }
       } else {
         result = await authenticate(emailInput.value.trim(), image, points);
       }
 
       sessionStorage.setItem("passpoints_access_token", result.access_token);
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
+      registrationId = null;
+      consecutiveSuccesses = 0;
+      usernameInput.readOnly = false;
+      emailInput.readOnly = false;
       onAuthenticated({
         user: result.user,
         image,
@@ -697,6 +739,42 @@ function initializeAuth({ onAuthenticated }) {
     document.body.style.overflow = "";
   }
 
+  function showConfirmationModal(attemptCorrect, successes) {
+    const title = document.getElementById("confirmation-feedback-title");
+    const desc = document.getElementById("confirmation-feedback-description");
+    const btn = document.getElementById("confirmation-feedback-close");
+
+    const remaining = attemptCorrect ? 3 - successes : 3;
+
+    title.textContent = t(
+      attemptCorrect
+        ? "passwordConfirmationTitle"
+        : "passwordConfirmationWrongTitle",
+    );
+
+    if (!attemptCorrect) {
+      desc.textContent = t("passwordConfirmationWrongHint", { n: remaining });
+    } else if (remaining === 1) {
+      desc.textContent = t("passwordConfirmationLast");
+    } else {
+      desc.textContent = t("passwordConfirmationHint", { n: remaining });
+    }
+    btn.textContent = t("passwordConfirmationButton");
+
+    confirmationModal.classList.add("is-open");
+    confirmationModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    confirmationModalClose.focus();
+  }
+  function closeConfirmationModal() {
+    confirmationModal.classList.remove("is-open");
+    confirmationModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  confirmationModalClose.addEventListener("click", closeConfirmationModal);
+  confirmationModal
+    .querySelector(".confirmation-modal-backdrop")
+    .addEventListener("click", closeConfirmationModal);
   registerTab.addEventListener("click", () => setMode("register"));
   loginTab.addEventListener("click", () => setMode("login"));
   window.refreshLanguageUI = function refreshLanguageUI() {
@@ -734,6 +812,10 @@ function initializeAuth({ onAuthenticated }) {
   document
     .getElementById("clear-points")
     .addEventListener("click", hideRequestFeedback);
+  changePasswordButton.addEventListener("click", () => {
+    hideRequestFeedback();
+    resetRegistrationProgress();
+  });
   analysisMethodInputs.forEach((input) => {
     input.addEventListener("change", () => {
       invalidateAnalysis();
@@ -742,7 +824,7 @@ function initializeAuth({ onAuthenticated }) {
     });
   });
   document.addEventListener("points-changed", () => {
-    if (mode === "register" && registrationStep > 0) {
+    if (mode === "register" && registrationId) {
       if (hasFiveSelectedPoints()) hideRequestFeedback();
       persistAuthProgress();
       updateButtons();
@@ -751,42 +833,18 @@ function initializeAuth({ onAuthenticated }) {
     invalidateAnalysis();
     persistAuthProgress();
   });
-  function resetRegistrationProgress() {
-    initialPasswordPoints = null;
-    confirmationSequences = [];
-    registrationStep = 0;
-    consecutivePasswordMismatches = 0;
-    restartPasswordButton.hidden = true;
-    updateUIForStep();
-  }
-  function matchesInitialPassword(points) {
-    const image = getImageData();
-    const toleranceCell = ({ x, y }) => [
-      Math.min(5, Math.floor((x / image.width) * 5 + 0.5)),
-      Math.min(5, Math.floor((y / image.height) * 5 + 0.5)),
-    ];
-    return points.every((point, index) => {
-      const expected = toleranceCell(initialPasswordPoints[index]);
-      const actual = toleranceCell(point);
-      return expected[0] === actual[0] && expected[1] === actual[1];
-    });
-  }
-  restartPasswordButton.addEventListener("click", () => {
-    resetRegistrationProgress();
-    analysisResult = null;
-    analysisKey = "";
-    analysisFeedback.hidden = true;
-    hideRequestFeedback();
-    persistAuthProgress();
-    updateButtons();
-  });
   document.addEventListener("image-selection-started", () => {
-    resetRegistrationProgress();
+    if (mode === "register" && registrationId) {
+      resetRegistrationProgress();
+    }
     invalidateAnalysis();
     persistAuthProgress();
   });
-  document.addEventListener("image-loaded", (event) => {
-    if (!event.detail) resetRegistrationProgress();
+  document.addEventListener(
+    "cancel-registration-progress",
+    resetRegistrationProgress,
+  );
+  document.addEventListener("image-loaded", () => {
     invalidateAnalysis();
     persistAuthProgress();
   });
@@ -801,6 +859,11 @@ function initializeAuth({ onAuthenticated }) {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && patternModal.classList.contains("is-open"))
       closePatternModal();
+    if (
+      event.key === "Escape" &&
+      confirmationModal.classList.contains("is-open")
+    )
+      closeConfirmationModal();
   });
   function updateVisualPoint(number, x, y) {
     visualPointPositions[number] = { x, y };
@@ -855,6 +918,7 @@ function initializeAuth({ onAuthenticated }) {
 }
 
 function resetAuth() {
+  document.dispatchEvent(new CustomEvent("cancel-registration-progress"));
   const form = document.getElementById("auth-form");
   form.reset();
   document.getElementById("clear-points").click();
