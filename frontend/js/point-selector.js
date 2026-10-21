@@ -26,11 +26,61 @@ function initializePointSelector() {
   function renderPoints() {
     pointsLayer.replaceChildren();
     selectedPoints.forEach((point, index) => {
-      const marker = document.createElement("span");
+      const marker = document.createElement("button");
+      marker.type = "button";
       marker.className = "point-marker";
       marker.textContent = String(index + 1);
       marker.style.left = `${point.relativeX * 100}%`;
       marker.style.top = `${point.relativeY * 100}%`;
+      marker.setAttribute(
+        "aria-label",
+        `Move point ${index + 1} by dragging or using the arrow keys`,
+      );
+      marker.addEventListener("pointerdown", (event) => {
+        if (pointSelectionLocked) return;
+        event.preventDefault();
+        marker.setPointerCapture(event.pointerId);
+      });
+      marker.addEventListener("pointermove", (event) => {
+        if (
+          pointSelectionLocked ||
+          !marker.hasPointerCapture(event.pointerId)
+        )
+          return;
+        const imageRect = selectedImageElement.getBoundingClientRect();
+        movePoint(
+          index,
+          (event.clientX - imageRect.left) / imageRect.width,
+          (event.clientY - imageRect.top) / imageRect.height,
+          false,
+        );
+      });
+      marker.addEventListener("pointerup", (event) => {
+        if (!marker.hasPointerCapture(event.pointerId)) return;
+        marker.releasePointerCapture(event.pointerId);
+        document.dispatchEvent(new CustomEvent("points-changed"));
+      });
+      marker.addEventListener("pointercancel", (event) => {
+        if (marker.hasPointerCapture(event.pointerId))
+          marker.releasePointerCapture(event.pointerId);
+        document.dispatchEvent(new CustomEvent("points-changed"));
+      });
+      marker.addEventListener("keydown", (event) => {
+        const offsets = {
+          ArrowLeft: [-0.01, 0],
+          ArrowRight: [0.01, 0],
+          ArrowUp: [0, -0.01],
+          ArrowDown: [0, 0.01],
+        };
+        const offset = offsets[event.key];
+        if (!offset || pointSelectionLocked) return;
+        event.preventDefault();
+        movePoint(
+          index,
+          point.relativeX + offset[0],
+          point.relativeY + offset[1],
+        );
+      });
       pointsLayer.appendChild(marker);
     });
 
@@ -109,6 +159,45 @@ function initializePointSelector() {
       Math.min(GRID_DIVISIONS, Math.floor((x / width) * GRID_DIVISIONS + 0.5)),
       Math.min(GRID_DIVISIONS, Math.floor((y / height) * GRID_DIVISIONS + 0.5))
     ];
+  }
+
+  function movePoint(index, relativeX, relativeY, dispatchChange = true) {
+    const imageData = getImageData();
+    const point = selectedPoints[index];
+    const nextX = Math.max(0, Math.min(1, relativeX));
+    const nextY = Math.max(0, Math.min(1, relativeY));
+    const nextCell = getGridCell(
+      nextX * imageData.width,
+      nextY * imageData.height,
+      imageData.width,
+      imageData.height,
+    );
+    const overlapsAnotherPoint = selectedPoints.some(
+      (otherPoint, otherIndex) => {
+        if (otherIndex === index) return false;
+        const otherCell = getGridCell(
+          otherPoint.x,
+          otherPoint.y,
+          imageData.width,
+          imageData.height,
+        );
+        return otherCell[0] === nextCell[0] && otherCell[1] === nextCell[1];
+      },
+    );
+    if (overlapsAnotherPoint) {
+      pointFeedback.textContent = t("pointsTooClose");
+      return false;
+    }
+
+    point.x = nextX * imageData.width;
+    point.y = nextY * imageData.height;
+    point.relativeX = nextX;
+    point.relativeY = nextY;
+    const marker = pointsLayer.children[index];
+    marker.style.left = `${nextX * 100}%`;
+    marker.style.top = `${nextY * 100}%`;
+    if (dispatchChange) document.dispatchEvent(new CustomEvent("points-changed"));
+    return true;
   }
 
   document.addEventListener("image-loaded", resetPoints);
