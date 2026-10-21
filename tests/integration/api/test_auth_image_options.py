@@ -10,6 +10,10 @@ from app.api.routes.auth import get_auth_service
 from app.application.auth.service import AuthService
 from app.infrastructure.database.base import Base
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
+from app.infrastructure.database.models.registration import (
+    RegistrationAttempt,
+    RegistrationDraft,
+)
 from app.infrastructure.database.models.user import User
 from app.main import app
 
@@ -53,7 +57,15 @@ def auth_client() -> Iterator[tuple[TestClient, sessionmaker[Session]]]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    Base.metadata.create_all(engine, tables=[User.__table__, GraphicalPassword.__table__])
+    Base.metadata.create_all(
+        engine,
+        tables=[
+            User.__table__,
+            GraphicalPassword.__table__,
+            RegistrationDraft.__table__,
+            RegistrationAttempt.__table__,
+        ],
+    )
     factory = sessionmaker(bind=engine, expire_on_commit=False)
 
     def provide_service() -> Iterator[AuthService]:
@@ -69,13 +81,27 @@ def auth_client() -> Iterator[tuple[TestClient, sessionmaker[Session]]]:
         engine.dispose()
 
 
+def register_complete(client: TestClient, payload: dict[str, object]):
+    start = client.post("/auth/register", json=payload)
+    assert start.status_code == 201
+    registration_id = start.json()["registration_id"]
+    response = None
+    for _ in range(2):
+        response = client.post(
+            f"/auth/register/{registration_id}/repetitions",
+            json={"points": POINTS},
+        )
+    assert response is not None
+    return response
+
+
 def test_login_options_include_registered_image_and_preserve_authentication(
     auth_client: tuple[TestClient, sessionmaker[Session]],
 ) -> None:
     client, _ = auth_client
-    registration = client.post(
-        "/auth/register",
-        json={
+    registration = register_complete(
+        client,
+        {
             "username": "image.user",
             "email": "image@example.test",
             "image_id": "botanical-garden",
@@ -84,7 +110,7 @@ def test_login_options_include_registered_image_and_preserve_authentication(
             "points": POINTS,
         },
     )
-    assert registration.status_code == 201
+    assert registration.json()["completed"] is True
 
     options_response = client.post(
         "/auth/login-images",
@@ -151,9 +177,9 @@ def test_login_options_do_not_substitute_missing_registered_image(
     auth_client: tuple[TestClient, sessionmaker[Session]],
 ) -> None:
     client, _ = auth_client
-    client.post(
-        "/auth/register",
-        json={
+    register_complete(
+        client,
+        {
             "username": "image.user",
             "email": "image@example.test",
             "image_id": "retired-image",

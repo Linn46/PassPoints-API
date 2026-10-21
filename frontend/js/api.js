@@ -8,13 +8,13 @@ class ApiError extends Error {
   }
 }
 
-async function requestJson(url, payload) {
+async function requestJson(url, payload, method = "POST", headers = {}) {
   let response;
   try {
     response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      method,
+      headers: { "Content-Type": "application/json", ...headers },
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
     });
   } catch (error) {
     console.error("Passpoints API connection error:", error);
@@ -22,10 +22,12 @@ async function requestJson(url, payload) {
   }
 
   let data = {};
-  try {
-    data = await response.json();
-  } catch (error) {
-    console.error("Passpoints API returned a non-JSON response:", error);
+  if (response.status !== 204) {
+    try {
+      data = await response.json();
+    } catch (error) {
+      console.error("Passpoints API returned a non-JSON response:", error);
+    }
   }
   if (!response.ok) {
     console.error("Passpoints API request failed:", response.status, data);
@@ -65,19 +67,27 @@ async function analyzeSelection(image, points, methods = ["delaunay_statistical"
   });
 }
 
-async function registerAccount(username, email, image, points, confirmationPoints = null, repetitionCount = null) {
-  const payload = {
+async function registerAccount(username, email, image, points) {
+  return requestJson(`${API_ORIGIN}/auth/register`, {
     username,
     email,
     ...authPayload(image, points),
-  };
-  if (confirmationPoints && confirmationPoints.length > 0) {
-    payload.confirmation_points = confirmationPoints;
-  }
-  if (repetitionCount !== null) {
-    payload.repetition_count = repetitionCount;
-  }
-  return requestJson(`${API_ORIGIN}/auth/register`, payload);
+  });
+}
+
+async function registerRepetition(registrationId, points) {
+  return requestJson(
+    `${API_ORIGIN}/auth/register/${encodeURIComponent(registrationId)}/repetitions`,
+    { points },
+  );
+}
+
+async function cancelRegistration(registrationId) {
+  return requestJson(
+    `${API_ORIGIN}/auth/register/${encodeURIComponent(registrationId)}`,
+    undefined,
+    "DELETE",
+  );
 }
 
 async function authenticate(email, image, points) {
@@ -92,4 +102,13 @@ async function getLoginImageOptions(email, imageIds) {
     email,
     image_ids: imageIds,
   });
+}
+
+async function getRepetitionHistory(accessToken) {
+  return requestJson(
+    `${API_ORIGIN}/auth/repetition-history`,
+    undefined,
+    "GET",
+    { Authorization: `Bearer ${accessToken}` },
+  );
 }

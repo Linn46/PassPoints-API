@@ -29,6 +29,8 @@ def test_alembic_creates_expected_tables(database):
             "graphical_passwords",
             "study_sessions",
             "attempts",
+            "registration_drafts",
+            "registration_attempts",
             "alembic_version",
         }.issubset(table_names)
     finally:
