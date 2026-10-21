@@ -125,6 +125,154 @@
   font-weight: 800;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+.repetition-panel {
+  margin-top: 24px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.repetition-panel .feed-heading {
+  margin-bottom: 18px;
+}
+.repetition-panel .feed-heading h2 {
+  margin-top: 2px;
+}
+.repetition-panel .feed-heading p {
+  max-width: 690px;
+  margin-top: 8px;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.repetition-history-status {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.repetition-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.repetition-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+}
+.repetition-stat span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.repetition-stat strong {
+  color: var(--text);
+  font-size: 23px;
+}
+.repetition-chart-scroll {
+  overflow-x: auto;
+  padding: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+}
+.repetition-chart {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+  height: 260px;
+}
+.chart-grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.chart-goal-line {
+  stroke: var(--primary-dark);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+}
+.chart-axis-line {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.chart-streak-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chart-point-correct {
+  fill: var(--primary-dark);
+  stroke: var(--surface-solid);
+  stroke-width: 2;
+}
+.chart-point-failure {
+  fill: var(--danger);
+  stroke: var(--surface-solid);
+  stroke-width: 2;
+}
+.chart-axis-label {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+.chart-axis-title {
+  fill: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+.repetition-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 2px 18px;
+}
+.repetition-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-soft);
+  font-size: 10px;
+}
+.repetition-legend i {
+  width: 9px;
+  height: 9px;
+  display: inline-block;
+  border-radius: 50%;
+}
+.repetition-legend .legend-correct {
+  background: var(--primary-dark);
+}
+.repetition-legend .legend-failure {
+  background: var(--danger);
+}
+.repetition-legend .legend-goal {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed var(--primary-dark);
+  border-radius: 0;
+}
+.repetition-conclusion {
+  padding: 17px 19px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+}
+.repetition-conclusion .small-label {
+  margin-bottom: 5px;
+}
+.repetition-conclusion p {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.65;
+}
 .education-feed,
 .resource-section {
   margin-top: 36px;
@@ -338,6 +486,12 @@
   }
   .project-info {
     grid-column: auto;
+  }
+  .repetition-panel {
+    padding: 19px;
+  }
+  .repetition-stats {
+    grid-template-columns: 1fr;
   }
   .education-article {
     padding: 18px;

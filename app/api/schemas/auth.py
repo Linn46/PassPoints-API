@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.core.config.image_parameters import is_supported_image_size
 
@@ -33,12 +34,6 @@ class RegisterRequest(BaseModel):
     image_width: int = Field(gt=0)
     image_height: int = Field(gt=0)
     points: list[PointInput] = Field(min_length=5, max_length=5)
-    confirmation_points: list[list[PointInput]] | None = Field(
-        default=None,
-        min_length=2,
-        max_length=2,
-    )
-    repetition_count: int | None = Field(default=None, ge=2)
     tolerance_grid_divisions: int = Field(default=5, ge=1, le=5)
 
     @field_validator("username", mode="before")
@@ -71,17 +66,21 @@ class RegisterRequest(BaseModel):
             raise ValueError("Points must be inside the image.")
         if len({(p.x, p.y) for p in self.points}) != 5:
             raise ValueError("The five points must be unique.")
-        if self.confirmation_points is not None:
-            if len(self.confirmation_points) != 2:
-                raise ValueError("Exactly two confirmation point sequences are required.")
-            for confirmation in self.confirmation_points:
-                if len(confirmation) != 5:
-                    raise ValueError("Each confirmation sequence must have exactly 5 points.")
-                if any(p.x > self.image_width or p.y > self.image_height for p in confirmation):
-                    raise ValueError("Confirmation points must be inside the image.")
-                if len({(p.x, p.y) for p in confirmation}) != 5:
-                    raise ValueError("The five points in each confirmation must be unique.")
         return self
+
+
+class RegisterRepetitionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    points: list[PointInput] = Field(min_length=5, max_length=5)
+
+    @field_validator("points")
+    @classmethod
+    def unique_points(cls, points: list[PointInput]) -> list[PointInput]:
+        if len({(point.x, point.y) for point in points}) != 5:
+            raise ValueError("The five points must be unique.")
+        return points
+
 
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -145,5 +144,32 @@ class AuthenticationResponse(BaseModel):
     expires_in: int
     user: UserResponse
 
+
+class RegistrationProgressResponse(BaseModel):
+    registration_id: str
+    completed: bool
+    attempt_correct: bool
+    consecutive_successes: int = Field(ge=0, le=3)
+    required_successes: int = 3
+    access_token: str | None = None
+    expires_in: int | None = None
+    user: UserResponse | None = None
+
+
 class LoginImagesResponse(BaseModel):
     image_ids: list[str] = Field(min_length=3, max_length=3)
+
+
+class RepetitionAttemptResponse(BaseModel):
+    attempt_number: int
+    is_correct: bool
+    consecutive_successes: int = Field(ge=0, le=3)
+    created_at: datetime
+
+
+class RepetitionHistoryResponse(BaseModel):
+    has_history: bool
+    attempts: list[RepetitionAttemptResponse]
+    total_attempts: int = Field(ge=0)
+    failures: int = Field(ge=0)
+    attempts_to_goal: int | None = Field(default=None, ge=1)
