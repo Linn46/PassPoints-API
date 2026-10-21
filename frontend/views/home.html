@@ -46,6 +46,70 @@
         ></div>
       </div>
     </section>
+    <section class="repetition-panel" aria-labelledby="repetition-heading">
+      <div class="feed-heading">
+        <div>
+          <span class="small-label" data-i18n="repetitionHistoryTitle"
+            >TU PRÁCTICA DURANTE EL REGISTRO</span
+          >
+          <h2 id="repetition-heading" data-i18n="repetitionChartTitle"
+            >Intentos y racha consecutiva</h2
+          >
+          <p data-i18n="repetitionHistoryIntro">
+            El gráfico resume cómo avanzó tu racha al repetir la secuencia para
+            crear la cuenta.
+          </p>
+        </div>
+      </div>
+      <p
+        id="repetition-history-status"
+        class="repetition-history-status"
+        role="status"
+        aria-live="polite"
+        data-i18n="repetitionHistoryLoading"
+      >
+        Cargando historial de repeticiones…
+      </p>
+      <div id="repetition-results" hidden>
+        <div class="repetition-stats">
+          <article class="repetition-stat">
+            <span data-i18n="repetitionAttempts">Intentos totales</span>
+            <strong id="repetition-total">0</strong>
+          </article>
+          <article class="repetition-stat">
+            <span data-i18n="repetitionFailures">Fallos</span>
+            <strong id="repetition-failures">0</strong>
+          </article>
+          <article class="repetition-stat">
+            <span data-i18n="repetitionGoal">Intentos hasta la meta</span>
+            <strong id="repetition-goal">—</strong>
+          </article>
+        </div>
+        <div class="repetition-chart-scroll">
+          <svg
+            id="repetition-chart"
+            class="repetition-chart"
+            viewBox="0 0 640 260"
+            role="img"
+            aria-labelledby="repetition-chart-title repetition-chart-description"
+          >
+            <title id="repetition-chart-title"></title>
+            <desc id="repetition-chart-description"></desc>
+          </svg>
+        </div>
+        <div class="repetition-legend">
+          <span><i class="legend-correct"></i><span data-i18n="repetitionCorrect">Acierto</span></span>
+          <span><i class="legend-failure"></i><span data-i18n="repetitionFailure">Fallo</span></span>
+          <span><i class="legend-goal"></i><span data-i18n="repetitionGoalLine">Meta: 3 aciertos consecutivos</span></span>
+        </div>
+        <article class="repetition-conclusion">
+          <span class="small-label" data-i18n="repetitionConclusionTitle"
+            >CONCLUSIÓN</span
+          >
+          <p id="repetition-conclusion"></p>
+        </article>
+      </div>
+    </section>
     <section class="education-feed">
       <div class="feed-heading">
         <div>

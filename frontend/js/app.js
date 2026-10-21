@@ -116,13 +116,43 @@ window.PasspointsTranslations = {
     didYouKnow: "¿SABÍAS QUE...?",
     pointOrder: "El orden de los puntos es tan importante como su posición.",
     pointsInSequence: "puntos en secuencia",
+    repetitionHistoryTitle: "Tu práctica durante el registro",
+    repetitionHistoryIntro:
+      "El gráfico resume cómo avanzó tu racha al repetir la secuencia para crear la cuenta.",
+    repetitionHistoryLoading: "Cargando historial de repeticiones…",
+    repetitionHistoryUnavailable:
+      "No hay historial detallado para este usuario. Los intentos anteriores a este registro no se conservaron.",
+    repetitionHistoryError: "No se pudo cargar el historial de repeticiones.",
+    repetitionAttempts: "Intentos totales",
+    repetitionFailures: "Fallos",
+    repetitionGoal: "Intentos hasta la meta",
+    repetitionGoalUnavailable: "No alcanzada",
+    repetitionChartTitle: "Intentos y racha consecutiva",
+    repetitionChartDescription:
+      "Cada punto muestra la racha consecutiva después de un intento. Los puntos verdes son aciertos y los rojos son fallos. La línea superior marca la meta de tres.",
+    repetitionCorrect: "Acierto",
+    repetitionFailure: "Fallo",
+    repetitionGoalLine: "Meta: 3 aciertos consecutivos",
+    repetitionConclusionTitle: "Conclusión",
+    repetitionConclusionReached:
+      "Alcanzaste tres aciertos consecutivos en {n} intentos y tuviste {failures} fallos. Esto describe únicamente la repetición durante el registro; no es una medida general de la seguridad de tu contraseña.",
+    repetitionConclusionNoGoal:
+      "El historial disponible no muestra cuándo se alcanzó la meta. Estos datos describen únicamente la repetición durante el registro y no miden la seguridad general de tu contraseña.",
+    repetitionAxisAttempts: "Intento",
+    repetitionAxisStreak: "Racha",
     theProject: "EL PROYECTO",
     projectDescription:
       "Proyecto de investigación sobre autenticación gráfica y evaluación de patrones.",
     myAccount: "Mi cuenta",
     accountMenu: "Mi cuenta",
-    pointsTooClose:
-      "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
+    passwordConfirmationTitle: "¡Secuencia aceptada!",
+    passwordConfirmationHint: "Repite la secuencia. Te faltan {n} veces.",
+    passwordConfirmationLast: "Repite la secuencia una última vez.",
+    passwordConfirmationWrongTitle: "La secuencia no coincide",
+    passwordConfirmationWrongHint: "La racha se reinició. Repite correctamente {n} veces seguidas.",
+    changePassword: "Cambiar contraseña",
+    passwordConfirmationButton: "Continuar",
+    pointsTooClose: "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
     profile: "Mi perfil",
     security: "Seguridad",
     appearance: "Apariencia",
@@ -281,6 +311,30 @@ window.PasspointsTranslations = {
     didYouKnow: "DID YOU KNOW...?",
     pointOrder: "The order of the points matters as much as their position.",
     pointsInSequence: "points in sequence",
+    repetitionHistoryTitle: "Your registration practice",
+    repetitionHistoryIntro:
+      "This chart summarizes how your streak progressed while repeating the sequence to create your account.",
+    repetitionHistoryLoading: "Loading repetition history…",
+    repetitionHistoryUnavailable:
+      "There is no detailed history for this user. Attempts from before this registration were not retained.",
+    repetitionHistoryError: "The repetition history could not be loaded.",
+    repetitionAttempts: "Total attempts",
+    repetitionFailures: "Failures",
+    repetitionGoal: "Attempts to reach goal",
+    repetitionGoalUnavailable: "Not reached",
+    repetitionChartTitle: "Attempts and consecutive streak",
+    repetitionChartDescription:
+      "Each point shows the consecutive streak after an attempt. Green points are correct and red points are failures. The top line marks the goal of three.",
+    repetitionCorrect: "Correct",
+    repetitionFailure: "Failure",
+    repetitionGoalLine: "Goal: 3 consecutive correct attempts",
+    repetitionConclusionTitle: "Conclusion",
+    repetitionConclusionReached:
+      "You reached three consecutive correct attempts in {n} attempts, with {failures} failures. This describes repetition during registration only; it is not a general measure of your password's security.",
+    repetitionConclusionNoGoal:
+      "The available history does not show when the goal was reached. These data describe repetition during registration only and do not measure your password's overall security.",
+    repetitionAxisAttempts: "Attempt",
+    repetitionAxisStreak: "Streak",
     theProject: "THE PROJECT",
     projectDescription:
       "Research project on graphical authentication and pattern evaluation.",
@@ -330,8 +384,14 @@ window.PasspointsTranslations = {
     notSelected: "Not selected",
     accountThemeLabelLight: "Light",
     accountThemeLabelDark: "Dark",
-    pointsTooClose:
-      "Some points are too close, they must be in different grid cells.",
+    passwordConfirmationTitle: "Sequence accepted!",
+    passwordConfirmationHint: "Repeat the sequence. You have {n} times left.",
+    passwordConfirmationLast: "Repeat the sequence one last time.",
+    passwordConfirmationWrongTitle: "The sequence does not match",
+    passwordConfirmationWrongHint: "Your streak was reset. Repeat the sequence correctly {n} times in a row.",
+    changePassword: "Change password",
+    passwordConfirmationButton: "Continue",
+    pointsTooClose: "Some points are too close, they must be in different grid cells.",
   },
 };
 
@@ -446,6 +506,27 @@ function handleAuthenticated(userState) {
   renderHome(currentUser);
   updateAccountUser(currentUser.user);
   showView("home");
+  loadRepetitionHistory();
+}
+
+async function loadRepetitionHistory() {
+  const token = sessionStorage.getItem("passpoints_access_token");
+  if (!token || !currentUser) return;
+  try {
+    const history = await getRepetitionHistory(token);
+    if (sessionStorage.getItem("passpoints_access_token") !== token) return;
+    currentUser.repetitionHistory = history;
+    window.currentUserState = currentUser;
+    renderHome(currentUser);
+  } catch (error) {
+    console.error("Could not load repetition history:", error);
+    if (
+      sessionStorage.getItem("passpoints_access_token") === token &&
+      typeof window.showRepetitionHistoryError === "function"
+    ) {
+      window.showRepetitionHistoryError();
+    }
+  }
 }
 
 function logout() {
@@ -504,6 +585,7 @@ function restoreAuthenticatedState() {
     renderHome(currentUser);
     updateAccountUser(currentUser.user);
     showView("home", { scroll: false });
+    loadRepetitionHistory();
     return true;
   } catch (error) {
     console.error("Could not restore the authenticated feed state:", error);
@@ -536,7 +618,7 @@ async function initializeApp() {
   initializePointSelector();
   const restoreForm = initializeAuth({ onAuthenticated: handleAuthenticated });
   initializeHome();
-  initializeAccount({ onLogout: logout });
+  initializeAccount({ onLogout: logout, onThemeChange: applyTheme });
   applyLanguageStrings();
   if (restoreAuthenticatedState()) return;
   await restoreForm();
