@@ -1,15 +1,19 @@
+from dataclasses import dataclass
+from uuid import UUID
+
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.application.auth.image_selection import select_login_images
-from app.application.auth.tokens import (
-    ACCESS_TOKEN_TTL_SECONDS,
-    TokenConfigurationError,
-    create_access_token,
-)
+from app.application.auth.tokens import ACCESS_TOKEN_TTL_SECONDS, create_access_token
 from app.application.passpoints.method import Passpoints
 from app.core.config.settings import settings
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
+from app.infrastructure.database.models.registration import (
+    RegistrationAttempt,
+    RegistrationDraft,
+)
 from app.infrastructure.database.models.user import User
 from app.infrastructure.database.repositories.graphical_password_repository import (
     GraphicalPasswordRepository,
@@ -25,12 +29,21 @@ class InvalidSelectionError(ValueError):
     pass
 
 
-class InconsistentPasswordError(ValueError):
-    pass
-
-
 class InvalidAuthenticationError(ValueError):
     pass
+
+
+class InvalidRegistrationError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class RegistrationProgress:
+    registration_id: UUID
+    consecutive_successes: int
+    attempt_correct: bool
+    user: User | None = None
+    token: str | None = None
 
 
 class AuthService:
@@ -40,7 +53,7 @@ class AuthService:
         self._credentials = GraphicalPasswordRepository(session)
         self._token_secret = settings.auth_token_secret if token_secret is None else token_secret
 
-    def register(
+    def start_registration(
         self,
         username: str,
         email: str,
@@ -48,11 +61,22 @@ class AuthService:
         image_width: int,
         image_height: int,
         points: list[tuple[float, float]],
-        confirmation_points: list[list[tuple[float, float]]] | None = None,
-        repetition_count: int | None = None,
         tolerance_grid_divisions: int = 5,
-    ) -> tuple[User, str, int]:
-        if self._users.get_by_username(username) or self._users.get_by_email(email):
+    ) -> RegistrationProgress:
+        pending_draft = self._session.scalar(
+            select(RegistrationDraft.id).where(
+                RegistrationDraft.is_completed.is_(False),
+                or_(
+                    RegistrationDraft.username == username,
+                    RegistrationDraft.email == email,
+                ),
+            )
+        )
+        if (
+            self._users.get_by_username(username)
+            or self._users.get_by_email(email)
+            or pending_draft is not None
+        ):
             raise DuplicateAccountError
         try:
             verifier = Passpoints.create_credential(
@@ -62,42 +86,28 @@ class AuthService:
             print(f"DEBUG: Error en create_credential: {error}") # Log añadido
             raise InvalidSelectionError from error
 
-        if confirmation_points is not None:
-            if len(confirmation_points) != 2:
-                raise InconsistentPasswordError(
-                    "The graphical password must be repeated consistently two more times."
-                )
-            for attempt_points in confirmation_points:
-                if not Passpoints.verify_credential(
-                    image_id, image_width, image_height, attempt_points, verifier, grid_divisions=tolerance_grid_divisions
-                ):
-                    raise InconsistentPasswordError(
-                        "The graphical password must be repeated consistently two more times."
-                    )
-
-        actual_repetition_count = (
-            repetition_count
-            if repetition_count is not None
-            else (len(confirmation_points) if confirmation_points is not None else 2)
-        )
-
-        user = User(
+        draft = RegistrationDraft(
             username=username,
             email=email,
-            password_hash=verifier,
-            graphical_password_repetition_count=actual_repetition_count,
-            graphical_password_verified=True,
-            tolerance_grid_divisions=tolerance_grid_divisions,
-        )
-        graphical_password = GraphicalPassword(
-            user=user,
             image_id=image_id,
+            image_width=image_width,
+            image_height=image_height,
             verifier=verifier,
+            tolerance_grid_divisions=tolerance_grid_divisions,
+            consecutive_successes=1,
+            attempt_count=1,
         )
         try:
-            self._session.add_all([user, graphical_password])
+            self._session.add(draft)
             self._session.flush()
-            token = create_access_token(user.id, username, self._token_secret)
+            self._session.add(
+                RegistrationAttempt(
+                    registration_id=draft.id,
+                    attempt_number=1,
+                    is_correct=True,
+                    consecutive_successes=1,
+                )
+            )
             self._session.commit()
         except IntegrityError as error:
             self._session.rollback()
@@ -105,7 +115,115 @@ class AuthService:
         except BaseException:
             self._session.rollback()
             raise
-        return user, token, ACCESS_TOKEN_TTL_SECONDS
+        return RegistrationProgress(draft.id, 1, True)
+
+    def register_repetition(
+        self, registration_id: UUID, points: list[tuple[float, float]]
+    ) -> RegistrationProgress:
+        draft = self._session.get(RegistrationDraft, registration_id)
+        if draft is None or draft.is_completed or draft.verifier is None:
+            raise InvalidRegistrationError
+
+        within_image = all(
+            0 <= x <= draft.image_width and 0 <= y <= draft.image_height
+            for x, y in points
+        )
+        is_correct = within_image and Passpoints.verify_credential(
+            draft.image_id,
+            draft.image_width,
+            draft.image_height,
+            points,
+            draft.verifier,
+            grid_divisions=draft.tolerance_grid_divisions,
+        )
+        draft.consecutive_successes = (
+            draft.consecutive_successes + 1 if is_correct else 0
+        )
+        draft.attempt_count += 1
+        self._session.add(
+            RegistrationAttempt(
+                registration_id=draft.id,
+                attempt_number=draft.attempt_count,
+                is_correct=is_correct,
+                consecutive_successes=draft.consecutive_successes,
+            )
+        )
+
+        user = None
+        token = None
+        if draft.consecutive_successes == 3:
+            if (
+                self._users.get_by_username(draft.username)
+                or self._users.get_by_email(draft.email)
+            ):
+                self._session.rollback()
+                raise DuplicateAccountError
+            user = User(
+                username=draft.username,
+                email=draft.email,
+                password_hash=draft.verifier,
+                graphical_password_repetition_count=draft.consecutive_successes,
+                graphical_password_verified=True,
+                tolerance_grid_divisions=draft.tolerance_grid_divisions,
+            )
+            self._session.add(
+                GraphicalPassword(
+                    user=user,
+                    image_id=draft.image_id,
+                    verifier=draft.verifier,
+                )
+            )
+            draft.is_completed = True
+            draft.verifier = None
+            try:
+                self._session.flush()
+                draft.user_id = user.id
+                token = create_access_token(user.id, user.username, self._token_secret)
+                self._session.commit()
+            except IntegrityError as error:
+                self._session.rollback()
+                raise DuplicateAccountError from error
+            except BaseException:
+                self._session.rollback()
+                raise
+        else:
+            self._session.commit()
+
+        return RegistrationProgress(
+            draft.id,
+            draft.consecutive_successes,
+            is_correct,
+            user,
+            token,
+        )
+
+    def cancel_registration(self, registration_id: UUID) -> None:
+        draft = self._session.get(RegistrationDraft, registration_id)
+        if draft is not None and not draft.is_completed:
+            self._session.delete(draft)
+            self._session.commit()
+
+    def get_repetition_history(
+        self, user_id: UUID
+    ) -> list[RegistrationAttempt] | None:
+        registration_id = self._session.scalar(
+            select(RegistrationDraft.id)
+            .where(
+                RegistrationDraft.user_id == user_id,
+                RegistrationDraft.is_completed.is_(True),
+            )
+            .order_by(RegistrationDraft.created_at.desc())
+            .limit(1)
+        )
+        if registration_id is None:
+            return None
+        return list(
+            self._session.scalars(
+                select(RegistrationAttempt)
+                .where(RegistrationAttempt.registration_id == registration_id)
+                .order_by(RegistrationAttempt.attempt_number)
+            )
+        )
 
     def login_image_options(
         self, email: str, catalog_image_ids: list[str]
