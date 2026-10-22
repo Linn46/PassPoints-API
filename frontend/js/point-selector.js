@@ -116,12 +116,22 @@ function initializePointSelector() {
     pointCount.textContent = `${count}/5`;
     clearPointsButton.disabled = pointSelectionLocked || count === 0;
     undoPointButton.disabled = pointSelectionLocked || count === 0;
+    const language =
+      window.PasspointsCurrentLanguage === "en" ? "en" : "es";
+    const translations = window.PasspointsTranslations?.[language];
     pointFeedback.textContent =
       count === 5
-        ? "Sequence complete. You can analyze it."
+        ? translations?.pointFeedbackComplete ??
+          "Sequence complete. You can analyze it."
         : count === 0
-          ? "No points selected yet."
-          : `Select ${5 - count} more point${count === 4 ? "" : "s"}.`;
+          ? translations?.pointFeedbackWaiting ?? "No points selected yet."
+            : 5 - count === 1
+              ? translations?.pointFeedbackRemainingOne ??
+                "Select 1 more point."
+              : (
+                  translations?.pointFeedbackRemainingMany ??
+                  "Select {count} more points."
+                ).replace("{count}", String(5 - count));
   }
 
   function getSelectedPoints() {
@@ -212,6 +222,7 @@ function initializePointSelector() {
 
   document.addEventListener("image-loaded", resetPoints);
   document.addEventListener("reset-points", resetPoints);
+  document.addEventListener("language-changed", renderPoints);
   document.addEventListener("authentication-mode-changed", (event) => {
     authenticationMode = event.detail?.mode ?? "register";
     repeatingPassword = Boolean(event.detail?.repeating);

@@ -14,6 +14,7 @@ from app.application.analysis.methods.mean_distance_convex_hull.distances import
 
 AGRUPADO = "agrupado"
 REGULAR = "regular"
+LINEAR = "linear"
 ALEATORIO = "aleatorio"
 
 
@@ -165,18 +166,19 @@ def evaluate_password(
     regularity = _regularity_score(points, image_width, image_height)
     area_ratio = hull_area(points) / max(image_width * image_height, 1.0)
     linearity = _linearity_score(points)
-    pattern = ALEATORIO
+    patterns = []
+    is_clustered = cluster_score >= 0.45 and area_ratio < 0.08
+    if is_clustered:
+        patterns.append(AGRUPADO)
+    if not is_clustered and (
+        (area_ratio >= 0.08 and regularity >= 0.40)
+        or (regularity >= 0.45 and linearity < 0.75)
+    ):
+        patterns.append(REGULAR)
+    if linearity >= 0.75:
+        patterns.append(LINEAR)
 
-    if cluster_score >= 0.55 and area_ratio < 0.08:
-        pattern = AGRUPADO
-    elif (area_ratio >= 0.08 and regularity >= 0.40) or linearity >= 0.75:
-        pattern = REGULAR
-    elif cluster_score >= 0.45:
-        pattern = AGRUPADO
-    elif regularity >= 0.45:
-        pattern = REGULAR
-
-    if pattern == ALEATORIO:
+    if not patterns:
         return Evaluacion(
             patrones=[],
             aceptada=True,
@@ -196,28 +198,28 @@ def evaluate_password(
     pec_stat = _relative_gap(hull_perimeter(points), expected_perimeter)
     aec_stat = _relative_gap(hull_area(points), expected_area)
 
-    resultados = {
-        "DM": ResultadoPrueba("DM", pattern, dm_stat),
+    results = {
+        "DM": ResultadoPrueba(
+            "DM",
+            AGRUPADO if AGRUPADO in patterns else REGULAR if REGULAR in patterns else LINEAR,
+            dm_stat,
+        ),
         "PEC": ResultadoPrueba(
-            "PEC",
-            AGRUPADO if pattern == AGRUPADO else REGULAR,
-            pec_stat,
+            "PEC", AGRUPADO if is_clustered else REGULAR if REGULAR in patterns else LINEAR, pec_stat
         ),
         "AEC": ResultadoPrueba(
-            "AEC",
-            REGULAR if pattern == REGULAR else AGRUPADO,
-            aec_stat,
+            "AEC", REGULAR if REGULAR in patterns else AGRUPADO if is_clustered else LINEAR, aec_stat
         ),
     }
 
     mensaje = (
         "Los puntos seleccionados presentan características compatibles con "
-        f"un patrón {pattern}."
+        f"los patrones {', '.join(patterns)}."
     )
 
     return Evaluacion(
-        patrones=[pattern],
+        patrones=patterns,
         aceptada=False,
         mensaje=mensaje,
-        resultados=resultados,
+        resultados=results,
     )

@@ -96,6 +96,7 @@ def test_analysis_endpoint_returns_complete_result():
         "patterns",
         "title",
         "explanation",
+        "pattern_details",
     }
     assert isinstance(data["security"]["is_weak"], bool)
     assert data["security"]["level"] in {"Alta", "Media", "Baja"}
@@ -120,6 +121,35 @@ def test_analysis_endpoint_exposes_no_rejection_for_reference_random_case():
     assert result["angle_test"]["reject_null"] is False
     assert result["security"]["is_weak"] is False
     assert result["security"]["patterns"] == []
+    assert result["security"]["pattern_details"] == []
+
+
+def test_analysis_combines_multiple_methods_and_deduplicates_pattern_sources():
+    request = valid_request()
+    request["points"] = [
+        {"x": 120, "y": 120},
+        {"x": 150, "y": 130},
+        {"x": 140, "y": 150},
+        {"x": 130, "y": 160},
+        {"x": 160, "y": 180},
+    ]
+    request["methods"] = [
+        "delaunay_statistical",
+        "mean_distance_convex_hull",
+    ]
+
+    response = client.post("/api/v1/analysis", json=request)
+
+    assert response.status_code == 200
+    security = response.json()["security"]
+    assert security["is_weak"] is True
+    assert security["patterns"] == ["Patrón agrupado"]
+    assert security["pattern_details"] == [
+        {
+            "pattern_id": "clustered",
+            "methods": ["delaunay_statistical", "mean_distance_convex_hull"],
+        }
+    ]
 
 
 def test_analysis_endpoint_rejects_less_than_five_points():

@@ -2,7 +2,7 @@ import math
 from statistics import pstdev
 
 from app.domain.point import Point
-from app.domain.security_assessment import SecurityAssessment
+from app.domain.security_assessment import PatternDetail, SecurityAssessment
 from app.domain.triangle import Triangle
 from app.geometry.triangle.angles import triangle_max_angle_degrees
 from app.geometry.triangle.perimeter import triangle_perimeter
@@ -20,21 +20,32 @@ def assess_security(
     """Interpreta los tests del método Delaunay y clasifica la seguridad."""
 
     patterns: list[str] = []
+    pattern_details: list[PatternDetail] = []
     angular_pattern = (
         _angular_pattern(points, image_width, image_height) if angle_test.reject_null else None
     )
+    points_are_grouped = (
+        perimeter_test.reject_null
+        and _points_are_grouped(points, image_width, image_height)
+    )
 
     if perimeter_test.reject_null:
-        if _points_are_grouped(points, image_width, image_height):
+        if points_are_grouped:
             patterns.append("Patrón agrupado")
-        elif (
-            angular_pattern not in {"Patrón Line", "Patrón Diag"}
-            and _triangles_are_regular(triangles)
-        ):
+            pattern_details.append(
+                PatternDetail("clustered", ("delaunay_statistical",))
+            )
+        if not points_are_grouped and _triangles_are_regular(triangles):
             patterns.append("Patrón regular")
+            pattern_details.append(
+                PatternDetail("regular", ("delaunay_statistical",))
+            )
 
     if angular_pattern is not None:
         patterns.append(angular_pattern)
+        pattern_details.append(
+            PatternDetail(_pattern_id(angular_pattern), ("delaunay_statistical",))
+        )
 
     if not patterns:
         return SecurityAssessment(
@@ -46,6 +57,7 @@ def assess_security(
                 "No se detectó un patrón geométrico no aleatorio con los "
                 "criterios utilizados por el análisis."
             ),
+            pattern_details=[],
         )
 
     pattern_text = ", ".join(patterns)
@@ -74,7 +86,19 @@ def assess_security(
             f"con {pattern_text}. La decisión se basa en que "
             f"{_join_evidence(evidence)}."
         ),
+        pattern_details=pattern_details,
     )
+
+
+def _pattern_id(pattern: str) -> str:
+    return {
+        "Patrón agrupado": "clustered",
+        "Patrón regular": "regular",
+        "Patrón Line": "linear",
+        "Patrón Diag": "diagonal",
+        "Patrón angular": "angular",
+    }.get(pattern, "unknown")
+
 
 def _join_evidence(evidence: list[str]) -> str:
     if len(evidence) == 1:
