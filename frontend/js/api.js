@@ -67,11 +67,12 @@ async function analyzeSelection(image, points, methods = ["delaunay_statistical"
   });
 }
 
-async function registerAccount(username, email, image, points) {
+async function registerAccount(username, email, image, points, toleranceRadius) {
   return requestJson(`${API_ORIGIN}/auth/register`, {
     username,
     email,
     ...authPayload(image, points),
+    tolerance_radius: toleranceRadius,
   });
 }
 

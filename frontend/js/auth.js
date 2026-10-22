@@ -4,6 +4,9 @@ function initializeAuth({ onAuthenticated }) {
   const authForm = document.getElementById("auth-form");
   const usernameInput = document.getElementById("username");
   const emailInput = document.getElementById("email");
+  const toleranceControl = document.getElementById("tolerance-control");
+  const toleranceRadiusInput = document.getElementById("tolerance-radius");
+  const toleranceValue = document.getElementById("tolerance-value");
   const usernameField = document.getElementById("username-field");
   const registerTab = document.getElementById("register-tab");
   const loginTab = document.getElementById("login-tab");
@@ -125,6 +128,13 @@ function initializeAuth({ onAuthenticated }) {
     const count = document.getElementById("point-count");
     changePasswordButton.hidden = !registrationId;
     const isRepeatingPassword = mode === "register" && Boolean(registrationId);
+    toleranceControl.hidden = mode !== "register";
+    toleranceRadiusInput.disabled = Boolean(registrationId) || pending;
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: isRepeatingPassword },
+      }),
+    );
 
     analysisMethodSelector.hidden = mode !== "register" || isRepeatingPassword;
     analyzeButton.hidden = mode !== "register" || isRepeatingPassword;
@@ -200,13 +210,14 @@ function initializeAuth({ onAuthenticated }) {
   function persistAuthProgress() {
     if (restoringProgress) return;
     const progress = {
-      version: 2,
+      version: 3,
       mode,
       username: usernameInput.value,
       email: emailInput.value,
       imageId: getImageData().id,
       imageOptionIds: getImageOptionIds(),
       points: getSelectedPointFractions(),
+      toleranceRadius: Number(toleranceRadiusInput.value),
       methods: selectedAnalysisMethods(),
       analysisResult,
       registrationId,
@@ -229,7 +240,7 @@ function initializeAuth({ onAuthenticated }) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
-    if (!progress || ![1, 2].includes(progress.version)) {
+    if (!progress || ![1, 2, 3].includes(progress.version)) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
@@ -240,6 +251,14 @@ function initializeAuth({ onAuthenticated }) {
         typeof progress.username === "string" ? progress.username : "";
       emailInput.value =
         typeof progress.email === "string" ? progress.email : "";
+      if (
+        Number.isInteger(progress.toleranceRadius) &&
+        progress.toleranceRadius >= 5 &&
+        progress.toleranceRadius <= 30
+      ) {
+        toleranceRadiusInput.value = String(progress.toleranceRadius);
+      }
+      updateToleranceLabel();
       if (Array.isArray(progress.methods)) {
         analysisMethodInputs.forEach((input) => {
           input.checked = progress.methods.includes(input.value);
@@ -340,6 +359,7 @@ function initializeAuth({ onAuthenticated }) {
       image: getImageData().id,
       username: usernameInput.value.trim().toLowerCase(),
       points: getSelectedPoints(),
+      toleranceRadius: Number(toleranceRadiusInput.value),
     });
   }
   function selectedAnalysisMethods() {
@@ -350,7 +370,11 @@ function initializeAuth({ onAuthenticated }) {
   function updateButtons() {
     const image = getImageData();
     const selectedMethods = selectedAnalysisMethods();
-    const ready = Boolean(image.id && hasFiveSelectedPoints());
+    const spacingReady =
+      mode !== "register" ||
+      typeof window.hasValidPointSpacing !== "function" ||
+      window.hasValidPointSpacing();
+    const ready = Boolean(image.id && hasFiveSelectedPoints() && spacingReady);
     const loginReady = Boolean(
       emailInput.validity.valid && emailInput.value.trim().length >= 5 && ready,
     );
@@ -385,6 +409,12 @@ function initializeAuth({ onAuthenticated }) {
     }
     mode = nextMode;
     const registering = mode === "register";
+    toleranceControl.hidden = !registering;
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: Boolean(registrationId) },
+      }),
+    );
     if (modeChanged) {
       clearTimeout(loginImageTimer);
       loginImageRequestId += 1;
@@ -455,6 +485,7 @@ function initializeAuth({ onAuthenticated }) {
   }
   function setPending(value, action) {
     pending = value;
+    toleranceRadiusInput.disabled = value || Boolean(registrationId);
     setPointSelectionLocked(value);
     setImageSelectionLocked(value);
     analyzeSpinner.hidden = !(value && action === "analysis");
@@ -632,6 +663,7 @@ function initializeAuth({ onAuthenticated }) {
             emailInput.value.trim(),
             image,
             points,
+            Number(toleranceRadiusInput.value),
           );
           registrationId = progress.registration_id;
           consecutiveSuccesses = progress.consecutive_successes;
@@ -807,6 +839,15 @@ function initializeAuth({ onAuthenticated }) {
     persistAuthProgress();
     updateButtons();
   });
+  toleranceRadiusInput.addEventListener("input", () => {
+    updateToleranceLabel();
+    document.dispatchEvent(new CustomEvent("tolerance-radius-changed"));
+    if (mode === "register" && !registrationId) invalidateAnalysis();
+    persistAuthProgress();
+  });
+  function updateToleranceLabel() {
+    toleranceValue.textContent = `${toleranceRadiusInput.value} px`;
+  }
   authForm.addEventListener("submit", submitAuth);
   analyzeButton.addEventListener("click", runRegistrationAnalysis);
   document
@@ -914,6 +955,7 @@ function initializeAuth({ onAuthenticated }) {
     updateVisualPoint(Number(number), position.x, position.y),
   );
   setMode("register");
+  updateToleranceLabel();
   return restoreAuthProgress;
 }
 

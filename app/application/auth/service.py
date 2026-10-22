@@ -6,8 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.application.auth.image_selection import select_login_images
-from app.application.auth.tokens import ACCESS_TOKEN_TTL_SECONDS, create_access_token
-from app.application.passpoints.method import Passpoints
+from app.application.auth.tokens import (
+    ACCESS_TOKEN_TTL_SECONDS,
+    TokenConfigurationError,
+    create_access_token,
+)
+from app.application.passpoints.method import DEFAULT_TOLERANCE_RADIUS, Passpoints
 from app.core.config.settings import settings
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
 from app.infrastructure.database.models.registration import (
@@ -61,7 +65,7 @@ class AuthService:
         image_width: int,
         image_height: int,
         points: list[tuple[float, float]],
-        tolerance_grid_divisions: int = 5,
+        tolerance_radius: int = DEFAULT_TOLERANCE_RADIUS,
     ) -> RegistrationProgress:
         pending_draft = self._session.scalar(
             select(RegistrationDraft.id).where(
@@ -78,12 +82,23 @@ class AuthService:
             or pending_draft is not None
         ):
             raise DuplicateAccountError
+        if len(self._token_secret.encode("utf-8")) < 32:
+            raise TokenConfigurationError(
+                "AUTH_TOKEN_SECRET must contain at least 32 bytes."
+            )
         try:
             verifier = Passpoints.create_credential(
-                image_id, image_width, image_height, points, grid_divisions=tolerance_grid_divisions
+                image_id, image_width, image_height, points, tolerance_radius
+            )
+            encrypted_points = Passpoints.encrypt_points(
+                image_id,
+                image_width,
+                image_height,
+                points,
+                self._token_secret,
+                tolerance_radius,
             )
         except ValueError as error:
-            print(f"DEBUG: Error en create_credential: {error}") # Log añadido
             raise InvalidSelectionError from error
 
         draft = RegistrationDraft(
@@ -93,7 +108,8 @@ class AuthService:
             image_width=image_width,
             image_height=image_height,
             verifier=verifier,
-            tolerance_grid_divisions=tolerance_grid_divisions,
+            tolerance_radius=tolerance_radius,
+            encrypted_points=encrypted_points,
             consecutive_successes=1,
             attempt_count=1,
         )
@@ -134,7 +150,9 @@ class AuthService:
             draft.image_height,
             points,
             draft.verifier,
-            grid_divisions=draft.tolerance_grid_divisions,
+            draft.encrypted_points,
+            draft.tolerance_radius,
+            self._token_secret,
         )
         draft.consecutive_successes = (
             draft.consecutive_successes + 1 if is_correct else 0
@@ -164,13 +182,14 @@ class AuthService:
                 password_hash=draft.verifier,
                 graphical_password_repetition_count=draft.consecutive_successes,
                 graphical_password_verified=True,
-                tolerance_grid_divisions=draft.tolerance_grid_divisions,
             )
             self._session.add(
                 GraphicalPassword(
                     user=user,
                     image_id=draft.image_id,
                     verifier=draft.verifier,
+                    encrypted_points=draft.encrypted_points,
+                    tolerance_radius=draft.tolerance_radius,
                 )
             )
             draft.is_completed = True
@@ -252,13 +271,24 @@ class AuthService:
         if user is None or not user.is_active:
             raise InvalidAuthenticationError
         credentials = self._credentials.list_active_by_user_and_image(user.id, image_id)
+        if len(self._token_secret.encode("utf-8")) < 32:
+            raise TokenConfigurationError(
+                "AUTH_TOKEN_SECRET must contain at least 32 bytes."
+            )
         matching_credential = next(
             (
                 credential
                 for credential in credentials
                 if Passpoints.verify_credential(
-                image_id, image_width, image_height, points, credential.verifier
-            )
+                    image_id,
+                    image_width,
+                    image_height,
+                    points,
+                    credential.verifier,
+                    credential.encrypted_points,
+                    credential.tolerance_radius,
+                    self._token_secret,
+                )
             ),
             None,
         )

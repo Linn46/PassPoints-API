@@ -86,12 +86,17 @@ def register(
             request.image_width,
             request.image_height,
             [(point.x, point.y) for point in request.points],
-            tolerance_grid_divisions=request.tolerance_grid_divisions,
+            tolerance_radius=request.tolerance_radius,
         )
     except DuplicateAccountError as error:
         raise HTTPException(409, "Username or email already registered.") from error
     except InvalidSelectionError as error:
         raise HTTPException(422, "Invalid Passpoints selection.") from error
+    except TokenConfigurationError as error:
+        raise HTTPException(
+            503,
+            "Authentication is not configured. Set AUTH_TOKEN_SECRET to at least 32 bytes and restart the API.",
+        ) from error
     return make_registration_progress(progress)
 
 

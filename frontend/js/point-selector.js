@@ -1,6 +1,8 @@
 const selectedPoints = [];
 const MAX_POINTS = 5;
 let pointSelectionLocked = false;
+let authenticationMode = "register";
+let repeatingPassword = false;
 
 function initializePointSelector() {
   const pointsLayer = document.getElementById("points-layer");
@@ -9,6 +11,32 @@ function initializePointSelector() {
   const undoPointButton = document.getElementById("undo-point");
   const selectedImageElement = document.getElementById("selected-image");
   const pointFeedback = document.getElementById("point-feedback");
+  const toleranceRadiusInput = document.getElementById("tolerance-radius");
+
+  function isTooClose(point, otherPoint) {
+    if (authenticationMode !== "register" || repeatingPassword) return false;
+    const radius = Number(toleranceRadiusInput?.value ?? 10);
+    return Math.hypot(point.x - otherPoint.x, point.y - otherPoint.y) <= 2 * radius;
+  }
+
+  function hasValidPointSpacing() {
+    for (let index = 0; index < selectedPoints.length; index += 1) {
+      for (
+        let otherIndex = index + 1;
+        otherIndex < selectedPoints.length;
+        otherIndex += 1
+      ) {
+        if (
+          isTooClose(selectedPoints[index], selectedPoints[otherIndex]) ||
+          (selectedPoints[index].x === selectedPoints[otherIndex].x &&
+            selectedPoints[index].y === selectedPoints[otherIndex].y)
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
   function resetPoints() {
     selectedPoints.length = 0;
@@ -153,44 +181,26 @@ function initializePointSelector() {
   }
 
   document.addEventListener("image-selection-started", resetPoints);
-  function getGridCell(x, y, width, height) {
-    const GRID_DIVISIONS = 5;
-    return [
-      Math.min(GRID_DIVISIONS, Math.floor((x / width) * GRID_DIVISIONS + 0.5)),
-      Math.min(GRID_DIVISIONS, Math.floor((y / height) * GRID_DIVISIONS + 0.5))
-    ];
-  }
-
   function movePoint(index, relativeX, relativeY, dispatchChange = true) {
     const imageData = getImageData();
     const point = selectedPoints[index];
     const nextX = Math.max(0, Math.min(1, relativeX));
     const nextY = Math.max(0, Math.min(1, relativeY));
-    const nextCell = getGridCell(
-      nextX * imageData.width,
-      nextY * imageData.height,
-      imageData.width,
-      imageData.height,
-    );
-    const overlapsAnotherPoint = selectedPoints.some(
-      (otherPoint, otherIndex) => {
-        if (otherIndex === index) return false;
-        const otherCell = getGridCell(
-          otherPoint.x,
-          otherPoint.y,
-          imageData.width,
-          imageData.height,
-        );
-        return otherCell[0] === nextCell[0] && otherCell[1] === nextCell[1];
-      },
-    );
-    if (overlapsAnotherPoint) {
+    const nextPoint = { x: nextX * imageData.width, y: nextY * imageData.height };
+    if (
+      selectedPoints.some(
+        (otherPoint, otherIndex) =>
+          otherIndex !== index &&
+          (isTooClose(nextPoint, otherPoint) ||
+            (nextPoint.x === otherPoint.x && nextPoint.y === otherPoint.y)),
+      )
+    ) {
       pointFeedback.textContent = t("pointsTooClose");
       return false;
     }
 
-    point.x = nextX * imageData.width;
-    point.y = nextY * imageData.height;
+    point.x = nextPoint.x;
+    point.y = nextPoint.y;
     point.relativeX = nextX;
     point.relativeY = nextY;
     const marker = pointsLayer.children[index];
@@ -202,6 +212,17 @@ function initializePointSelector() {
 
   document.addEventListener("image-loaded", resetPoints);
   document.addEventListener("reset-points", resetPoints);
+  document.addEventListener("authentication-mode-changed", (event) => {
+    authenticationMode = event.detail?.mode ?? "register";
+    repeatingPassword = Boolean(event.detail?.repeating);
+  });
+  document.addEventListener("tolerance-radius-changed", () => {
+    if (!hasValidPointSpacing()) {
+      pointFeedback.textContent = t("pointsTooClose");
+    } else {
+      renderPoints();
+    }
+  });
   selectedImageElement.addEventListener("click", (event) => {
     if (
       pointSelectionLocked ||
@@ -225,27 +246,14 @@ function initializePointSelector() {
       relativeX,
       relativeY,
     };
-    
-    // Validación de celda distinta (Passpoints rule)
-    const newCell = getGridCell(point.x, point.y, imageData.width, imageData.height);
-    if (selectedPoints.some(p => {
-        const pCell = getGridCell(p.x, p.y, imageData.width, imageData.height);
-        return pCell[0] === newCell[0] && pCell[1] === newCell[1];
-    })) {
-        pointFeedback.textContent = t("pointsTooClose");
-        return;
-    }
-
     if (
       selectedPoints.some(
         (selectedPoint) =>
-          selectedPoint.x === point.x && selectedPoint.y === point.y,
+          isTooClose(point, selectedPoint) ||
+          (selectedPoint.x === point.x && selectedPoint.y === point.y),
       )
     ) {
-      pointFeedback.textContent =
-        window.PasspointsCurrentLanguage === "es"
-          ? "Ese punto ya está seleccionado. Elige una ubicación diferente."
-          : "That point is already selected. Choose a different location.";
+      pointFeedback.textContent = t("pointsTooClose");
       return;
     }
 
@@ -260,6 +268,7 @@ function initializePointSelector() {
     getSelectedPointFractions,
     setSelectedPointFractions,
     hasFiveSelectedPoints,
+    hasValidPointSpacing,
     setPointSelectionLocked,
   });
   renderPoints();
