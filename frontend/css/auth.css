@@ -80,6 +80,11 @@
 .form-group {
   margin-bottom: 20px;
 }
+.tolerance-control input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 10px 0 6px;
+}
 .form-label {
   display: block;
   margin-bottom: 8px;

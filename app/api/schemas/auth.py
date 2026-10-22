@@ -2,6 +2,11 @@ import re
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.core.config.image_parameters import is_supported_image_size
+from app.application.passpoints.method import (
+    DEFAULT_TOLERANCE_RADIUS,
+    MAX_TOLERANCE_RADIUS,
+    MIN_TOLERANCE_RADIUS,
+)
 
 _EMAIL_PATTERN = re.compile(
     r"[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*"
@@ -34,7 +39,11 @@ class RegisterRequest(BaseModel):
     image_width: int = Field(gt=0)
     image_height: int = Field(gt=0)
     points: list[PointInput] = Field(min_length=5, max_length=5)
-    tolerance_grid_divisions: int = Field(default=5, ge=1, le=5)
+    tolerance_radius: int = Field(
+        default=DEFAULT_TOLERANCE_RADIUS,
+        ge=MIN_TOLERANCE_RADIUS,
+        le=MAX_TOLERANCE_RADIUS,
+    )
 
     @field_validator("username", mode="before")
     @classmethod

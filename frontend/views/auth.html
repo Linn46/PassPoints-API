@@ -191,6 +191,25 @@
           </div>
         </div>
       </div>
+      <div id="tolerance-control" class="form-group tolerance-control">
+        <label class="form-label" for="tolerance-radius">
+          <span data-i18n="toleranceLabel">Tolerancia</span>
+          <output id="tolerance-value">10 px</output>
+        </label>
+        <input
+          id="tolerance-radius"
+          name="tolerance-radius"
+          type="range"
+          min="5"
+          max="30"
+          step="1"
+          value="10"
+          aria-describedby="tolerance-hint"
+        />
+        <p id="tolerance-hint" class="selection-hint" data-i18n="toleranceHint">
+          Elige una tolerancia de 5 a 30 píxeles para reconocer cada punto.
+        </p>
+      </div>
       <div
         class="analysis-method-selector"
         aria-label="Métodos de análisis"

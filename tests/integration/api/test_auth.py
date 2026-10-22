@@ -152,7 +152,7 @@ def test_register_rejects_weak_graphical_pattern(
         assert session.scalar(select(GraphicalPassword)) is None
 
 
-def test_register_rejects_points_in_same_tolerance_cell(
+def test_register_rejects_points_with_overlapping_tolerance_areas(
     client_and_session: tuple[TestClient, sessionmaker[Session]],
 ) -> None:
     client, _ = client_and_session

@@ -179,6 +179,13 @@ Puedes comprobar que existe con:
 ```
 
 No compartas este valor ni lo almacenes directamente en el repositorio.
+La secuencia de coordenadas se cifra con una clave derivada de este secreto;
+mantén el mismo valor al reiniciar o desplegar la API. Si se pierde o se
+reemplaza, las credenciales gráficas existentes deberán registrarse de nuevo.
+Las credenciales del método anterior guardan posiciones en celdas y no pueden
+convertirse a coordenadas; antes de actualizar otra base con cuentas antiguas,
+planifica su restablecimiento explícito. La migración elimina los registros de
+inscripción que quedaron pendientes con el formato antiguo.
 
 ## Ejecutar las migraciones
 

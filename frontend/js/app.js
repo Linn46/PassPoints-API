@@ -22,6 +22,8 @@ window.PasspointsTranslations = {
     createSequence: "Crea tu secuencia",
     repeatSequence: "Repite tu secuencia",
     sequencePrompt: "Selecciona exactamente cinco puntos.",
+    toleranceLabel: "Tolerancia",
+    toleranceHint: "Elige una tolerancia de 5 a 30 píxeles para reconocer cada punto.",
     selectionHint:
       "Primero selecciona una imagen y después marca cinco lugares en el orden que prefieras.",
     repeatSequenceHint:
@@ -152,7 +154,7 @@ window.PasspointsTranslations = {
     passwordConfirmationWrongHint: "La racha se reinició. Repite correctamente {n} veces seguidas.",
     changePassword: "Cambiar contraseña",
     passwordConfirmationButton: "Continuar",
-    pointsTooClose: "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
+    pointsTooClose: "Los puntos están demasiado cerca. Sepáralos más para que sus zonas de tolerancia no se superpongan.",
     profile: "Mi perfil",
     security: "Seguridad",
     appearance: "Apariencia",
@@ -218,6 +220,8 @@ window.PasspointsTranslations = {
     createSequence: "Create your sequence",
     repeatSequence: "Repeat your sequence",
     sequencePrompt: "Select exactly five points.",
+    toleranceLabel: "Tolerance",
+    toleranceHint: "Choose a tolerance from 5 to 30 pixels for recognizing each point.",
     selectionHint:
       "First select an image and then mark five places in the order you prefer.",
     repeatSequenceHint: "Select the same five points in the same order.",
@@ -391,7 +395,7 @@ window.PasspointsTranslations = {
     passwordConfirmationWrongHint: "Your streak was reset. Repeat the sequence correctly {n} times in a row.",
     changePassword: "Change password",
     passwordConfirmationButton: "Continue",
-    pointsTooClose: "Some points are too close, they must be in different grid cells.",
+    pointsTooClose: "The points are too close. Move them farther apart so their tolerance areas do not overlap.",
   },
 };
 
