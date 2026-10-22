@@ -140,7 +140,7 @@ test("selected points can be dragged without changing their sequence order", () 
       }
     },
     getImageData: () => ({ id: "test-image", width: 1920, height: 1080 }),
-    t: () => "Points must be in different grid cells.",
+    t: () => "Points are too close.",
   });
 
   vm.runInContext(selectorSource, context);
@@ -183,4 +183,96 @@ test("selected points can be dragged without changing their sequence order", () 
     clientY: 30,
   });
   assert.equal(context.window.getSelectedPoints()[0].x, 0.7 * 1920);
+});
+
+test("selecting points inside each other's tolerance radius shows feedback", () => {
+  const elements = new Map(
+    [
+      "points-layer",
+      "point-count",
+      "clear-points",
+      "undo-point",
+      "selected-image",
+      "point-feedback",
+      "tolerance-radius",
+    ].map((id) => [id, createElement()]),
+  );
+  elements.get("tolerance-radius").value = "10";
+  const document = {
+    getElementById: (id) => elements.get(id),
+    createElement,
+    addEventListener() {},
+    dispatchEvent() {},
+  };
+  const context = vm.createContext({
+    document,
+    window: {},
+    CustomEvent: class CustomEvent {
+      constructor(type) {
+        this.type = type;
+      }
+    },
+    getImageData: () => ({ id: "test-image", width: 1920, height: 1080 }),
+    t: () => "Points are too close.",
+  });
+
+  vm.runInContext(selectorSource, context);
+  vm.runInContext("initializePointSelector()", context);
+
+  const image = elements.get("selected-image");
+  image.click({ clientX: 25, clientY: 25 });
+  image.click({ clientX: 26, clientY: 25 });
+
+  assert.equal(elements.get("point-count").textContent, "1/5");
+  assert.equal(elements.get("point-feedback").textContent, "Points are too close.");
+});
+
+test("login point selection is not constrained by a registration radius", () => {
+  const elements = new Map(
+    [
+      "points-layer",
+      "point-count",
+      "clear-points",
+      "undo-point",
+      "selected-image",
+      "point-feedback",
+      "tolerance-radius",
+    ].map((id) => [id, createElement()]),
+  );
+  elements.get("tolerance-radius").value = "20";
+  const listeners = new Map();
+  const document = {
+    getElementById: (id) => elements.get(id),
+    createElement,
+    addEventListener(type, listener) {
+      listeners.set(type, listener);
+    },
+    dispatchEvent(event) {
+      listeners.get(event.type)?.(event);
+    },
+  };
+  const context = vm.createContext({
+    document,
+    window: {},
+    CustomEvent: class CustomEvent {
+      constructor(type) {
+        this.type = type;
+      }
+    },
+    getImageData: () => ({ id: "test-image", width: 1920, height: 1080 }),
+    t: () => "Points are too close.",
+  });
+
+  vm.runInContext(selectorSource, context);
+  vm.runInContext("initializePointSelector()", context);
+  document.dispatchEvent({
+    type: "authentication-mode-changed",
+    detail: { mode: "login", repeating: false },
+  });
+
+  const image = elements.get("selected-image");
+  image.click({ clientX: 25, clientY: 25 });
+  image.click({ clientX: 26, clientY: 25 });
+
+  assert.equal(elements.get("point-count").textContent, "2/5");
 });

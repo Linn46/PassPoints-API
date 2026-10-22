@@ -268,6 +268,14 @@ function initializeImageSelector() {
     document.dispatchEvent(new CustomEvent("image-loaded", { detail: null }));
   }
 
+  document.addEventListener("language-changed", () => {
+    imageStatus.textContent = selectedImageData
+      ? selectedImageData.name
+      : window.PasspointsCurrentLanguage === "en"
+        ? "Not selected"
+        : "Sin seleccionar";
+  });
+
   function setImageSelectionMode(mode) {
     imageOptions.dataset.mode = mode;
     currentImageOptions =

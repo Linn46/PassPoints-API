@@ -80,6 +80,11 @@
 .form-group {
   margin-bottom: 20px;
 }
+.tolerance-control input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 10px 0 6px;
+}
 .form-label {
   display: block;
   margin-bottom: 8px;
@@ -111,6 +116,27 @@
 }
 .input-wrapper input::placeholder {
   color: var(--text-muted);
+}
+.analysis-feedback-summary {
+  margin: 0;
+  font-weight: 700;
+}
+.analysis-pattern-list {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+.analysis-pattern-list li p {
+  margin: 4px 0 0;
+}
+.analysis-pattern-recommendation {
+  font-weight: 650;
+}
+.analysis-pattern-list li small {
+  display: block;
+  margin-top: 5px;
+  opacity: 0.8;
 }
 .input-wrapper input:focus {
   border-color: var(--primary);

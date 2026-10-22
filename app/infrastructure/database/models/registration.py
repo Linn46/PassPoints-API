@@ -17,7 +17,8 @@ class RegistrationDraft(Base):
     image_width: Mapped[int] = mapped_column(Integer, nullable=False)
     image_height: Mapped[int] = mapped_column(Integer, nullable=False)
     verifier: Mapped[str | None] = mapped_column(Text, nullable=True)
-    tolerance_grid_divisions: Mapped[int] = mapped_column(Integer, nullable=False)
+    tolerance_radius: Mapped[int] = mapped_column(Integer, nullable=False)
+    encrypted_points: Mapped[str | None] = mapped_column(Text, nullable=True)
     consecutive_successes: Mapped[int] = mapped_column(
         Integer, default=1, server_default="1", nullable=False
     )

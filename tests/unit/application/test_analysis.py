@@ -59,7 +59,7 @@ def test_analysis_service_supports_mean_distance_convex_hull_method():
     assert result.method == "mean_distance_convex_hull"
     assert result.security is not None
     assert result.security.patterns
-    assert "Patrón" in result.security.patterns[0]
+    assert result.security.patterns[0].startswith("Patrón")
     assert "Los puntos seleccionados presentan características compatibles" in result.security.explanation
 
 

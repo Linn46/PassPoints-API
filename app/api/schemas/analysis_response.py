@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PointResponse(BaseModel):
@@ -25,12 +25,18 @@ class AngleTestResponse(BaseModel):
     reject_null: bool
 
 
+class PatternDetailResponse(BaseModel):
+    pattern_id: str
+    methods: list[str]
+
+
 class SecurityResponse(BaseModel):
     is_weak: bool
     level: str
     patterns: list[str]
     title: str
     explanation: str
+    pattern_details: list[PatternDetailResponse] = Field(default_factory=list)
 
 
 class AnalysisResponse(BaseModel):

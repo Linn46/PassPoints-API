@@ -4,6 +4,9 @@ function initializeAuth({ onAuthenticated }) {
   const authForm = document.getElementById("auth-form");
   const usernameInput = document.getElementById("username");
   const emailInput = document.getElementById("email");
+  const toleranceControl = document.getElementById("tolerance-control");
+  const toleranceRadiusInput = document.getElementById("tolerance-radius");
+  const toleranceValue = document.getElementById("tolerance-value");
   const usernameField = document.getElementById("username-field");
   const registerTab = document.getElementById("register-tab");
   const loginTab = document.getElementById("login-tab");
@@ -120,11 +123,18 @@ function initializeAuth({ onAuthenticated }) {
   let consecutiveSuccesses = 0;
   let registrationCancellation = null;
 
-  function updateUIForStep() {
+  function updateUIForStep(resetSelection = true) {
     const title = document.querySelector('[data-i18n="createSequence"]');
     const count = document.getElementById("point-count");
     changePasswordButton.hidden = !registrationId;
     const isRepeatingPassword = mode === "register" && Boolean(registrationId);
+    toleranceControl.hidden = mode !== "register";
+    toleranceRadiusInput.disabled = Boolean(registrationId) || pending;
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: isRepeatingPassword },
+      }),
+    );
 
     analysisMethodSelector.hidden = mode !== "register" || isRepeatingPassword;
     analyzeButton.hidden = mode !== "register" || isRepeatingPassword;
@@ -159,8 +169,10 @@ function initializeAuth({ onAuthenticated }) {
           ? "Repite los mismos cinco puntos. Un error reinicia la racha."
           : "Repeat the same five points. A mistake resets the streak.";
     }
-    count.textContent = "0/5";
-    document.dispatchEvent(new CustomEvent("reset-points"));
+    if (resetSelection) {
+      count.textContent = "0/5";
+      document.dispatchEvent(new CustomEvent("reset-points"));
+    }
   }
   function resetRegistrationProgress() {
     const previousRegistrationId = registrationId;
@@ -200,13 +212,14 @@ function initializeAuth({ onAuthenticated }) {
   function persistAuthProgress() {
     if (restoringProgress) return;
     const progress = {
-      version: 2,
+      version: 3,
       mode,
       username: usernameInput.value,
       email: emailInput.value,
       imageId: getImageData().id,
       imageOptionIds: getImageOptionIds(),
       points: getSelectedPointFractions(),
+      toleranceRadius: Number(toleranceRadiusInput.value),
       methods: selectedAnalysisMethods(),
       analysisResult,
       registrationId,
@@ -229,7 +242,7 @@ function initializeAuth({ onAuthenticated }) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
-    if (!progress || ![1, 2].includes(progress.version)) {
+    if (!progress || ![1, 2, 3].includes(progress.version)) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
@@ -240,6 +253,14 @@ function initializeAuth({ onAuthenticated }) {
         typeof progress.username === "string" ? progress.username : "";
       emailInput.value =
         typeof progress.email === "string" ? progress.email : "";
+      if (
+        Number.isInteger(progress.toleranceRadius) &&
+        progress.toleranceRadius >= 5 &&
+        progress.toleranceRadius <= 30
+      ) {
+        toleranceRadiusInput.value = String(progress.toleranceRadius);
+      }
+      updateToleranceLabel();
       if (Array.isArray(progress.methods)) {
         analysisMethodInputs.forEach((input) => {
           input.checked = progress.methods.includes(input.value);
@@ -311,14 +332,7 @@ function initializeAuth({ onAuthenticated }) {
         analysisKey = selectionKey();
         analysisFeedback.hidden =
           mode !== "register" || Boolean(registrationId);
-        analysisFeedback.className = analysisResult.security.is_weak
-          ? "feedback is-warning"
-          : "feedback is-success";
-        analysisFeedback.textContent = analysisResult.security.is_weak
-          ? weakPatternMessage(analysisResult.security)
-          : window.PasspointsCurrentLanguage === "es"
-            ? "Selección aceptada por el análisis. Ya puedes crear tu cuenta."
-            : "Selection accepted by the analysis. You can now create your account.";
+        renderAnalysisFeedback(analysisResult.security);
       }
     } catch (error) {
       console.error("Could not restore the authentication form state:", error);
@@ -340,6 +354,7 @@ function initializeAuth({ onAuthenticated }) {
       image: getImageData().id,
       username: usernameInput.value.trim().toLowerCase(),
       points: getSelectedPoints(),
+      toleranceRadius: Number(toleranceRadiusInput.value),
     });
   }
   function selectedAnalysisMethods() {
@@ -350,7 +365,11 @@ function initializeAuth({ onAuthenticated }) {
   function updateButtons() {
     const image = getImageData();
     const selectedMethods = selectedAnalysisMethods();
-    const ready = Boolean(image.id && hasFiveSelectedPoints());
+    const spacingReady =
+      mode !== "register" ||
+      typeof window.hasValidPointSpacing !== "function" ||
+      window.hasValidPointSpacing();
+    const ready = Boolean(image.id && hasFiveSelectedPoints() && spacingReady);
     const loginReady = Boolean(
       emailInput.validity.valid && emailInput.value.trim().length >= 5 && ready,
     );
@@ -385,6 +404,12 @@ function initializeAuth({ onAuthenticated }) {
     }
     mode = nextMode;
     const registering = mode === "register";
+    toleranceControl.hidden = !registering;
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: Boolean(registrationId) },
+      }),
+    );
     if (modeChanged) {
       clearTimeout(loginImageTimer);
       loginImageRequestId += 1;
@@ -455,6 +480,7 @@ function initializeAuth({ onAuthenticated }) {
   }
   function setPending(value, action) {
     pending = value;
+    toleranceRadiusInput.disabled = value || Boolean(registrationId);
     setPointSelectionLocked(value);
     setImageSelectionLocked(value);
     analyzeSpinner.hidden = !(value && action === "analysis");
@@ -533,12 +559,7 @@ function initializeAuth({ onAuthenticated }) {
       );
       analysisResult = result;
       analysisKey = selectionKey();
-      analysisFeedback.className = `feedback ${result.security.is_weak ? "is-warning" : "is-success"}`;
-      analysisFeedback.textContent = result.security.is_weak
-        ? weakPatternMessage(result.security)
-        : window.PasspointsCurrentLanguage === "es"
-          ? "Selección aceptada por el análisis. Ya puedes guardar la contraseña."
-          : "Selection accepted by the analysis. You can now save your password.";
+      renderAnalysisFeedback(result.security);
     } catch (error) {
       analysisResult = null;
       analysisKey = "";
@@ -550,31 +571,144 @@ function initializeAuth({ onAuthenticated }) {
       setPending(false);
     }
   }
-  function weakPatternMessage(security) {
+  function renderAnalysisFeedback(security) {
     const isSpanish = window.PasspointsCurrentLanguage === "es";
-    const labels = isSpanish
-      ? {
-          "Patrón agrupado": "Los puntos están demasiado concentrados.",
-          "Patrón Line": "Los puntos forman una alineación.",
-          "Patrón Diag": "Los puntos forman una alineación diagonal.",
-          "Patrón angular":
-            "La disposición presenta una estructura demasiado regular.",
-          "Patrón regular":
-            "Los puntos forman una estructura demasiado regular.",
-        }
-      : {
-          "Clustered pattern": "The points are too concentrated.",
-          "Line pattern": "The points form a straight alignment.",
-          "Diagonal pattern": "The points form a diagonal alignment.",
-          "Angular pattern": "The layout presents an overly regular structure.",
-          "Regular pattern": "The points form a structure that is too regular.",
-        };
-    const reason = (security.patterns ?? [])
-      .map((pattern) => labels[pattern])
-      .filter(Boolean);
-    return isSpanish
-      ? `${reason.join(" ") || "Esta selección presenta un patrón débil."} Prueba con otros puntos.`
-      : `${reason.join(" ") || "This selection shows a weak pattern."} Please try different points.`;
+    analysisFeedback.hidden = false;
+    analysisFeedback.replaceChildren();
+    if (!security.is_weak) {
+      analysisFeedback.className = "feedback feedback-analysis is-success";
+      analysisFeedback.textContent = isSpanish
+        ? "No se detectaron patrones débiles. Ya puedes guardar la contraseña."
+        : "No weak patterns were detected. You can save your password.";
+      return;
+    }
+
+    analysisFeedback.className = "feedback feedback-analysis is-warning";
+    const details = Array.isArray(security.pattern_details)
+      ? security.pattern_details
+      : [];
+    const patterns = details.length
+      ? details
+      : (security.patterns ?? []).map((pattern) => ({
+          pattern_id: pattern,
+          methods: [],
+        }));
+    const summary = document.createElement("p");
+    summary.className = "analysis-feedback-summary";
+    summary.textContent = isSpanish
+      ? `El análisis detectó ${patterns.length} patrón${patterns.length === 1 ? "" : "es"} débil${patterns.length === 1 ? "" : "es"}. Puede hacer que la secuencia sea más predecible:`
+      : `The analysis detected ${patterns.length} weak pattern${patterns.length === 1 ? "" : "s"}. This may make the sequence easier to predict:`;
+    analysisFeedback.appendChild(summary);
+
+    const list = document.createElement("ul");
+    list.className = "analysis-pattern-list";
+    const patternCopy = {
+      clustered: {
+        title: isSpanish ? "Puntos agrupados" : "Clustered points",
+        reason: isSpanish
+          ? "Los puntos ocupan una zona pequeña de la imagen, lo que reduce las ubicaciones posibles."
+          : "The points occupy a small area of the image, reducing the number of possible locations.",
+        recommendation: isSpanish
+          ? "Distribuye los puntos en distintas zonas de la imagen."
+          : "Spread the points across different areas of the image.",
+      },
+      regular: {
+        title: isSpanish ? "Distribución regular" : "Regular distribution",
+        reason: isSpanish
+          ? "Las distancias o la geometría entre puntos son demasiado uniformes y pueden anticiparse."
+          : "The spacing or geometry between points is too uniform and may be anticipated.",
+        recommendation: isSpanish
+          ? "Varía las distancias y evita formar una disposición demasiado uniforme."
+          : "Vary the spacing and avoid an overly uniform arrangement.",
+      },
+      linear: {
+        title: isSpanish ? "Puntos alineados" : "Aligned points",
+        reason: isSpanish
+          ? "Los puntos siguen una línea fácil de reconocer y reproducir."
+          : "The points follow a line that is easy to recognize and reproduce.",
+        recommendation: isSpanish
+          ? "Rompe la alineación colocando algunos puntos fuera de esa línea."
+          : "Break the alignment by moving some points away from the line.",
+      },
+      diagonal: {
+        title: isSpanish ? "Alineación diagonal" : "Diagonal alignment",
+        reason: isSpanish
+          ? "Los puntos forman una diagonal reconocible que puede simplificar la predicción."
+          : "The points form a recognizable diagonal that may simplify prediction.",
+        recommendation: isSpanish
+          ? "Cambia la dirección de algunos puntos para romper la diagonal."
+          : "Change the direction of some points to break the diagonal.",
+      },
+      angular: {
+        title: isSpanish ? "Estructura geométrica" : "Geometric structure",
+        reason: isSpanish
+          ? "La disposición tiene una forma geométrica marcada que puede resultar predecible."
+          : "The arrangement has a pronounced geometric shape that may be predictable.",
+        recommendation: isSpanish
+          ? "Evita formas geométricas evidentes y cambia la posición de varios puntos."
+          : "Avoid obvious geometric shapes and change the position of several points.",
+      },
+    };
+    const rawPatterns = security.patterns ?? [];
+    patterns.forEach((detail, index) => {
+      const patternId = normalizePatternId(detail.pattern_id);
+      const copy = patternCopy[patternId];
+      const item = document.createElement("li");
+      const title = document.createElement("strong");
+      title.textContent =
+        copy?.title ?? rawPatterns[index] ?? detail.pattern_id ?? t("unknownPattern");
+      item.appendChild(title);
+
+      const reason = document.createElement("p");
+      reason.textContent =
+        copy?.reason ??
+        security.explanation ??
+        (isSpanish
+          ? "La API detectó una característica que puede hacer la selección más predecible."
+          : "The API detected a feature that may make the selection easier to predict.");
+      item.appendChild(reason);
+
+      const recommendation = document.createElement("p");
+      recommendation.className = "analysis-pattern-recommendation";
+      recommendation.textContent =
+        copy?.recommendation ??
+        (isSpanish
+          ? "Prueba otra distribución de puntos."
+          : "Try a different point arrangement.");
+      item.appendChild(recommendation);
+
+      const methods = Array.isArray(detail.methods) ? detail.methods : [];
+      if (methods.length) {
+        const source = document.createElement("small");
+        source.textContent = `${t("detectedBy")}: ${methods
+          .map((method) =>
+            method === "delaunay_statistical"
+              ? t("delaunayMethodLabel")
+              : method === "mean_distance_convex_hull"
+                ? t("distanceHullMethodLabel")
+                : method,
+          )
+          .join(", ")}`;
+        item.appendChild(source);
+      }
+      list.appendChild(item);
+    });
+    analysisFeedback.appendChild(list);
+  }
+
+  function normalizePatternId(pattern) {
+    const normalized = String(pattern ?? "").trim().toLowerCase();
+    if (["clustered", "agrupado", "patrón agrupado", "clustered pattern"].includes(normalized))
+      return "clustered";
+    if (["regular", "patrón regular", "regular pattern"].includes(normalized))
+      return "regular";
+    if (["linear", "patrón line", "line pattern"].includes(normalized))
+      return "linear";
+    if (["diagonal", "patrón diag", "diagonal pattern"].includes(normalized))
+      return "diagonal";
+    if (["angular", "patrón angular", "angular pattern"].includes(normalized))
+      return "angular";
+    return "unknown";
   }
   async function submitAuth(event) {
     event.preventDefault();
@@ -632,6 +766,7 @@ function initializeAuth({ onAuthenticated }) {
             emailInput.value.trim(),
             image,
             points,
+            Number(toleranceRadiusInput.value),
           );
           registrationId = progress.registration_id;
           consecutiveSuccesses = progress.consecutive_successes;
@@ -797,6 +932,9 @@ function initializeAuth({ onAuthenticated }) {
     }
     updateButtons();
     setMode(mode);
+    if (analysisResult?.security && mode === "register" && !registrationId) {
+      renderAnalysisFeedback(analysisResult.security);
+    }
   };
   usernameInput.addEventListener("input", () => {
     persistAuthProgress();
@@ -807,6 +945,15 @@ function initializeAuth({ onAuthenticated }) {
     persistAuthProgress();
     updateButtons();
   });
+  toleranceRadiusInput.addEventListener("input", () => {
+    updateToleranceLabel();
+    document.dispatchEvent(new CustomEvent("tolerance-radius-changed"));
+    if (mode === "register" && !registrationId) invalidateAnalysis();
+    persistAuthProgress();
+  });
+  function updateToleranceLabel() {
+    toleranceValue.textContent = `${toleranceRadiusInput.value} px`;
+  }
   authForm.addEventListener("submit", submitAuth);
   analyzeButton.addEventListener("click", runRegistrationAnalysis);
   document
@@ -914,6 +1061,7 @@ function initializeAuth({ onAuthenticated }) {
     updateVisualPoint(Number(number), position.x, position.y),
   );
   setMode("register");
+  updateToleranceLabel();
   return restoreAuthProgress;
 }
 

@@ -1,4 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True, slots=True)
+class PatternDetail:
+    pattern_id: str
+    methods: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -10,3 +16,4 @@ class SecurityAssessment:
     patterns: list[str]
     title: str
     explanation: str
+    pattern_details: list[PatternDetail] = field(default_factory=list)

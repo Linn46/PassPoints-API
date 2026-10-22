@@ -2,6 +2,7 @@ from app.application.analysis.methods.mean_distance_convex_hull.pattern_detector
     AGRUPADO,
     ALEATORIO,
     REGULAR,
+    LINEAR,
     evaluate_password,
 )
 
@@ -52,7 +53,7 @@ def test_mean_distance_detector_identifies_linear_pattern():
 
     result = evaluate_password(points, 1920, 1080, alpha=0.05)
 
-    assert result.patrones == [REGULAR]
+    assert result.patrones == [LINEAR]
     assert result.aceptada is False
 
 

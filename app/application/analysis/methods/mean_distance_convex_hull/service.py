@@ -1,25 +1,23 @@
 from dataclasses import dataclass
 
-from app.application.analysis.methods.delaunay_statistical.service import (
-    AnalysisResult as DelaunayAnalysisResult,
-    AnalysisService as DelaunayAnalysisService,
+from app.application.analysis.methods.mean_distance_convex_hull.pattern_detector import (
+    AGRUPADO,
+    LINEAR,
+    REGULAR,
+    evaluate_password,
 )
 from app.domain.point import Point
+from app.domain.security_assessment import PatternDetail, SecurityAssessment
 
 
 @dataclass(frozen=True, slots=True)
-class MeanDistanceConvexHullResult(DelaunayAnalysisResult):
-    """Compatibility result for the mean-distance convex hull research line.
-
-    The project keeps the Delaunay implementation as the concrete analysis engine
-    while exposing the mean-distance method name through the public API surface.
-    """
-
+class MeanDistanceConvexHullResult:
+    security: SecurityAssessment
     method: str = "mean_distance_convex_hull"
 
 
-class AnalysisService(DelaunayAnalysisService):
-    """Thin compatibility wrapper for the newer method identifier."""
+class AnalysisService:
+    """Analyze point distribution with pairwise distances and convex-hull metrics."""
 
     def analyze(
         self,
@@ -28,19 +26,47 @@ class AnalysisService(DelaunayAnalysisService):
         image_height: int,
         alpha: float = 0.05,
     ) -> MeanDistanceConvexHullResult:
-        result = super().analyze(
-            points=points,
-            image_width=image_width,
-            image_height=image_height,
-            alpha=alpha,
+        evaluation = evaluate_password(
+            [(point.x, point.y) for point in points],
+            image_width,
+            image_height,
+            alpha,
+        )
+        pattern_details = [
+            PatternDetail(
+                pattern_id={
+                    AGRUPADO: "clustered",
+                    REGULAR: "regular",
+                    LINEAR: "linear",
+                }[pattern],
+                methods=("mean_distance_convex_hull",),
+            )
+            for pattern in evaluation.patrones
+        ]
+        is_weak = not evaluation.aceptada
+        security = SecurityAssessment(
+            is_weak=is_weak,
+            level=(
+                "Baja"
+                if is_weak and (AGRUPADO in evaluation.patrones or len(evaluation.patrones) > 1)
+                else "Media"
+                if is_weak
+                else "Alta"
+            ),
+            patterns=[
+                {
+                    AGRUPADO: "Patrón agrupado",
+                    REGULAR: "Patrón regular",
+                    LINEAR: "Patrón Line",
+                }[pattern]
+                for pattern in evaluation.patrones
+            ],
+            title="Contraseña no segura" if is_weak else "Contraseña sin patrón débil detectado",
+            explanation=evaluation.mensaje,
+            pattern_details=pattern_details,
         )
         return MeanDistanceConvexHullResult(
-            triangulation=result.triangulation,
-            average_perimeter=result.average_perimeter,
-            average_max_angle=result.average_max_angle,
-            perimeter_test=result.perimeter_test,
-            angle_test=result.angle_test,
-            security=result.security,
+            security=security,
             method="mean_distance_convex_hull",
         )
 
