@@ -259,6 +259,8 @@ La contraseña gráfica debe estar formada por cinco puntos. El análisis geomé
 
 La selección inicial establece la contraseña y cuenta como el primer acierto. Cada intento posterior se guarda en la base de datos con su resultado y la racha actual, sin conservar los puntos ingresados. Un intento incorrecto reinicia la racha; el perfil solo se crea al acumular tres secuencias correctas consecutivas. Por eso, si la primera confirmación falla, hacen falta tres confirmaciones correctas adicionales.
 
+La tolerancia de acceso se adapta automáticamente a la desviación máxima observada en las confirmaciones correctas, con un margen de 2 píxeles. El valor final se limita al intervalo de 5–30 píxeles y se restringe según la distancia entre los puntos para evitar que sus zonas de tolerancia se superpongan. La credencial guarda el valor adaptado para los inicios de sesión posteriores; el cliente no puede elegirlo manualmente.
+
 El endpoint devuelve un identificador de registro pendiente. Envía cada confirmación por separado a `POST /auth/register/{registration_id}/repetitions`; puedes cancelar el proceso y reiniciar la contraseña con `DELETE /auth/register/{registration_id}`.
 
 Al completar el registro se conserva el resultado de cada repetición (acierto o fallo, racha consecutiva y fecha), sin guardar las coordenadas de los intentos. El feed muestra un gráfico de la racha durante el registro, el total de intentos, los fallos y el número de intentos hasta alcanzar tres aciertos consecutivos. Esta conclusión describe únicamente la práctica realizada durante el registro; no es una medida general de seguridad de la contraseña. Las cuentas anteriores a este historial muestran que no hay datos detallados disponibles.

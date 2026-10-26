@@ -79,19 +79,35 @@ def register(
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> RegistrationProgressResponse:
     try:
-        progress = service.start_registration(
-            request.username,
-            request.email,
-            request.image_id,
-            request.image_width,
-            request.image_height,
-            [(point.x, point.y) for point in request.points],
-            tolerance_radius=request.tolerance_radius,
-        )
+        points = [(point.x, point.y) for point in request.points]
+        if request.repetition_count is None:
+            progress = service.register_immediately(
+                request.username,
+                request.email,
+                request.image_id,
+                request.image_width,
+                request.image_height,
+                points,
+                [
+                    [(point.x, point.y) for point in confirmation]
+                    for confirmation in request.confirmation_points
+                ],
+            )
+        else:
+            progress = service.start_registration(
+                request.username,
+                request.email,
+                request.image_id,
+                request.image_width,
+                request.image_height,
+                points,
+            )
     except DuplicateAccountError as error:
         raise HTTPException(409, "Username or email already registered.") from error
     except InvalidSelectionError as error:
-        raise HTTPException(422, "Invalid Passpoints selection.") from error
+        raise HTTPException(
+            422, str(error) or "Invalid Passpoints selection."
+        ) from error
     except TokenConfigurationError as error:
         raise HTTPException(
             503,

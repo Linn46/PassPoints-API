@@ -126,6 +126,99 @@ class Passpoints:
         ):
             return False
 
+    @classmethod
+    def measure_repetition_deviations(
+        cls,
+        image_id: str,
+        image_width: int,
+        image_height: int,
+        points: Sequence[tuple[float, float]],
+        verifier: str,
+        encrypted_points: str | None,
+        tolerance_radius: int,
+        encryption_secret: str,
+    ) -> tuple[list[tuple[float, float]], list[float]] | None:
+        if encrypted_points is None:
+            return None
+        try:
+            cls._validate_points(image_id, image_width, image_height, points)
+            if len(set(points)) != 5:
+                return None
+            payload = cls._fernet(encryption_secret).decrypt(
+                encrypted_points.encode()
+            )
+            saved = json.loads(payload)
+            if (
+                saved["image_id"] != image_id.strip()
+                or saved["image_width"] != image_width
+                or saved["image_height"] != image_height
+                or saved["tolerance_radius"] != tolerance_radius
+            ):
+                return None
+            reference_points = [
+                (float(point[0]), float(point[1])) for point in saved["points"]
+            ]
+            reference_representation = cls._canonical_representation(
+                image_id,
+                image_width,
+                image_height,
+                reference_points,
+                tolerance_radius,
+            )
+            if not verify_secret(reference_representation, verifier):
+                return None
+            cls._validate_points(
+                image_id,
+                image_width,
+                image_height,
+                reference_points,
+                tolerance_radius,
+            )
+            return reference_points, [
+                math.hypot(current_x - saved_x, current_y - saved_y)
+                for (current_x, current_y), (saved_x, saved_y) in zip(
+                    points, reference_points
+                )
+            ]
+        except (
+            IndexError,
+            KeyError,
+            TypeError,
+            ValueError,
+            InvalidToken,
+            UnicodeDecodeError,
+        ):
+            return None
+
+    @classmethod
+    def max_safe_tolerance_radius(
+        cls, reference_points: Sequence[tuple[float, float]]
+    ) -> int:
+        minimum_distance = min(
+            math.hypot(x - other_x, y - other_y)
+            for index, (x, y) in enumerate(reference_points)
+            for other_x, other_y in reference_points[index + 1 :]
+        )
+        return min(
+            MAX_TOLERANCE_RADIUS,
+            math.ceil(minimum_distance / 2) - 1,
+        )
+
+    @classmethod
+    def estimate_tolerance_radius(
+        cls,
+        max_deviation: float,
+        reference_points: Sequence[tuple[float, float]],
+    ) -> int:
+        max_safe_radius = cls.max_safe_tolerance_radius(reference_points)
+        if max_safe_radius < MIN_TOLERANCE_RADIUS:
+            raise ValueError("Passpoints are too close for a safe tolerance.")
+        estimated_radius = math.ceil(max_deviation + 2)
+        return min(
+            max(MIN_TOLERANCE_RADIUS, estimated_radius),
+            max_safe_radius,
+        )
+
     @staticmethod
     def _fernet(encryption_secret: str) -> Fernet:
         secret = encryption_secret.encode("utf-8")

@@ -49,7 +49,7 @@ def auth_service() -> Iterator[tuple[AuthService, Session]]:
         engine.dispose()
 
 
-def test_selected_tolerance_survives_registration_and_is_used_for_login(
+def test_tolerance_is_learned_from_confirmations_and_used_for_login(
     auth_service: tuple[AuthService, Session],
 ) -> None:
     service, session = auth_service
@@ -60,9 +60,8 @@ def test_selected_tolerance_survives_registration_and_is_used_for_login(
         WIDTH,
         HEIGHT,
         POINTS,
-        tolerance_radius=30,
     )
-    repeated = [(x + 29, y) for x, y in POINTS]
+    repeated = [(x + 17, y) for x, y in POINTS]
 
     service.register_repetition(progress.registration_id, repeated)
     completed = service.register_repetition(progress.registration_id, repeated)
@@ -70,37 +69,19 @@ def test_selected_tolerance_survives_registration_and_is_used_for_login(
     assert completed.user is not None
     credential = session.scalar(select(GraphicalPassword))
     assert credential is not None
-    assert credential.tolerance_radius == 30
+    assert credential.tolerance_radius == 19
     assert credential.encrypted_points
     user, _, _ = service.login(
         "alice@example.com", IMAGE, WIDTH, HEIGHT, repeated
     )
     assert user.id == completed.user.id
 
-    outside_radius = [(x + 31, y) for x, y in POINTS]
+    outside_radius = [(x + 20, y) for x, y in POINTS]
     with pytest.raises(InvalidAuthenticationError):
         service.login("alice@example.com", IMAGE, WIDTH, HEIGHT, outside_radius)
 
 
-@pytest.mark.parametrize("radius", [5, 30])
-def test_registration_schema_accepts_tolerance_limits(radius: int) -> None:
-    request = RegisterRequest(
-        username="alice",
-        email="alice@example.com",
-        image_id=IMAGE,
-        image_width=WIDTH,
-        image_height=HEIGHT,
-        points=[{"x": x, "y": y} for x, y in POINTS],
-        tolerance_radius=radius,
-    )
-
-    assert request.tolerance_radius == radius
-
-
-@pytest.mark.parametrize("radius", [4, 31])
-def test_registration_schema_rejects_tolerance_outside_allowed_range(
-    radius: int,
-) -> None:
+def test_registration_rejects_manual_tolerance_input() -> None:
     with pytest.raises(ValueError):
         RegisterRequest(
             username="alice",
@@ -109,5 +90,83 @@ def test_registration_schema_rejects_tolerance_outside_allowed_range(
             image_width=WIDTH,
             image_height=HEIGHT,
             points=[{"x": x, "y": y} for x, y in POINTS],
-            tolerance_radius=radius,
+            tolerance_radius=30,
         )
+
+
+def test_registration_requires_confirmation_or_staged_repetition() -> None:
+    with pytest.raises(ValueError, match="confirmation is required"):
+        RegisterRequest(
+            username="alice",
+            email="alice@example.com",
+            image_id=IMAGE,
+            image_width=WIDTH,
+            image_height=HEIGHT,
+            points=[{"x": x, "y": y} for x, y in POINTS],
+        )
+
+
+def test_registration_schema_accepts_two_confirmation_sequences() -> None:
+    request = RegisterRequest(
+        username="alice",
+        email="alice@example.com",
+        image_id=IMAGE,
+        image_width=WIDTH,
+        image_height=HEIGHT,
+        points=[{"x": x, "y": y} for x, y in POINTS],
+        confirmation_points=[
+            [{"x": x + 5, "y": y} for x, y in POINTS],
+            [{"x": x + 8, "y": y} for x, y in POINTS],
+        ],
+    )
+
+    assert len(request.confirmation_points) == 2
+
+
+def test_registration_schema_rejects_duplicate_confirmation_points() -> None:
+    with pytest.raises(ValueError):
+        RegisterRequest(
+            username="alice",
+            email="alice@example.com",
+            image_id=IMAGE,
+            image_width=WIDTH,
+            image_height=HEIGHT,
+            points=[{"x": x, "y": y} for x, y in POINTS],
+            confirmation_points=[
+                [{"x": 100, "y": 100}] * 5,
+                [{"x": x, "y": y} for x, y in POINTS],
+            ],
+        )
+
+
+def test_immediate_registration_persists_calibrated_tolerance(
+    auth_service: tuple[AuthService, Session],
+) -> None:
+    service, session = auth_service
+    confirmations = [
+        [(x + 16, y) for x, y in POINTS],
+        [(x + 20, y) for x, y in POINTS],
+    ]
+
+    completed = service.register_immediately(
+        "alice",
+        "alice@example.com",
+        IMAGE,
+        WIDTH,
+        HEIGHT,
+        POINTS,
+        confirmations,
+    )
+
+    assert completed.user is not None
+    credential = session.scalar(select(GraphicalPassword))
+    assert credential is not None
+    assert credential.tolerance_radius == 22
+    user, _, _ = service.login(
+        "alice@example.com",
+        IMAGE,
+        WIDTH,
+        HEIGHT,
+        [(x + 21, y) for x, y in POINTS],
+    )
+    assert user.id == completed.user.id
