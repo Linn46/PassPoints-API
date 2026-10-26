@@ -11,12 +11,9 @@ function initializePointSelector() {
   const undoPointButton = document.getElementById("undo-point");
   const selectedImageElement = document.getElementById("selected-image");
   const pointFeedback = document.getElementById("point-feedback");
-  const toleranceRadiusInput = document.getElementById("tolerance-radius");
-
   function isTooClose(point, otherPoint) {
     if (authenticationMode !== "register" || repeatingPassword) return false;
-    const radius = Number(toleranceRadiusInput?.value ?? 10);
-    return Math.hypot(point.x - otherPoint.x, point.y - otherPoint.y) <= 2 * radius;
+    return Math.hypot(point.x - otherPoint.x, point.y - otherPoint.y) <= 20;
   }
 
   function hasValidPointSpacing() {
@@ -226,13 +223,6 @@ function initializePointSelector() {
   document.addEventListener("authentication-mode-changed", (event) => {
     authenticationMode = event.detail?.mode ?? "register";
     repeatingPassword = Boolean(event.detail?.repeating);
-  });
-  document.addEventListener("tolerance-radius-changed", () => {
-    if (!hasValidPointSpacing()) {
-      pointFeedback.textContent = t("pointsTooClose");
-    } else {
-      renderPoints();
-    }
   });
   selectedImageElement.addEventListener("click", (event) => {
     if (

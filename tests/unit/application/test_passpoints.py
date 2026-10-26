@@ -98,3 +98,10 @@ def test_points_with_overlapping_tolerance_regions_are_rejected() -> None:
 
     with pytest.raises(ValueError, match="too close"):
         Passpoints.create_credential(IMAGE, WIDTH, HEIGHT, too_close, 10)
+
+
+def test_adaptive_tolerance_uses_deviation_margin_and_spacing_cap() -> None:
+    assert Passpoints.estimate_tolerance_radius(8.2, POINTS) == 11
+    close_points = [(100, 100), (130, 100), *POINTS[2:]]
+    assert Passpoints.estimate_tolerance_radius(25, close_points) == 14
+    assert Passpoints.estimate_tolerance_radius(0, POINTS) == 5

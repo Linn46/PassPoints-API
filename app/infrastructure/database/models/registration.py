@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database.base import Base
@@ -18,6 +18,9 @@ class RegistrationDraft(Base):
     image_height: Mapped[int] = mapped_column(Integer, nullable=False)
     verifier: Mapped[str | None] = mapped_column(Text, nullable=True)
     tolerance_radius: Mapped[int] = mapped_column(Integer, nullable=False)
+    max_successful_deviation: Mapped[float] = mapped_column(
+        Float, default=0, server_default="0", nullable=False
+    )
     encrypted_points: Mapped[str | None] = mapped_column(Text, nullable=True)
     consecutive_successes: Mapped[int] = mapped_column(
         Integer, default=1, server_default="1", nullable=False

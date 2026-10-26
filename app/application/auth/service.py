@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.application.analysis.service import AnalysisService as PatternAnalysisService
 from app.application.auth.image_selection import select_login_images
 from app.application.auth.tokens import (
     ACCESS_TOKEN_TTL_SECONDS,
@@ -13,6 +14,7 @@ from app.application.auth.tokens import (
 )
 from app.application.passpoints.method import DEFAULT_TOLERANCE_RADIUS, Passpoints
 from app.core.config.settings import settings
+from app.domain.point import Point
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
 from app.infrastructure.database.models.registration import (
     RegistrationAttempt,
@@ -65,7 +67,6 @@ class AuthService:
         image_width: int,
         image_height: int,
         points: list[tuple[float, float]],
-        tolerance_radius: int = DEFAULT_TOLERANCE_RADIUS,
     ) -> RegistrationProgress:
         pending_draft = self._session.scalar(
             select(RegistrationDraft.id).where(
@@ -88,7 +89,11 @@ class AuthService:
             )
         try:
             verifier = Passpoints.create_credential(
-                image_id, image_width, image_height, points, tolerance_radius
+                image_id,
+                image_width,
+                image_height,
+                points,
+                DEFAULT_TOLERANCE_RADIUS,
             )
             encrypted_points = Passpoints.encrypt_points(
                 image_id,
@@ -96,11 +101,14 @@ class AuthService:
                 image_height,
                 points,
                 self._token_secret,
-                tolerance_radius,
+                DEFAULT_TOLERANCE_RADIUS,
             )
+        except InvalidSelectionError:
+            raise
         except ValueError as error:
             raise InvalidSelectionError from error
 
+        self._validate_password_strength(image_width, image_height, points)
         draft = RegistrationDraft(
             username=username,
             email=email,
@@ -108,7 +116,7 @@ class AuthService:
             image_width=image_width,
             image_height=image_height,
             verifier=verifier,
-            tolerance_radius=tolerance_radius,
+            tolerance_radius=DEFAULT_TOLERANCE_RADIUS,
             encrypted_points=encrypted_points,
             consecutive_successes=1,
             attempt_count=1,
@@ -133,6 +141,144 @@ class AuthService:
             raise
         return RegistrationProgress(draft.id, 1, True)
 
+    def register_immediately(
+        self,
+        username: str,
+        email: str,
+        image_id: str,
+        image_width: int,
+        image_height: int,
+        points: list[tuple[float, float]],
+        confirmation_points: list[list[tuple[float, float]]],
+    ) -> RegistrationProgress:
+        pending_draft = self._session.scalar(
+            select(RegistrationDraft.id).where(
+                RegistrationDraft.is_completed.is_(False),
+                or_(
+                    RegistrationDraft.username == username,
+                    RegistrationDraft.email == email,
+                ),
+            )
+        )
+        if (
+            self._users.get_by_username(username)
+            or self._users.get_by_email(email)
+            or pending_draft is not None
+        ):
+            raise DuplicateAccountError
+        if len(self._token_secret.encode("utf-8")) < 32:
+            raise TokenConfigurationError(
+                "AUTH_TOKEN_SECRET must contain at least 32 bytes."
+            )
+        try:
+            starting_verifier = Passpoints.create_credential(
+                image_id,
+                image_width,
+                image_height,
+                points,
+                DEFAULT_TOLERANCE_RADIUS,
+            )
+            starting_encrypted_points = Passpoints.encrypt_points(
+                image_id,
+                image_width,
+                image_height,
+                points,
+                self._token_secret,
+                DEFAULT_TOLERANCE_RADIUS,
+            )
+            max_deviation = 0.0
+            tolerance_radius = DEFAULT_TOLERANCE_RADIUS
+            for confirmation in confirmation_points:
+                measured = Passpoints.measure_repetition_deviations(
+                    image_id,
+                    image_width,
+                    image_height,
+                    confirmation,
+                    starting_verifier,
+                    starting_encrypted_points,
+                    DEFAULT_TOLERANCE_RADIUS,
+                    self._token_secret,
+                )
+                if measured is None:
+                    raise InvalidSelectionError(
+                        "The graphical password must be repeated consistently two more times."
+                    )
+                reference_points, deviations = measured
+                max_safe_radius = Passpoints.max_safe_tolerance_radius(
+                    reference_points
+                )
+                if any(deviation > max_safe_radius for deviation in deviations):
+                    raise InvalidSelectionError(
+                        "The graphical password must be repeated consistently two more times."
+                    )
+                max_deviation = max(max_deviation, max(deviations))
+            tolerance_radius = Passpoints.estimate_tolerance_radius(
+                max_deviation, points
+            )
+            verifier = Passpoints.create_credential(
+                image_id, image_width, image_height, points, tolerance_radius
+            )
+            encrypted_points = Passpoints.encrypt_points(
+                image_id,
+                image_width,
+                image_height,
+                points,
+                self._token_secret,
+                tolerance_radius,
+            )
+        except InvalidSelectionError:
+            raise
+        except ValueError as error:
+            raise InvalidSelectionError from error
+
+        self._validate_password_strength(image_width, image_height, points)
+        user = User(
+            username=username,
+            email=email,
+            password_hash=verifier,
+            graphical_password_repetition_count=2,
+            graphical_password_verified=True,
+        )
+        self._session.add(
+            GraphicalPassword(
+                user=user,
+                image_id=image_id,
+                verifier=verifier,
+                encrypted_points=encrypted_points,
+                tolerance_radius=tolerance_radius,
+            )
+        )
+        try:
+            self._session.flush()
+            token = create_access_token(user.id, user.username, self._token_secret)
+            self._session.commit()
+        except IntegrityError as error:
+            self._session.rollback()
+            raise DuplicateAccountError from error
+        except BaseException:
+            self._session.rollback()
+            raise
+        return RegistrationProgress(user.id, 3, True, user, token)
+
+    @staticmethod
+    def _validate_password_strength(
+        image_width: int,
+        image_height: int,
+        points: list[tuple[float, float]],
+    ) -> None:
+        analysis = PatternAnalysisService()
+        domain_points = [Point(x=x, y=y) for x, y in points]
+        result = analysis.analyze(
+            points=domain_points,
+            image_width=image_width,
+            image_height=image_height,
+            method="delaunay_statistical",
+        )
+        if result.security.is_weak:
+            raise InvalidSelectionError(
+                "Weak graphical-password patterns are not allowed."
+            )
+
     def register_repetition(
         self, registration_id: UUID, points: list[tuple[float, float]]
     ) -> RegistrationProgress:
@@ -140,11 +286,7 @@ class AuthService:
         if draft is None or draft.is_completed or draft.verifier is None:
             raise InvalidRegistrationError
 
-        within_image = all(
-            0 <= x <= draft.image_width and 0 <= y <= draft.image_height
-            for x, y in points
-        )
-        is_correct = within_image and Passpoints.verify_credential(
+        measured = Passpoints.measure_repetition_deviations(
             draft.image_id,
             draft.image_width,
             draft.image_height,
@@ -154,9 +296,25 @@ class AuthService:
             draft.tolerance_radius,
             self._token_secret,
         )
+        reference_points, deviations = measured if measured is not None else ([], [])
+        max_safe_radius = (
+            Passpoints.max_safe_tolerance_radius(reference_points)
+            if reference_points
+            else 0
+        )
+        is_correct = bool(deviations) and all(
+            deviation <= max_safe_radius for deviation in deviations
+        )
         draft.consecutive_successes = (
             draft.consecutive_successes + 1 if is_correct else 0
         )
+        if is_correct:
+            draft.max_successful_deviation = max(
+                draft.max_successful_deviation,
+                max(deviations),
+            )
+        else:
+            draft.max_successful_deviation = 0
         draft.attempt_count += 1
         self._session.add(
             RegistrationAttempt(
@@ -176,20 +334,39 @@ class AuthService:
             ):
                 self._session.rollback()
                 raise DuplicateAccountError
+            tolerance_radius = Passpoints.estimate_tolerance_radius(
+                draft.max_successful_deviation,
+                reference_points,
+            )
+            verifier = Passpoints.create_credential(
+                draft.image_id,
+                draft.image_width,
+                draft.image_height,
+                reference_points,
+                tolerance_radius,
+            )
+            encrypted_points = Passpoints.encrypt_points(
+                draft.image_id,
+                draft.image_width,
+                draft.image_height,
+                reference_points,
+                self._token_secret,
+                tolerance_radius,
+            )
             user = User(
                 username=draft.username,
                 email=draft.email,
-                password_hash=draft.verifier,
-                graphical_password_repetition_count=draft.consecutive_successes,
+                password_hash=verifier,
+                graphical_password_repetition_count=draft.consecutive_successes - 1,
                 graphical_password_verified=True,
             )
             self._session.add(
                 GraphicalPassword(
                     user=user,
                     image_id=draft.image_id,
-                    verifier=draft.verifier,
-                    encrypted_points=draft.encrypted_points,
-                    tolerance_radius=draft.tolerance_radius,
+                    verifier=verifier,
+                    encrypted_points=encrypted_points,
+                    tolerance_radius=tolerance_radius,
                 )
             )
             draft.is_completed = True
