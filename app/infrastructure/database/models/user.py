@@ -34,10 +34,6 @@ class User(Base):
     graphical_password_verified: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default="true", nullable=False
     )
-    tolerance_grid_divisions: Mapped[int] = mapped_column(
-        Integer, default=5, server_default="5", nullable=False
-    )
-
     graphical_passwords: Mapped[list["GraphicalPassword"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

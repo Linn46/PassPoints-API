@@ -34,7 +34,10 @@ class RegisterRequest(BaseModel):
     image_width: int = Field(gt=0)
     image_height: int = Field(gt=0)
     points: list[PointInput] = Field(min_length=5, max_length=5)
-    tolerance_grid_divisions: int = Field(default=5, ge=1, le=5)
+    confirmation_points: list[list[PointInput]] | None = Field(
+        default=None, min_length=2, max_length=2
+    )
+    repetition_count: int | None = Field(default=None, ge=3, le=3)
 
     @field_validator("username", mode="before")
     @classmethod
@@ -66,6 +69,23 @@ class RegisterRequest(BaseModel):
             raise ValueError("Points must be inside the image.")
         if len({(p.x, p.y) for p in self.points}) != 5:
             raise ValueError("The five points must be unique.")
+        if self.confirmation_points is None and self.repetition_count is None:
+            raise ValueError("Password confirmation is required.")
+        if self.confirmation_points is not None:
+            if self.repetition_count is not None:
+                raise ValueError(
+                    "Provide either confirmation_points or repetition_count, not both."
+                )
+            for confirmation in self.confirmation_points:
+                if (
+                    len(confirmation) != 5
+                    or any(
+                        point.x > self.image_width or point.y > self.image_height
+                        for point in confirmation
+                    )
+                    or len({(point.x, point.y) for point in confirmation}) != 5
+                ):
+                    raise ValueError("Invalid confirmation points.")
         return self
 
 

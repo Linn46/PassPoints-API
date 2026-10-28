@@ -22,6 +22,8 @@ window.PasspointsTranslations = {
     createSequence: "Crea tu secuencia",
     repeatSequence: "Repite tu secuencia",
     sequencePrompt: "Selecciona exactamente cinco puntos.",
+    toleranceLabel: "Tolerancia adaptativa",
+    toleranceHint: "La tolerancia se ajusta automáticamente durante las confirmaciones.",
     selectionHint:
       "Primero selecciona una imagen y después marca cinco lugares en el orden que prefieras.",
     repeatSequenceHint:
@@ -150,9 +152,12 @@ window.PasspointsTranslations = {
     passwordConfirmationLast: "Repite la secuencia una última vez.",
     passwordConfirmationWrongTitle: "La secuencia no coincide",
     passwordConfirmationWrongHint: "La racha se reinició. Repite correctamente {n} veces seguidas.",
+    passwordConfirmationAdaptiveStart: "Secuencia guardada. Repítela dos veces para adaptar automáticamente la tolerancia.",
+    passwordConfirmationAdaptiveProgress: "Bien. Repítela {n} veces más; la tolerancia se está ajustando a tus puntos.",
+    passwordConfirmationAdaptiveRetry: "La secuencia no coincidió y la racha se reinició. Repítela correctamente {n} veces; la tolerancia se ajustará durante las confirmaciones.",
     changePassword: "Cambiar contraseña",
     passwordConfirmationButton: "Continuar",
-    pointsTooClose: "Algunos puntos están demasiado cerca, deben estar en celdas diferentes.",
+    pointsTooClose: "Los puntos están demasiado cerca. Sepáralos más para que sus zonas de tolerancia no se superpongan.",
     profile: "Mi perfil",
     security: "Seguridad",
     appearance: "Apariencia",
@@ -218,6 +223,8 @@ window.PasspointsTranslations = {
     createSequence: "Create your sequence",
     repeatSequence: "Repeat your sequence",
     sequencePrompt: "Select exactly five points.",
+    toleranceLabel: "Adaptive tolerance",
+    toleranceHint: "Tolerance adapts automatically during confirmation.",
     selectionHint:
       "First select an image and then mark five places in the order you prefer.",
     repeatSequenceHint: "Select the same five points in the same order.",
@@ -389,9 +396,12 @@ window.PasspointsTranslations = {
     passwordConfirmationLast: "Repeat the sequence one last time.",
     passwordConfirmationWrongTitle: "The sequence does not match",
     passwordConfirmationWrongHint: "Your streak was reset. Repeat the sequence correctly {n} times in a row.",
+    passwordConfirmationAdaptiveStart: "Sequence saved. Repeat it twice to automatically adapt the tolerance.",
+    passwordConfirmationAdaptiveProgress: "Good. Repeat it {n} more times; the tolerance is adapting to your points.",
+    passwordConfirmationAdaptiveRetry: "The sequence did not match and the streak was reset. Repeat it correctly {n} times; the tolerance will adapt during confirmation.",
     changePassword: "Change password",
     passwordConfirmationButton: "Continue",
-    pointsTooClose: "Some points are too close, they must be in different grid cells.",
+    pointsTooClose: "The points are too close. Move them farther apart so their tolerance areas do not overlap.",
   },
 };
 

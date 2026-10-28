@@ -179,6 +179,13 @@ Puedes comprobar que existe con:
 ```
 
 No compartas este valor ni lo almacenes directamente en el repositorio.
+La secuencia de coordenadas se cifra con una clave derivada de este secreto;
+mantén el mismo valor al reiniciar o desplegar la API. Si se pierde o se
+reemplaza, las credenciales gráficas existentes deberán registrarse de nuevo.
+Las credenciales del método anterior guardan posiciones en celdas y no pueden
+convertirse a coordenadas; antes de actualizar otra base con cuentas antiguas,
+planifica su restablecimiento explícito. La migración elimina los registros de
+inscripción que quedaron pendientes con el formato antiguo.
 
 ## Ejecutar las migraciones
 
@@ -251,6 +258,8 @@ Registra un usuario y su credencial gráfica Passpoints.
 La contraseña gráfica debe estar formada por cinco puntos. El análisis geométrico es opcional: los métodos aparecen deseleccionados y el usuario puede guardar la contraseña sin ejecutar un análisis.
 
 La selección inicial establece la contraseña y cuenta como el primer acierto. Cada intento posterior se guarda en la base de datos con su resultado y la racha actual, sin conservar los puntos ingresados. Un intento incorrecto reinicia la racha; el perfil solo se crea al acumular tres secuencias correctas consecutivas. Por eso, si la primera confirmación falla, hacen falta tres confirmaciones correctas adicionales.
+
+La tolerancia de acceso se adapta automáticamente a la desviación máxima observada en las confirmaciones correctas, con un margen de 2 píxeles. El valor final se limita al intervalo de 5–30 píxeles y se restringe según la distancia entre los puntos para evitar que sus zonas de tolerancia se superpongan. La credencial guarda el valor adaptado para los inicios de sesión posteriores; el cliente no puede elegirlo manualmente.
 
 El endpoint devuelve un identificador de registro pendiente. Envía cada confirmación por separado a `POST /auth/register/{registration_id}/repetitions`; puedes cancelar el proceso y reiniciar la contraseña con `DELETE /auth/register/{registration_id}`.
 

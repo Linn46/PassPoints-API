@@ -13,8 +13,11 @@ async function requestJson(url, payload, method = "POST", headers = {}) {
   try {
     response = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json", ...headers },
-      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+      headers: {
+        ...(payload ? { "Content-Type": "application/json" } : {}),
+        ...headers,
+      },
+      ...(payload ? { body: JSON.stringify(payload) } : {}),
     });
   } catch (error) {
     console.error("Passpoints API connection error:", error);
@@ -31,17 +34,19 @@ async function requestJson(url, payload, method = "POST", headers = {}) {
   }
   if (!response.ok) {
     console.error("Passpoints API request failed:", response.status, data);
-    
+
     // LOG DETALLADO PARA DEPURACIÓN
     console.log("Detalles del error recibido:", data);
 
     const detail = Array.isArray(data.errors)
       ? data.errors
-          .map(({ field, message }) => [field, message].filter(Boolean).join(": "))
+          .map(({ field, message }) =>
+            [field, message].filter(Boolean).join(": "),
+          )
           .join("; ")
       : Array.isArray(data.detail)
         ? data.detail.map((error) => `${error.loc[1]}: ${error.msg}`).join("; ") // Mejoramos el detalle de Pydantic
-        : data.message ?? data.detail ?? data.error ?? "request_failed";
+        : (data.message ?? data.detail ?? data.error ?? "request_failed");
     throw new ApiError(response.status, detail);
   }
   return data;
@@ -56,8 +61,13 @@ function authPayload(image, points) {
   };
 }
 
-async function analyzeSelection(image, points, methods = ["delaunay_statistical"]) {
-  const selectedMethods = methods && methods.length > 0 ? methods : ["delaunay_statistical"];
+async function analyzeSelection(
+  image,
+  points,
+  methods = ["delaunay_statistical"],
+) {
+  const selectedMethods =
+    methods && methods.length > 0 ? methods : ["delaunay_statistical"];
   return requestJson(ANALYSIS_URL, {
     image_width: image.width,
     image_height: image.height,
@@ -67,12 +77,26 @@ async function analyzeSelection(image, points, methods = ["delaunay_statistical"
   });
 }
 
-async function registerAccount(username, email, image, points) {
-  return requestJson(`${API_ORIGIN}/auth/register`, {
+async function registerAccount(
+  username,
+  email,
+  image,
+  points,
+  confirmationPoints = null,
+  repetitionCount = null,
+) {
+  const payload = {
     username,
     email,
     ...authPayload(image, points),
-  });
+  };
+  if (confirmationPoints && confirmationPoints.length > 0) {
+    payload.confirmation_points = confirmationPoints;
+  }
+  if (repetitionCount !== null) {
+    payload.repetition_count = repetitionCount;
+  }
+  return requestJson(`${API_ORIGIN}/auth/register`, payload);
 }
 
 async function registerRepetition(registrationId, points) {
@@ -105,10 +129,7 @@ async function getLoginImageOptions(email, imageIds) {
 }
 
 async function getRepetitionHistory(accessToken) {
-  return requestJson(
-    `${API_ORIGIN}/auth/repetition-history`,
-    undefined,
-    "GET",
-    { Authorization: `Bearer ${accessToken}` },
-  );
+  return requestJson(`${API_ORIGIN}/auth/repetition-history`, undefined, "GET", {
+    Authorization: `Bearer ${accessToken}`,
+  });
 }

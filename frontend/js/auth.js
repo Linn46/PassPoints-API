@@ -11,7 +11,6 @@ function initializeAuth({ onAuthenticated }) {
   const analyzeButton = document.getElementById("analyze-button");
   const analyzeLabel = document.getElementById("analyze-label");
   const analyzeSpinner = document.getElementById("analyze-spinner");
-  const changePasswordButton = document.getElementById("change-password");
   const submitButton = document.getElementById("submit-button");
   const submitLabel = document.getElementById("submit-label");
   const submitSpinner = document.getElementById("submit-spinner");
@@ -26,12 +25,6 @@ function initializeAuth({ onAuthenticated }) {
   );
   const patternModal = document.getElementById("pattern-modal");
   const patternModalClose = document.getElementById("pattern-modal-close");
-  const confirmationModal = document.getElementById(
-    "confirmation-feedback-modal",
-  );
-  const confirmationModalClose = document.getElementById(
-    "confirmation-feedback-close",
-  );
   const passwordStageStatus = document.getElementById("password-stage-status");
   const restartPasswordButton = document.getElementById(
     "restart-password-button",
@@ -118,13 +111,20 @@ function initializeAuth({ onAuthenticated }) {
   let analysisKey = "";
   let registrationId = null;
   let consecutiveSuccesses = 0;
+  let lastConfirmation = null;
   let registrationCancellation = null;
 
-  function updateUIForStep() {
+  function updateUIForStep(resetSelection = true) {
     const title = document.querySelector('[data-i18n="createSequence"]');
     const count = document.getElementById("point-count");
-    changePasswordButton.hidden = !registrationId;
+    restartPasswordButton.hidden = !registrationId;
     const isRepeatingPassword = mode === "register" && Boolean(registrationId);
+    passwordStageStatus.hidden = !registrationId;
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: isRepeatingPassword },
+      }),
+    );
 
     analysisMethodSelector.hidden = mode !== "register" || isRepeatingPassword;
     analyzeButton.hidden = mode !== "register" || isRepeatingPassword;
@@ -159,13 +159,16 @@ function initializeAuth({ onAuthenticated }) {
           ? "Repite los mismos cinco puntos. Un error reinicia la racha."
           : "Repeat the same five points. A mistake resets the streak.";
     }
-    count.textContent = "0/5";
-    document.dispatchEvent(new CustomEvent("reset-points"));
+    if (resetSelection) {
+      count.textContent = "0/5";
+      document.dispatchEvent(new CustomEvent("reset-points"));
+    }
   }
   function resetRegistrationProgress() {
     const previousRegistrationId = registrationId;
     registrationId = null;
     consecutiveSuccesses = 0;
+    lastConfirmation = null;
     usernameInput.readOnly = false;
     emailInput.readOnly = false;
     updateUIForStep();
@@ -200,7 +203,7 @@ function initializeAuth({ onAuthenticated }) {
   function persistAuthProgress() {
     if (restoringProgress) return;
     const progress = {
-      version: 2,
+      version: 3,
       mode,
       username: usernameInput.value,
       email: emailInput.value,
@@ -229,7 +232,7 @@ function initializeAuth({ onAuthenticated }) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
-    if (!progress || ![1, 2].includes(progress.version)) {
+    if (!progress || ![1, 2, 3].includes(progress.version)) {
       sessionStorage.removeItem(AUTH_PROGRESS_KEY);
       return;
     }
@@ -350,7 +353,11 @@ function initializeAuth({ onAuthenticated }) {
   function updateButtons() {
     const image = getImageData();
     const selectedMethods = selectedAnalysisMethods();
-    const ready = Boolean(image.id && hasFiveSelectedPoints());
+    const spacingReady =
+      mode !== "register" ||
+      typeof window.hasValidPointSpacing !== "function" ||
+      window.hasValidPointSpacing();
+    const ready = Boolean(image.id && hasFiveSelectedPoints() && spacingReady);
     const loginReady = Boolean(
       emailInput.validity.valid && emailInput.value.trim().length >= 5 && ready,
     );
@@ -385,6 +392,11 @@ function initializeAuth({ onAuthenticated }) {
     }
     mode = nextMode;
     const registering = mode === "register";
+    document.dispatchEvent(
+      new CustomEvent("authentication-mode-changed", {
+        detail: { mode, repeating: Boolean(registrationId) },
+      }),
+    );
     if (modeChanged) {
       clearTimeout(loginImageTimer);
       loginImageRequestId += 1;
@@ -632,6 +644,8 @@ function initializeAuth({ onAuthenticated }) {
             emailInput.value.trim(),
             image,
             points,
+            null,
+            3,
           );
           registrationId = progress.registration_id;
           consecutiveSuccesses = progress.consecutive_successes;
@@ -639,7 +653,7 @@ function initializeAuth({ onAuthenticated }) {
           emailInput.readOnly = true;
           updateUIForStep();
           persistAuthProgress();
-          showConfirmationModal(true, consecutiveSuccesses);
+          showConfirmationFeedback(true, consecutiveSuccesses);
           return;
         }
 
@@ -648,7 +662,10 @@ function initializeAuth({ onAuthenticated }) {
         if (!result.completed) {
           updateUIForStep();
           persistAuthProgress();
-          showConfirmationModal(result.attempt_correct, consecutiveSuccesses);
+          showConfirmationFeedback(
+            result.attempt_correct,
+            consecutiveSuccesses,
+          );
           return;
         }
       } else {
@@ -739,42 +756,17 @@ function initializeAuth({ onAuthenticated }) {
     document.body.style.overflow = "";
   }
 
-  function showConfirmationModal(attemptCorrect, successes) {
-    const title = document.getElementById("confirmation-feedback-title");
-    const desc = document.getElementById("confirmation-feedback-description");
-    const btn = document.getElementById("confirmation-feedback-close");
-
+  function showConfirmationFeedback(attemptCorrect, successes) {
+    lastConfirmation = { attemptCorrect };
     const remaining = attemptCorrect ? 3 - successes : 3;
-
-    title.textContent = t(
-      attemptCorrect
-        ? "passwordConfirmationTitle"
-        : "passwordConfirmationWrongTitle",
-    );
-
-    if (!attemptCorrect) {
-      desc.textContent = t("passwordConfirmationWrongHint", { n: remaining });
-    } else if (remaining === 1) {
-      desc.textContent = t("passwordConfirmationLast");
-    } else {
-      desc.textContent = t("passwordConfirmationHint", { n: remaining });
-    }
-    btn.textContent = t("passwordConfirmationButton");
-
-    confirmationModal.classList.add("is-open");
-    confirmationModal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-    confirmationModalClose.focus();
+    const message = attemptCorrect
+      ? remaining === 2
+        ? t("passwordConfirmationAdaptiveStart")
+        : t("passwordConfirmationAdaptiveProgress", { n: remaining })
+      : t("passwordConfirmationAdaptiveRetry", { n: remaining });
+    passwordStageStatus.textContent = message;
+    passwordStageStatus.hidden = false;
   }
-  function closeConfirmationModal() {
-    confirmationModal.classList.remove("is-open");
-    confirmationModal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-  confirmationModalClose.addEventListener("click", closeConfirmationModal);
-  confirmationModal
-    .querySelector(".confirmation-modal-backdrop")
-    .addEventListener("click", closeConfirmationModal);
   registerTab.addEventListener("click", () => setMode("register"));
   loginTab.addEventListener("click", () => setMode("login"));
   window.refreshLanguageUI = function refreshLanguageUI() {
@@ -797,6 +789,12 @@ function initializeAuth({ onAuthenticated }) {
     }
     updateButtons();
     setMode(mode);
+    if (registrationId && lastConfirmation) {
+      showConfirmationFeedback(
+        lastConfirmation.attemptCorrect,
+        consecutiveSuccesses,
+      );
+    }
   };
   usernameInput.addEventListener("input", () => {
     persistAuthProgress();
@@ -812,7 +810,7 @@ function initializeAuth({ onAuthenticated }) {
   document
     .getElementById("clear-points")
     .addEventListener("click", hideRequestFeedback);
-  changePasswordButton.addEventListener("click", () => {
+  restartPasswordButton.addEventListener("click", () => {
     hideRequestFeedback();
     resetRegistrationProgress();
   });
@@ -859,11 +857,6 @@ function initializeAuth({ onAuthenticated }) {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && patternModal.classList.contains("is-open"))
       closePatternModal();
-    if (
-      event.key === "Escape" &&
-      confirmationModal.classList.contains("is-open")
-    )
-      closeConfirmationModal();
   });
   function updateVisualPoint(number, x, y) {
     visualPointPositions[number] = { x, y };
