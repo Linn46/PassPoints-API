@@ -314,14 +314,7 @@ function initializeAuth({ onAuthenticated }) {
         analysisKey = selectionKey();
         analysisFeedback.hidden =
           mode !== "register" || Boolean(registrationId);
-        analysisFeedback.className = analysisResult.security.is_weak
-          ? "feedback is-warning"
-          : "feedback is-success";
-        analysisFeedback.textContent = analysisResult.security.is_weak
-          ? weakPatternMessage(analysisResult.security)
-          : window.PasspointsCurrentLanguage === "es"
-            ? "Selección aceptada por el análisis. Ya puedes crear tu cuenta."
-            : "Selection accepted by the analysis. You can now create your account.";
+        renderAnalysisFeedback(analysisResult.security);
       }
     } catch (error) {
       console.error("Could not restore the authentication form state:", error);
@@ -545,12 +538,7 @@ function initializeAuth({ onAuthenticated }) {
       );
       analysisResult = result;
       analysisKey = selectionKey();
-      analysisFeedback.className = `feedback ${result.security.is_weak ? "is-warning" : "is-success"}`;
-      analysisFeedback.textContent = result.security.is_weak
-        ? weakPatternMessage(result.security)
-        : window.PasspointsCurrentLanguage === "es"
-          ? "Selección aceptada por el análisis. Ya puedes guardar la contraseña."
-          : "Selection accepted by the analysis. You can now save your password.";
+      renderAnalysisFeedback(result.security);
     } catch (error) {
       analysisResult = null;
       analysisKey = "";
@@ -562,31 +550,144 @@ function initializeAuth({ onAuthenticated }) {
       setPending(false);
     }
   }
-  function weakPatternMessage(security) {
+  function renderAnalysisFeedback(security) {
     const isSpanish = window.PasspointsCurrentLanguage === "es";
-    const labels = isSpanish
-      ? {
-          "Patrón agrupado": "Los puntos están demasiado concentrados.",
-          "Patrón Line": "Los puntos forman una alineación.",
-          "Patrón Diag": "Los puntos forman una alineación diagonal.",
-          "Patrón angular":
-            "La disposición presenta una estructura demasiado regular.",
-          "Patrón regular":
-            "Los puntos forman una estructura demasiado regular.",
-        }
-      : {
-          "Clustered pattern": "The points are too concentrated.",
-          "Line pattern": "The points form a straight alignment.",
-          "Diagonal pattern": "The points form a diagonal alignment.",
-          "Angular pattern": "The layout presents an overly regular structure.",
-          "Regular pattern": "The points form a structure that is too regular.",
-        };
-    const reason = (security.patterns ?? [])
-      .map((pattern) => labels[pattern])
-      .filter(Boolean);
-    return isSpanish
-      ? `${reason.join(" ") || "Esta selección presenta un patrón débil."} Prueba con otros puntos.`
-      : `${reason.join(" ") || "This selection shows a weak pattern."} Please try different points.`;
+    analysisFeedback.hidden = false;
+    analysisFeedback.replaceChildren();
+    if (!security.is_weak) {
+      analysisFeedback.className = "feedback feedback-analysis is-success";
+      analysisFeedback.textContent = isSpanish
+        ? "No se detectaron patrones débiles. Ya puedes guardar la contraseña."
+        : "No weak patterns were detected. You can save your password.";
+      return;
+    }
+
+    analysisFeedback.className = "feedback feedback-analysis is-warning";
+    const details = Array.isArray(security.pattern_details)
+      ? security.pattern_details
+      : [];
+    const patterns = details.length
+      ? details
+      : (security.patterns ?? []).map((pattern) => ({
+          pattern_id: pattern,
+          methods: [],
+        }));
+    const summary = document.createElement("p");
+    summary.className = "analysis-feedback-summary";
+    summary.textContent = isSpanish
+      ? `El análisis detectó ${patterns.length} patrón${patterns.length === 1 ? "" : "es"} débil${patterns.length === 1 ? "" : "es"}. Puede hacer que la secuencia sea más predecible:`
+      : `The analysis detected ${patterns.length} weak pattern${patterns.length === 1 ? "" : "s"}. This may make the sequence easier to predict:`;
+    analysisFeedback.appendChild(summary);
+
+    const list = document.createElement("ul");
+    list.className = "analysis-pattern-list";
+    const patternCopy = {
+      clustered: {
+        title: isSpanish ? "Puntos agrupados" : "Clustered points",
+        reason: isSpanish
+          ? "Los puntos ocupan una zona pequeña de la imagen, lo que reduce las ubicaciones posibles."
+          : "The points occupy a small area of the image, reducing the number of possible locations.",
+        recommendation: isSpanish
+          ? "Distribuye los puntos en distintas zonas de la imagen."
+          : "Spread the points across different areas of the image.",
+      },
+      regular: {
+        title: isSpanish ? "Distribución regular" : "Regular distribution",
+        reason: isSpanish
+          ? "Las distancias o la geometría entre puntos son demasiado uniformes y pueden anticiparse."
+          : "The spacing or geometry between points is too uniform and may be anticipated.",
+        recommendation: isSpanish
+          ? "Varía las distancias y evita formar una disposición demasiado uniforme."
+          : "Vary the spacing and avoid an overly uniform arrangement.",
+      },
+      linear: {
+        title: isSpanish ? "Puntos alineados" : "Aligned points",
+        reason: isSpanish
+          ? "Los puntos siguen una línea fácil de reconocer y reproducir."
+          : "The points follow a line that is easy to recognize and reproduce.",
+        recommendation: isSpanish
+          ? "Rompe la alineación colocando algunos puntos fuera de esa línea."
+          : "Break the alignment by moving some points away from the line.",
+      },
+      diagonal: {
+        title: isSpanish ? "Alineación diagonal" : "Diagonal alignment",
+        reason: isSpanish
+          ? "Los puntos forman una diagonal reconocible que puede simplificar la predicción."
+          : "The points form a recognizable diagonal that may simplify prediction.",
+        recommendation: isSpanish
+          ? "Cambia la dirección de algunos puntos para romper la diagonal."
+          : "Change the direction of some points to break the diagonal.",
+      },
+      angular: {
+        title: isSpanish ? "Estructura geométrica" : "Geometric structure",
+        reason: isSpanish
+          ? "La disposición tiene una forma geométrica marcada que puede resultar predecible."
+          : "The arrangement has a pronounced geometric shape that may be predictable.",
+        recommendation: isSpanish
+          ? "Evita formas geométricas evidentes y cambia la posición de varios puntos."
+          : "Avoid obvious geometric shapes and change the position of several points.",
+      },
+    };
+    const rawPatterns = security.patterns ?? [];
+    patterns.forEach((detail, index) => {
+      const patternId = normalizePatternId(detail.pattern_id);
+      const copy = patternCopy[patternId];
+      const item = document.createElement("li");
+      const title = document.createElement("strong");
+      title.textContent =
+        copy?.title ?? rawPatterns[index] ?? detail.pattern_id ?? t("unknownPattern");
+      item.appendChild(title);
+
+      const reason = document.createElement("p");
+      reason.textContent =
+        copy?.reason ??
+        security.explanation ??
+        (isSpanish
+          ? "La API detectó una característica que puede hacer la selección más predecible."
+          : "The API detected a feature that may make the selection easier to predict.");
+      item.appendChild(reason);
+
+      const recommendation = document.createElement("p");
+      recommendation.className = "analysis-pattern-recommendation";
+      recommendation.textContent =
+        copy?.recommendation ??
+        (isSpanish
+          ? "Prueba otra distribución de puntos."
+          : "Try a different point arrangement.");
+      item.appendChild(recommendation);
+
+      const methods = Array.isArray(detail.methods) ? detail.methods : [];
+      if (methods.length) {
+        const source = document.createElement("small");
+        source.textContent = `${t("detectedBy")}: ${methods
+          .map((method) =>
+            method === "delaunay_statistical"
+              ? t("delaunayMethodLabel")
+              : method === "mean_distance_convex_hull"
+                ? t("distanceHullMethodLabel")
+                : method,
+          )
+          .join(", ")}`;
+        item.appendChild(source);
+      }
+      list.appendChild(item);
+    });
+    analysisFeedback.appendChild(list);
+  }
+
+  function normalizePatternId(pattern) {
+    const normalized = String(pattern ?? "").trim().toLowerCase();
+    if (["clustered", "agrupado", "patrón agrupado", "clustered pattern"].includes(normalized))
+      return "clustered";
+    if (["regular", "patrón regular", "regular pattern"].includes(normalized))
+      return "regular";
+    if (["linear", "patrón line", "line pattern"].includes(normalized))
+      return "linear";
+    if (["diagonal", "patrón diag", "diagonal pattern"].includes(normalized))
+      return "diagonal";
+    if (["angular", "patrón angular", "angular pattern"].includes(normalized))
+      return "angular";
+    return "unknown";
   }
   async function submitAuth(event) {
     event.preventDefault();
@@ -789,6 +890,9 @@ function initializeAuth({ onAuthenticated }) {
     }
     updateButtons();
     setMode(mode);
+    if (analysisResult?.security && mode === "register" && !registrationId) {
+      renderAnalysisFeedback(analysisResult.security);
+    }
     if (registrationId && lastConfirmation) {
       showConfirmationFeedback(
         lastConfirmation.attemptCorrect,

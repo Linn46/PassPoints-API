@@ -140,6 +140,29 @@ def test_independent_rejections_report_multiple_patterns_and_low_security():
 
     assert result.patterns == ["Patrón regular", "Patrón angular"]
     assert result.level == "Baja"
+    assert [detail.pattern_id for detail in result.pattern_details] == [
+        "regular",
+        "angular",
+    ]
+
+
+def test_grouping_and_angle_detection_are_both_reported():
+    selected_points = grouped_points()
+    result = assess_security(
+        perimeter_test=perimeter_test(True, -2.1),
+        angle_test=angle_test(True),
+        points=selected_points,
+        triangles=triangles_for(selected_points),
+        image_width=1920,
+        image_height=1080,
+    )
+
+    assert "Patrón agrupado" in result.patterns
+    assert any(
+        pattern in result.patterns
+        for pattern in ("Patrón Line", "Patrón Diag", "Patrón angular")
+    )
+    assert len(result.pattern_details) >= 2
 
 
 def test_rejected_perimeter_without_geometric_pattern_is_not_weak():

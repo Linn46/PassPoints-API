@@ -268,15 +268,16 @@ class AuthService:
     ) -> None:
         analysis = PatternAnalysisService()
         domain_points = [Point(x=x, y=y) for x, y in points]
-        for method in ("delaunay_statistical", "mean_distance_convex_hull"):
-            result = analysis.analyze(
-                points=domain_points,
-                image_width=image_width,
-                image_height=image_height,
-                method=method,
+        result = analysis.analyze(
+            points=domain_points,
+            image_width=image_width,
+            image_height=image_height,
+            method="delaunay_statistical",
+        )
+        if result.security.is_weak:
+            raise InvalidSelectionError(
+                "Weak graphical-password patterns are not allowed."
             )
-            if result.security.is_weak:
-                raise InvalidSelectionError("Weak graphical-password patterns are not allowed.")
 
     def register_repetition(
         self, registration_id: UUID, points: list[tuple[float, float]]

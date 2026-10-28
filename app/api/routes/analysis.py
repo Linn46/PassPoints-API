@@ -4,6 +4,7 @@ from app.api.schemas.analysis_request import AnalysisRequest
 from app.api.schemas.analysis_response import (
     AnalysisResponse,
     AngleTestResponse,
+    PatternDetailResponse,
     PerimeterTestResponse,
     PointResponse,
     SecurityResponse,
@@ -59,16 +60,43 @@ def _single_response(
             patterns=result.security.patterns,
             title=result.security.title,
             explanation=result.security.explanation,
+            pattern_details=[
+                PatternDetailResponse(
+                    pattern_id=detail.pattern_id,
+                    methods=list(detail.methods),
+                )
+                for detail in result.security.pattern_details
+            ],
         ),
     )
 
 
+def _pattern_id(pattern: str) -> str:
+    return {
+        "agrupado": "clustered",
+        "Patrón agrupado": "clustered",
+        "regular": "regular",
+        "Patrón regular": "regular",
+        "Patrón Line": "linear",
+        "Patrón Diag": "diagonal",
+        "Patrón Line": "linear",
+        "Patrón angular": "angular",
+    }.get(pattern, pattern)
+
+
 def _aggregate_security(results):
     patterns = []
+    pattern_ids = set()
+    detail_methods: dict[str, list[str]] = {}
     for result in results:
         for pattern in result.security.patterns:
-            if pattern not in patterns:
+            pattern_id = _pattern_id(pattern)
+            if pattern_id not in pattern_ids:
                 patterns.append(pattern)
+                pattern_ids.add(pattern_id)
+        for detail in result.security.pattern_details:
+            methods = detail_methods.setdefault(detail.pattern_id, [])
+            methods.extend(method for method in detail.methods if method not in methods)
 
     is_weak = any(result.security.is_weak for result in results)
     level = "Baja" if is_weak else "Alta"
@@ -83,6 +111,10 @@ def _aggregate_security(results):
         is_weak=is_weak,
         level=level,
         patterns=patterns,
+        pattern_details=[
+            PatternDetailResponse(pattern_id=pattern_id, methods=methods)
+            for pattern_id, methods in detail_methods.items()
+        ],
         title=title,
         explanation=" ".join(explanation_parts) if explanation_parts else "Sin explicación disponible.",
     )
@@ -156,6 +188,13 @@ def analyze(request: AnalysisRequest) -> AnalysisResponse:
                     patterns=security.patterns,
                     title=security.title,
                     explanation=security.explanation,
+                    pattern_details=[
+                        PatternDetailResponse(
+                            pattern_id=detail.pattern_id,
+                            methods=list(detail.methods),
+                        )
+                        for detail in security.pattern_details
+                    ],
                 ),
             )
         return _single_response(points, request, result)
