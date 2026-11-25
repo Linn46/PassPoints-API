@@ -2,9 +2,9 @@
 
 API desarrollada con FastAPI para el análisis y autenticación mediante contraseñas gráficas Passpoints de cinco puntos.
 
-Actualmente, el proyecto implementa una metodología de análisis basada en triangulación de Delaunay, utilizando métricas geométricas de perímetros y ángulos junto con pruebas estadísticas para identificar patrones potencialmente débiles en las contraseñas gráficas.
+Actualmente, el proyecto implementa dos metodologías de análisis independientes: (1) triangulación de Delaunay, con métricas de perímetros y ángulos y sus pruebas estadísticas; y (2) distancia media y envolvente convexa (DM/PEC/AEC), con contrastes estadísticos calibrados según las resoluciones documentadas. Ambas identifican patrones potencialmente débiles sin mezclar sus criterios científicos.
 
-El proyecto está organizado para permitir la incorporación futura de otras metodologías de análisis sin mezclar su lógica científica con la metodología actualmente implementada.
+La metodología DM/PEC/AEC requiere exactamente cinco puntos distintos. DM está calibrado para 800×480, 1366×768 y 1920×1080; PEC y AEC solo para 1920×1080. Esta metodología clasifica agrupamiento y regularidad en las colas respaldadas experimentalmente; no clasifica patrones lineales (Line). La ausencia de detección no demuestra aleatoriedad.
 
 ## Arquitectura
 
@@ -51,7 +51,7 @@ Su implementación se encuentra en:
 
     app/application/analysis/methods/delaunay_statistical/
 
-El proyecto contiene un espacio reservado para incorporar posteriormente otra metodología:
+La metodología DM/PEC/AEC se implementa en:
 
     app/application/analysis/methods/mean_distance_convex_hull/
 
@@ -283,26 +283,12 @@ Proporciona la documentación interactiva de los endpoints mediante Swagger UI.
 
 ## Análisis de una contraseña Passpoints
 
-La metodología actualmente implementada sigue, de forma general, este flujo:
+El flujo depende de la metodología seleccionada:
 
-    Cinco puntos
-         │
-         ▼
-      Validación
-         │
-         ▼
-    Triangulación
-     de Delaunay
-         │
-         ├──────────────┐
-         ▼              ▼
-     Perímetros      Ángulos
-         │              │
-         └──────┬───────┘
-                ▼
-       Pruebas estadísticas
-                │
-                ▼
+- **Delaunay:** cinco puntos, validación geométrica, triangulación, cálculo de perímetros y ángulos, y aplicación de las pruebas estadísticas correspondientes.
+- **DM/PEC/AEC:** cinco puntos distintos, cálculo de distancia media y métricas de envolvente convexa, y evaluación mediante los contrastes estadísticos calibrados para las resoluciones admitidas.
+
+Las dos metodologías mantienen criterios y resultados diferenciados; no se deben interpretar como una única secuencia de pruebas.
         Evaluación de patrones
                 │
                 ▼
@@ -367,11 +353,9 @@ Las pruebas que requieren PostgreSQL necesitan que `DATABASE_URL` esté correcta
 
 ## Estado actual
 
-La metodología científica actualmente disponible es la basada en Delaunay.
+El proyecto contiene dos metodologías de análisis implementadas: Delaunay y DM/PEC/AEC. La arquitectura mantiene separada la lógica científica de ambas. La disponibilidad de una metodología en el endpoint de análisis no implica que ambas se ejecuten automáticamente en todos los flujos de la aplicación; la selección depende del método solicitado por cada operación.
 
-La arquitectura está preparada para incorporar posteriormente otras metodologías de análisis manteniendo separada su lógica científica.
-
-La segunda metodología no forma parte todavía de la implementación actual.
+En DM/PEC/AEC, la ausencia de un patrón clasificado no equivale a demostrar aleatoriedad. Asimismo, un rechazo estadístico de la hipótesis nula (H0) no basta por sí solo para asignar un patrón concreto: la clasificación se limita a las colas y categorías respaldadas por la calibración experimental. Los rechazos que no permiten una atribución respaldada deben informarse como tales, sin etiquetarlos como aleatorios ni asignarles otro patrón.
 
 El estado de la suite completa de pruebas puede depender de la configuración local de PostgreSQL y de los contratos actuales de autenticación. Por ello, antes de considerar una ejecución completamente verificada, deben configurarse las variables de entorno y ejecutarse las pruebas en el entorno correspondiente.
 

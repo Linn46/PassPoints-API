@@ -15,10 +15,3 @@ def mean_distance(points: list[tuple[float, float]]) -> float:
     if not distances:
         return 0.0
     return sum(distances) / len(distances)
-
-
-def mean_distance_rectangle(image_width: float, image_height: float) -> float:
-    if image_width <= 0 or image_height <= 0:
-        return 0.0
-    rectangle_area = image_width * image_height
-    return rectangle_area / max(image_width, image_height)

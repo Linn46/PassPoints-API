@@ -63,6 +63,8 @@ class AnalysisService:
         angle_test = run_angle_test(
             average_max_angle=average_max_angle,
             alpha=alpha,
+            image_width=image_width,
+            image_height=image_height,
         )
 
         security = assess_security(

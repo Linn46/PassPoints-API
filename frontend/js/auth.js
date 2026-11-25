@@ -1,3 +1,15 @@
+function validateEmailAddress(value) {
+  const email = String(value ?? "").trim();
+  if (!email) return "emailRequired";
+  if (email.length < 5) return "emailTooShort";
+  if (email.length > 254) return "emailTooLong";
+
+  const emailPattern =
+    /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)*\.[A-Z]{2,63}$/i;
+
+  return emailPattern.test(email) ? "" : "emailInvalid";
+}
+
 function initializeAuth({ onAuthenticated }) {
   const AUTH_PROGRESS_KEY = "passpoints_auth_progress";
   const authView = document.getElementById("auth-view");
@@ -698,17 +710,16 @@ function initializeAuth({ onAuthenticated }) {
       const missingFields = [];
       const username = usernameInput.value.trim();
       const email = emailInput.value.trim();
-      const emailPattern =
-        /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)*\.[A-Z]{2,63}$/i;
+      const emailError = validateEmailAddress(email);
       if (!username)
         missingFields.push(isSpanish ? "nombre de usuario" : "username");
       else if (!/^[a-z0-9_.-]{3,100}$/i.test(username))
         missingFields.push(
           isSpanish ? "nombre de usuario válido" : "a valid username",
         );
-      if (!email)
+      if (emailError === "emailRequired")
         missingFields.push(isSpanish ? "correo electrónico" : "email");
-      else if (!emailPattern.test(email) || email.length > 254)
+      else if (emailError)
         missingFields.push(
           isSpanish ? "correo electrónico válido" : "a valid email",
         );

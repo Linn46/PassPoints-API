@@ -22,6 +22,23 @@ def transform(
     )
     """
 
+    if not math.isfinite(value):
+        raise JohnsonSBTransformationError(
+            "The value must be finite."
+        )
+
+    if not all(math.isfinite(parameter) for parameter in (
+        parameters.gamma, parameters.delta, parameters.lambda_, parameters.xi
+    )):
+        raise JohnsonSBTransformationError(
+            "Johnson SB parameters must be finite."
+        )
+
+    if parameters.delta <= 0 or parameters.lambda_ <= 0:
+        raise JohnsonSBTransformationError(
+            "Johnson SB delta and lambda parameters must be positive."
+        )
+
     numerator = value - parameters.xi
     denominator = (
         parameters.lambda_

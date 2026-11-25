@@ -5,6 +5,10 @@ from scipy.spatial import QhullError
 from app.domain.point import Point
 from app.domain.triangle import Triangle
 from app.domain.triangulation import Triangulation
+from app.geometry.triangle.validation import (
+    TriangleValidationError,
+    validate_triangle,
+)
 from app.geometry.delaunay.validator import (
     DelaunayValidationError,
     validate_points,
@@ -39,6 +43,15 @@ def triangulate(points: list[Point]) -> Triangulation:
         )
         for simplex in delaunay.simplices
     )
+
+    try:
+        for triangle in triangles:
+            validate_triangle(triangle)
+    except TriangleValidationError as exc:
+        raise DelaunayValidationError(
+            "Delaunay produced a degenerate triangle.",
+            validation_type="degenerate_triangle",
+        ) from exc
 
     return Triangulation(
         triangles=triangles,

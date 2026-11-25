@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from app.application.analysis.methods.mean_distance_convex_hull.pattern_detector import (
     AGRUPADO,
-    LINEAR,
     REGULAR,
     evaluate_password,
 )
@@ -37,7 +36,6 @@ class AnalysisService:
                 pattern_id={
                     AGRUPADO: "clustered",
                     REGULAR: "regular",
-                    LINEAR: "linear",
                 }[pattern],
                 methods=("mean_distance_convex_hull",),
             )
@@ -57,7 +55,6 @@ class AnalysisService:
                 {
                     AGRUPADO: "Patrón agrupado",
                     REGULAR: "Patrón regular",
-                    LINEAR: "Patrón Line",
                 }[pattern]
                 for pattern in evaluation.patrones
             ],

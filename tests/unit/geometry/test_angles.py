@@ -57,3 +57,11 @@ def test_average_max_delaunay_angle():
     )
 
     assert average == pytest.approx(90.0)
+
+def test_triangle_angles_reject_degenerate_triangle():
+    from app.geometry.triangle.validation import TriangleValidationError
+
+    triangle = Triangle((Point(0, 0), Point(1, 0), Point(2, 0)))
+
+    with pytest.raises(TriangleValidationError):
+        triangle_angles_degrees(triangle)

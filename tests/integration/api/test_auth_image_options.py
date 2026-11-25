@@ -82,7 +82,10 @@ def auth_client() -> Iterator[tuple[TestClient, sessionmaker[Session]]]:
 
 
 def register_complete(client: TestClient, payload: dict[str, object]):
-    start = client.post("/auth/register", json=payload)
+    start = client.post(
+        "/auth/register",
+        json={**payload, "repetition_count": 3},
+    )
     assert start.status_code == 201
     registration_id = start.json()["registration_id"]
     response = None
