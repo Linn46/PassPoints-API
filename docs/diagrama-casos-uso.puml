@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Visitante" as Visitante
+actor "Usuario autenticado" as Usuario
+
+rectangle "Sistema PassPoints" {
+  usecase "Crear cuenta" as CrearCuenta
+  usecase "Elegir imagen" as ElegirImagenRegistro
+  usecase "Definir secuencia\nde cinco puntos" as DefinirSecuencia
+  usecase "Confirmar secuencia\n(3 aciertos consecutivos)" as ConfirmarSecuencia
+  usecase "Cancelar registro" as CancelarRegistro
+
+  usecase "Iniciar sesión" as IniciarSesion
+  usecase "Elegir imagen de acceso" as ElegirImagenAcceso
+  usecase "Reproducir secuencia\nde cinco puntos" as ReproducirSecuencia
+
+  usecase "Analizar seguridad\nde una secuencia" as AnalizarSeguridad
+  usecase "Consultar perfil" as ConsultarPerfil
+  usecase "Consultar historial\nde repeticiones" as ConsultarHistorial
+  usecase "Cerrar sesión" as CerrarSesion
+}
+
+Visitante --> CrearCuenta
+Visitante --> IniciarSesion
+Visitante --> AnalizarSeguridad
+
+CrearCuenta ..> ElegirImagenRegistro : <<include>>
+CrearCuenta ..> DefinirSecuencia : <<include>>
+CrearCuenta ..> ConfirmarSecuencia : <<include>>
+CancelarRegistro ..> CrearCuenta : <<extend>>
+Visitante --> CancelarRegistro
+
+IniciarSesion ..> ElegirImagenAcceso : <<include>>
+IniciarSesion ..> ReproducirSecuencia : <<include>>
+
+Usuario --> ConsultarPerfil
+Usuario --> ConsultarHistorial
+Usuario --> CerrarSesion
+
+note right of ConfirmarSecuencia
+  Un fallo reinicia la racha
+  de confirmaciones.
+end note
+
+note bottom of AnalizarSeguridad
+  El análisis puede usar uno o varios
+  métodos disponibles y muestra
+  patrones potencialmente débiles.
+end note
+@enduml
