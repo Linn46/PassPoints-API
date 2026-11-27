@@ -14,7 +14,7 @@ vm.runInContext(authSource, context);
 test("email validation rejects empty, too-short, and oversized values", () => {
   assert.equal(context.validateEmailAddress("  "), "emailRequired");
   assert.equal(context.validateEmailAddress("a@b."), "emailTooShort");
-  assert.equal(context.validateEmailAddress(`${"a".repeat(251)}@b.c`), "emailTooLong");
+  assert.equal(context.validateEmailAddress(`${"a".repeat(250)}@b.co`), "emailTooLong");
 });
 
 test("email validation rejects malformed addresses and accepts normalized input", () => {
@@ -29,5 +29,7 @@ test("email validation rejects malformed addresses and accepts normalized input"
   }
 
   assert.equal(context.validateEmailAddress("  Name@Example.com  "), "");
-  assert.equal(context.validateEmailAddress(`${"a".repeat(250)}@b.c`), "");
+  const maxLengthEmail = `${"a".repeat(249)}@b.co`;
+  assert.equal(maxLengthEmail.length, 254);
+  assert.equal(context.validateEmailAddress(maxLengthEmail), "");
 });

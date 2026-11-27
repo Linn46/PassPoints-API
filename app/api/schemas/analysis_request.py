@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.core.config.image_parameters import is_supported_image_size
+
 AnalysisMethod = Literal["delaunay_statistical", "mean_distance_convex_hull"]
 
 
@@ -69,6 +71,11 @@ class AnalysisRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_coordinates(self):
+        if not is_supported_image_size(self.image_width, self.image_height):
+            raise ValueError(
+                f"Unsupported image size: {self.image_width}x{self.image_height}."
+            )
+
         for point in self.points:
             if not 0 <= point.x <= self.image_width:
                 raise ValueError(

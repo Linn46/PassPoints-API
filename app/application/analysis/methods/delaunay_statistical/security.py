@@ -22,7 +22,8 @@ def assess_security(
     patterns: list[str] = []
     pattern_details: list[PatternDetail] = []
     angular_pattern = (
-        _angular_pattern(points, image_width, image_height) if angle_test.reject_null else None
+        _angular_pattern(points, image_width, image_height)
+        if angle_test.applicable and angle_test.reject_null else None
     )
     points_are_grouped = (
         perimeter_test.reject_null
@@ -70,7 +71,7 @@ def assess_security(
             f"(Z={perimeter_test.statistic:.2f})"
         )
 
-    if angle_test.reject_null:
+    if angle_test.applicable and angle_test.reject_null:
         evidence.append(
             "el test de ángulos rechazó H0 "
             f"(Z={angle_test.statistic:.2f})"

@@ -32,3 +32,9 @@ def test_johnson_sb_rejects_value_outside_domain():
 
     with pytest.raises(JohnsonSBTransformationError):
         transform(parameters.xi, parameters)
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_johnson_sb_rejects_non_finite_values(value):
+    parameters = PARAMETERS_BY_IMAGE_SIZE[(1920, 1080)]
+
+    with pytest.raises(JohnsonSBTransformationError):
+        transform(value, parameters)

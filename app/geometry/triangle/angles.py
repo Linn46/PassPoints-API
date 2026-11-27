@@ -2,6 +2,7 @@ from math import acos, degrees
 
 from app.domain.triangle import Triangle
 from app.geometry.triangle.sides import triangle_side_lengths
+from app.geometry.triangle.validation import validate_triangle
 
 
 def _safe_acos(value: float) -> float:
@@ -19,6 +20,7 @@ def triangle_angles_degrees(
     Calcula los tres ángulos interiores de un triángulo
     y los devuelve en grados.
     """
+    validate_triangle(triangle)
     a, b, c = triangle_side_lengths(triangle)
 
     angle_a = degrees(

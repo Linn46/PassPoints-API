@@ -109,3 +109,25 @@ class TestDelaunayValidationEnhanced:
         error = exc_info.value
         assert "unique" in error.message.lower()
         assert "Duplicate points detected" in error.message
+
+
+def test_nearly_collinear_points_are_rejected():
+    points = [
+        Point(0, 0),
+        Point(1, 0),
+        Point(2, 1e-14),
+        Point(3, 0),
+        Point(4, 0),
+    ]
+
+    with pytest.raises(DelaunayValidationError) as exc_info:
+        validate_points(points)
+
+    assert exc_info.value.validation_type == "collinear_points"
+
+
+def test_collinearity_tolerance_is_scale_independent():
+    from app.geometry.geometry_utils import are_collinear
+
+    assert are_collinear(Point(0, 0), Point(1, 0), Point(2, 1e-14))
+    assert are_collinear(Point(0, 0), Point(1e6, 0), Point(2e6, 1e-8))

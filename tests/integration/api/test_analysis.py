@@ -189,3 +189,52 @@ def test_analysis_endpoint_rejects_invalid_alpha():
     )
 
     assert response.status_code == 422
+
+def test_angle_test_is_reported_as_not_applicable_for_800x480():
+    request = valid_request()
+    request["image_width"] = 800
+    request["image_height"] = 480
+    request["points"] = [
+        {"x": 80, "y": 80}, {"x": 400, "y": 80},
+        {"x": 400, "y": 400}, {"x": 80, "y": 400},
+        {"x": 240, "y": 240},
+    ]
+    response = client.post("/api/v1/analysis", json=request)
+    assert response.status_code == 200
+    assert response.json()["angle_test"]["applicable"] is False
+    assert response.json()["angle_test"]["reject_null"] is False
+
+
+def test_analysis_rejects_uncalibrated_image_size():
+    request = valid_request()
+    request["image_width"] = 900
+    request["image_height"] = 600
+    response = client.post("/api/v1/analysis", json=request)
+    assert response.status_code == 422
+
+
+def test_convex_hull_response_marks_delaunay_metrics_not_applicable():
+    points = [
+        {"x": 100, "y": 100},
+        {"x": 500, "y": 100},
+        {"x": 500, "y": 500},
+        {"x": 100, "y": 500},
+        {"x": 300, "y": 300},
+    ]
+    response = client.post(
+        "/api/v1/analysis",
+        json={
+            "points": points,
+            "image_width": 1920,
+            "image_height": 1080,
+            "method": "mean_distance_convex_hull",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["average_perimeter"] is None
+    assert data["average_max_angle"] is None
+    assert data["perimeter_test"]["applicable"] is False
+    assert data["perimeter_test"]["statistic"] is None
+    assert data["angle_test"]["applicable"] is False
+    assert data["angle_test"]["average_max_angle"] is None

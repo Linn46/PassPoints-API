@@ -60,7 +60,7 @@ def test_analysis_service_supports_mean_distance_convex_hull_method():
     assert result.security is not None
     assert result.security.patterns
     assert result.security.patterns[0].startswith("Patrón")
-    assert "Los puntos seleccionados presentan características compatibles" in result.security.explanation
+    assert "Se detectaron indicios estadísticos compatibles" in result.security.explanation
 
 
 def test_analysis_request_accepts_one_or_multiple_methods():

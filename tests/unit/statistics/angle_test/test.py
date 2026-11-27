@@ -68,3 +68,13 @@ def test_angle_test_does_not_reject_null():
     assert result.reject_null is False
     assert result.alpha == pytest.approx(0.05)
     assert result.critical_value == pytest.approx(1.6448536)
+
+def test_angle_test_is_not_applicable_outside_calibrated_resolution():
+    result = run_test(
+        average_max_angle=150.0,
+        alpha=0.05,
+        image_width=800,
+        image_height=480,
+    )
+    assert result.applicable is False
+    assert result.reject_null is False

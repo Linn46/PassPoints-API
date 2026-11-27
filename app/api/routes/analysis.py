@@ -53,6 +53,7 @@ def _single_response(
             critical_value=result.angle_test.critical_value,
             alpha=result.angle_test.alpha,
             reject_null=result.angle_test.reject_null,
+            applicable=result.angle_test.applicable,
         ),
         security=SecurityResponse(
             is_weak=result.security.is_weak,
@@ -167,20 +168,22 @@ def analyze(request: AnalysisRequest) -> AnalysisResponse:
                     for point in points
                 ],
                 triangles=[],
-                average_perimeter=0.0,
-                average_max_angle=0.0,
+                average_perimeter=None,
+                average_max_angle=None,
                 perimeter_test=PerimeterTestResponse(
-                    statistic=0.0,
-                    critical_value=0.0,
+                    statistic=None,
+                    critical_value=None,
                     alpha=request.alpha,
                     reject_null=False,
+                    applicable=False,
                 ),
                 angle_test=AngleTestResponse(
-                    average_max_angle=0.0,
-                    statistic=0.0,
-                    critical_value=0.0,
+                    average_max_angle=None,
+                    statistic=None,
+                    critical_value=None,
                     alpha=request.alpha,
                     reject_null=False,
+                    applicable=False,
                 ),
                 security=SecurityResponse(
                     is_weak=security.is_weak,
@@ -236,6 +239,7 @@ def analyze(request: AnalysisRequest) -> AnalysisResponse:
             critical_value=delaunay_result.angle_test.critical_value,
             alpha=delaunay_result.angle_test.alpha,
             reject_null=delaunay_result.angle_test.reject_null,
+            applicable=delaunay_result.angle_test.applicable,
         ),
         security=combined_security,
     )

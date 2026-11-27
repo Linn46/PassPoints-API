@@ -11,18 +11,20 @@ class TriangleResponse(BaseModel):
 
 
 class PerimeterTestResponse(BaseModel):
-    statistic: float
-    critical_value: float
+    statistic: float | None = None
+    critical_value: float | None = None
     alpha: float
     reject_null: bool
+    applicable: bool = True
 
 
 class AngleTestResponse(BaseModel):
-    average_max_angle: float
-    statistic: float
-    critical_value: float
+    average_max_angle: float | None = None
+    statistic: float | None = None
+    critical_value: float | None = None
     alpha: float
     reject_null: bool
+    applicable: bool = True
 
 
 class PatternDetailResponse(BaseModel):
@@ -93,8 +95,8 @@ class AnalysisResponse(BaseModel):
     points: list[PointResponse]
     triangles: list[TriangleResponse]
 
-    average_perimeter: float
-    average_max_angle: float
+    average_perimeter: float | None = None
+    average_max_angle: float | None = None
 
     perimeter_test: PerimeterTestResponse
     angle_test: AngleTestResponse

@@ -106,3 +106,59 @@ def test_invalid_triangle():
 
     with pytest.raises(TriangleValidationError):
         validate_triangle(triangle)
+
+def test_triangulation_rejects_nearly_collinear_points():
+    points = [
+        Point(0, 0),
+        Point(1, 0),
+        Point(2, 1e-14),
+        Point(3, 0),
+        Point(4, 0),
+    ]
+
+    with pytest.raises(DelaunayValidationError) as exc_info:
+        triangulate(points)
+
+    assert exc_info.value.validation_type == "collinear_points"
+
+
+def test_delaunay_output_is_repeatable_for_same_input():
+    points = valid_points()
+
+    first = triangulate(points)
+    second = triangulate(points)
+
+    assert first == second
+
+
+def test_cocircular_permutations_produce_valid_covering_triangulations():
+    """Cocircular inputs may admit different diagonals; validate geometry, not identity."""
+    from itertools import permutations
+    from math import cos, pi, sin
+
+    points = [
+        Point(100 * cos(2 * pi * index / 5), 100 * sin(2 * pi * index / 5))
+        for index in range(5)
+    ]
+
+    def polygon_area(vertices):
+        return abs(sum(
+            vertices[i].x * vertices[(i + 1) % len(vertices)].y
+            - vertices[(i + 1) % len(vertices)].x * vertices[i].y
+            for i in range(len(vertices))
+        )) / 2
+
+    expected_area = polygon_area(points)
+    for ordering in permutations(points):
+        result = triangulate(list(ordering))
+        assert len(result.triangles) == 3
+        triangle_area = sum(
+            abs(
+                (t.vertices[1].x - t.vertices[0].x)
+                * (t.vertices[2].y - t.vertices[0].y)
+                - (t.vertices[2].x - t.vertices[0].x)
+                * (t.vertices[1].y - t.vertices[0].y)
+            ) / 2
+            for t in result.triangles
+        )
+        assert triangle_area == pytest.approx(expected_area, rel=1e-8)

@@ -33,3 +33,7 @@ def test_angle_statistic_uses_standardization():
     result = angle_statistic(111.8)
 
     assert result == pytest.approx(0.0)
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_standardization_rejects_non_finite_values(value):
+    with pytest.raises(ValueError, match="finite"):
+        standardize(value)

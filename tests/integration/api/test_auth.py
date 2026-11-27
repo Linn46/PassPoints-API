@@ -15,6 +15,10 @@ from app.application.auth.service import AuthService
 from app.application.passpoints.method import Passpoints
 from app.infrastructure.database.base import Base
 from app.infrastructure.database.models.graphical_password import GraphicalPassword
+from app.infrastructure.database.models.registration import (
+    RegistrationAttempt,
+    RegistrationDraft,
+)
 from app.infrastructure.database.models.user import User
 from app.main import app
 
@@ -37,7 +41,12 @@ def client_and_session() -> Iterator[tuple[TestClient, sessionmaker[Session]]]:
     )
     Base.metadata.create_all(
         engine,
-        tables=[User.__table__, GraphicalPassword.__table__],
+        tables=[
+            User.__table__,
+            GraphicalPassword.__table__,
+            RegistrationDraft.__table__,
+            RegistrationAttempt.__table__,
+        ],
     )
     factory = sessionmaker(bind=engine, expire_on_commit=False)
 
@@ -57,18 +66,23 @@ def client_and_session() -> Iterator[tuple[TestClient, sessionmaker[Session]]]:
 def register_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "username": "alice",
-        "password": "correct horse battery staple",
+        "email": "alice@example.test",
         "image_id": "image-001",
         "image_width": 1920,
         "image_height": 1080,
         "points": GRAPHICAL_POINTS,
+        "confirmation_points": [GRAPHICAL_POINTS, GRAPHICAL_POINTS],
     }
     payload.update(overrides)
     return payload
 
 
 def login_payload(**overrides: object) -> dict[str, object]:
-    return register_payload(**overrides)
+    payload = register_payload()
+    payload.pop("username")
+    payload.pop("confirmation_points")
+    payload.update(overrides)
+    return payload
 
 
 def test_register_persists_user_and_graphical_password_without_secrets(
@@ -79,14 +93,16 @@ def test_register_persists_user_and_graphical_password_without_secrets(
     response = client.post("/auth/register", json=register_payload())
 
     assert response.status_code == 201
-    assert set(response.json()) == {"id", "username"}
-    assert response.json()["username"] == "alice"
-    assert "password" not in response.text
+    body = response.json()
+    assert body["completed"] is True
+    assert body["user"]["username"] == "alice"
+    assert body["user"]["email"] == "alice@example.test"
+    assert body["access_token"]
     assert "verifier" not in response.text
     with factory() as session:
         user = session.scalar(select(User).where(User.username == "alice"))
         assert user is not None
-        assert user.password_hash != "correct horse battery staple"
+        assert user.password_hash != "alice@example.test"
         assert user.password_hash.startswith("$argon2id$")
         graphical_passwords = session.scalars(
             select(GraphicalPassword).where(GraphicalPassword.user_id == user.id)
@@ -105,16 +121,16 @@ def test_register_uses_passpoints_credential_creation(
     calls = []
     original = Passpoints.create_credential
 
-    def create_credential(image_id, width, height, points):
-        calls.append((image_id, width, height, points))
-        return original(image_id, width, height, points)
+    def create_credential(image_id, width, height, points, tolerance_radius=None):
+        calls.append((image_id, width, height, points, tolerance_radius))
+        return original(image_id, width, height, points, tolerance_radius)
 
     monkeypatch.setattr(Passpoints, "create_credential", create_credential)
 
     response = client.post("/auth/register", json=register_payload())
 
     assert response.status_code == 201
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0][:3] == ("image-001", 1920, 1080)
 
 
@@ -127,7 +143,7 @@ def test_register_rejects_duplicate_username(
     response = client.post("/auth/register", json=register_payload())
 
     assert response.status_code == 409
-    assert response.json() == {"detail": "Username already registered."}
+    assert response.json() == {"detail": "Username or email already registered."}
 
 
 def test_register_rejects_weak_graphical_pattern(
@@ -168,6 +184,7 @@ def test_register_rejects_points_with_overlapping_tolerance_areas(
     "overrides",
     [
         {"username": "a"},
+        {"email": "not-an-email"},
         {"password": "short"},
         {"points": GRAPHICAL_POINTS[:4]},
         {"points": [GRAPHICAL_POINTS[0]] * 5},
@@ -222,9 +239,27 @@ def test_login_uses_passpoints_verification(
     calls = []
     original = Passpoints.verify_credential
 
-    def verify_credential(image_id, width, height, points, verifier):
+    def verify_credential(
+        image_id,
+        width,
+        height,
+        points,
+        verifier,
+        encrypted_points,
+        tolerance_radius,
+        encryption_secret,
+    ):
         calls.append((image_id, width, height))
-        return original(image_id, width, height, points, verifier)
+        return original(
+            image_id,
+            width,
+            height,
+            points,
+            verifier,
+            encrypted_points,
+            tolerance_radius,
+            encryption_secret,
+        )
 
     monkeypatch.setattr(Passpoints, "verify_credential", verify_credential)
 
@@ -237,8 +272,7 @@ def test_login_uses_passpoints_verification(
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"password": "incorrect password"},
-        {"username": "not-registered"},
+        {"email": "unknown@example.test"},
         {
             "points": [
                 {"x": 250, "y": 200},

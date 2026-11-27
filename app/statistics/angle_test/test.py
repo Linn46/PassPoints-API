@@ -22,30 +22,29 @@ class AngleTestResult:
     critical_value: float
     alpha: float
     reject_null: bool
+    applicable: bool = True
 
 
 def run_test(
     average_max_angle: float,
     alpha: float = DEFAULT_ALPHA,
+    image_width: int = 1920,
+    image_height: int = 1080,
 ) -> AngleTestResult:
     """
     Ejecuta el test unilateral derecho para detectar
     patrones Diag y Line.
     """
 
-    statistic = angle_statistic(
-        average_max_angle
-    )
-
+    statistic = angle_statistic(average_max_angle)
     critical = critical_value(alpha)
+    applicable = (image_width, image_height) == (1920, 1080)
 
     return AngleTestResult(
         average_max_angle=average_max_angle,
         statistic=statistic,
         critical_value=critical,
         alpha=alpha,
-        reject_null=is_in_critical_region(
-            statistic,
-            alpha,
-        ),
+        reject_null=(applicable and is_in_critical_region(statistic, alpha)),
+        applicable=applicable,
     )
